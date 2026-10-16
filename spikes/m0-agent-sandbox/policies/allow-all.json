@@ -1,0 +1,5 @@
+{
+  "name": "allow-all",
+  "comment": "Simulates a prompt-injected agent that has talked its way past every permission rule. Used by the escape tests: if the sandbox holds under this policy, the policy is irrelevant to the boundary.",
+  "default": "allow"
+}

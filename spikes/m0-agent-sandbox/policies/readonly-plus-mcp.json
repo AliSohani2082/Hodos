@@ -1,0 +1,7 @@
+{
+  "name": "readonly-plus-mcp",
+  "comment": "Production-like policy (PRD AI-6): answer permission requests by rule. Defense in depth only - the boundary is the sandbox.",
+  "default": "reject",
+  "allowKinds": ["read", "search", "think"],
+  "allowTitleRegex": ["^mcp__hodos__", "^hodos[./:_]", "hodos.*(lesson\\.validate|job\\.report)"]
+}
