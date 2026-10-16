@@ -122,3 +122,9 @@ export interface Task {
 }
 
 export type Model = 'claude-opus-5-5' | 'claude-sonnet-5-5' | 'claude-haiku-5-5'
+
+export const OPENROUTER_MODELS: Record<Model, string> = {
+  'claude-opus-5-5': 'anthropic/claude-opus-5.5',
+  'claude-sonnet-5-5': 'anthropic/claude-sonnet-5.5',
+  'claude-haiku-5-5': 'anthropic/claude-haiku-5.5',
+}

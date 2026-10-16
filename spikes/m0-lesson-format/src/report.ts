@@ -1,7 +1,7 @@
 // Report: per-format validity, repair rounds and cost (the ticket's "Done when"), the K1-K6 gates, the decision,
 // and a re-quote for the full run built from measured token counts (§8.6 says to replace the assumptions).
 import { readJudgments, type Judgment } from './judge.ts'
-import { PRICES } from './cost.ts'
+import { RESERVE_PRICES } from './cost.ts'
 import { MAX_REPAIRS, type GenRecord } from './score.ts'
 import { cellMean, cellN, decide, pairedDiff, pairedDiffBy, scoreAll, THRESHOLDS, type Quality, type Scored } from './stats.ts'
 import { TASKS } from './tasks.ts'
@@ -15,6 +15,7 @@ const pct = (x: number) => (Number.isNaN(x) ? 'n/a' : `${(x * 100).toFixed(1)}%`
 const pp = (x: number) => (Number.isNaN(x) ? 'n/a' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(1)}pp`)
 const num = (x: number, d = 2) => (Number.isNaN(x) ? 'n/a' : x.toFixed(d))
 const usd = (x: number) => `$${x.toFixed(2)}`
+const usdActual = (x: number) => `$${x.toFixed(x < 0.01 ? 5 : 3)}`
 const short = (m: Model) => m.replace('claude-', '').replace('-5-5', ' 5.5')
 
 function mean(xs: number[]) {
@@ -32,7 +33,7 @@ export function qualityOf(scored: Scored[], judgments: Judgment[]): Quality | un
   return out
 }
 
-export function buildReport(args: { run: string; records: GenRecord[]; dir: string; q2prefM?: number; iterationUsed?: boolean }): string {
+export function buildReport(args: { run: string; records: GenRecord[]; dir: string; q2prefM?: number; iterationUsed?: boolean; totalSpendUSD?: number }): string {
   const { run, records, dir } = args
   const scored = scoreAll(records)
   const ok = records.filter((r) => r.status === 'ok')
@@ -40,6 +41,7 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
   const taskIds = new Set(scored.map((x) => x.task.id))
   const samples = Math.max(0, ...scored.map((x) => x.rec.sample))
   const full = taskIds.size === TASKS.length && samples >= 3
+  const reducedPilot = run === 'pilot'
   const judgments = readJudgments(dir)
   const quality = qualityOf(scored, judgments)
   if (quality && args.q2prefM !== undefined) quality.q2prefM = args.q2prefM
@@ -49,9 +51,13 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
   L.push(
     full
       ? `**Full run**: ${taskIds.size} tasks, ${samples} samples per cell.`
-      : `**PILOT / PARTIAL RUN**: ${taskIds.size} of ${TASKS.length} tasks, up to ${samples} sample(s) per cell. The K1-K6 thresholds assume the full 36 tasks x 3 samples, so nothing below is a verdict.`,
+      : reducedPilot
+        ? `**REDUCED PILOT / PARTIAL RUN**: ${taskIds.size} of ${TASKS.length} tasks, up to ${samples} sample(s) per cell. The planned reduced pilot uses 6 of the original 12 pilot tasks: one base task per domain; the 6 adversarial tasks were omitted to fit the $4.50 cumulative cap. The K1-K6 thresholds assume the full 36 tasks x 3 samples, so nothing below is a verdict.`
+        : `**OFFLINE OR PARTIAL RUN**: ${taskIds.size} of ${TASKS.length} tasks, up to ${samples} sample(s) per cell. The K1-K6 thresholds assume the full 36 tasks x 3 samples, so nothing below is a verdict.`,
     '',
     `${ok.length} finished generations, ${records.length - ok.length} unfinished (budget or API error, excluded). Spend so far: ${usd(spent)} on generation${judgments.length ? ` and ${usd(judgments.reduce((n, j) => n + j.costUSD, 0))} on judging` : ''}.`,
+    ...(args.totalSpendUSD !== undefined ? [`Cumulative OpenRouter spend recorded across smoke and generation: $${args.totalSpendUSD.toFixed(8)} of the $4.50 hard cap.`] : []),
+    '[Ten-output manual scoring spot-check](spot-check.md).',
     '',
   )
 
@@ -65,7 +71,7 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
       if (!n) continue
       const cost = mean(records.filter((r) => r.model === model && r.arm === arm && r.status === 'ok').map((r) => r.costUSD))
       L.push(
-        `| ${short(model)} | ${ARM_NAME[arm]} | ${n} | ${pct(cellMean(scored, model, arm, 'm1'))} | ${pct(cellMean(scored, model, arm, 'm2'))} | ${num(cellMean(scored, model, arm, 'm3'))} | ${pct(cellMean(scored, model, arm, 'm4'))} | ${pct(cellMean(scored, model, arm, 'm5first'))} | ${pct(cellMean(scored, model, arm, 'm6first'))} | ${Math.round(cellMean(scored, model, arm, 'm7'))} | ${usd(cost)} |`,
+        `| ${short(model)} | ${ARM_NAME[arm]} | ${n} | ${pct(cellMean(scored, model, arm, 'm1'))} | ${pct(cellMean(scored, model, arm, 'm2'))} | ${num(cellMean(scored, model, arm, 'm3'))} | ${pct(cellMean(scored, model, arm, 'm4'))} | ${pct(cellMean(scored, model, arm, 'm5first'))} | ${pct(cellMean(scored, model, arm, 'm6first'))} | ${Math.round(cellMean(scored, model, arm, 'm7'))} | ${usdActual(cost)} |`,
       )
     }
   L.push('', 'M3 counts a lesson that never reaches green as 3. M4 counts only drops the validator did not report; M4-any (reported or not) is in the table below.', '')
@@ -144,7 +150,7 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
     const cost = mean(rs.map((r) => r.costUSD))
     return { n: rs.length, inp, out, think, repaired, cost }
   }
-  L.push('Spec assumed 12k input and 6.7k output tokens per generation, with about 30% needing repair.', '', '| Model | n | Input tokens / gen | Output tokens / gen | of which thinking | Needed repair | $ / generation | Prompt-cache read share |', '|---|---|---|---|---|---|---|---|')
+  L.push('The $ / generation values below are actual OpenRouter-reported usage costs. Token metrics use OpenRouter usage; visible output token count is estimated locally because the OpenRouter chat endpoint has no count-only call.', '', '| Model | n | Input tokens / gen | Output tokens / gen | of which thinking | Needed repair | $ / generation | Prompt-cache read share |', '|---|---|---|---|---|---|---|---|')
   let quoteGen = 0
   for (const m of MODELS) {
     const g = perGen(m)
@@ -155,12 +161,12 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
     L.push(`| ${short(m)} | ${g.n} | ${Math.round(g.inp)} | ${Math.round(g.out)} | ${Number.isNaN(g.think) ? 'n/a' : Math.round(g.think)} | ${pct(g.repaired)} | ${usd(g.cost)} | ${pct(reads / (allIn || 1))} |`)
     quoteGen += g.cost * 216 // 36 tasks x 2 arms x 3 samples per model
   }
-  const judgeCost = judgments.length ? mean(judgments.map((j) => j.costUSD)) * 648 : (648 * (8000 * PRICES['claude-opus-5-5'].input + 800 * PRICES['claude-opus-5-5'].output)) / 1e6
+  const judgeCost = judgments.length ? mean(judgments.map((j) => j.costUSD)) * 648 : (648 * (8000 * RESERVE_PRICES['claude-opus-5-5'].input + 800 * RESERVE_PRICES['claude-opus-5-5'].output)) / 1e6
   const sub = quoteGen + judgeCost
   L.push(
     '',
     `**Quote for the full run** (216 generations per model, scaled from the measured cost per generation${judgments.length ? ' and measured judge cost' : '; judge cost still the spec assumption'}):`,
-    `generation ${usd(quoteGen)} + judge ${usd(judgeCost)} = ${usd(sub)}, plus 25% contingency = **${usd(sub * 1.25)}**. Hard cap from the ticket: $150.`,
+    `generation ${usd(quoteGen)} + judge ${usd(judgeCost)} = ${usd(sub)}, plus 25% contingency = **${usd(sub * 1.25)}**. This is a planning estimate from the reduced pilot; live cost uses OpenRouter's usage.cost. The $150 full-run cap is not approved or funded.`,
     '',
     '_Estimate rests on this run\'s mix of tasks; a pilot with fewer tasks than the full set can mis-estimate by tens of percent._',
     '',

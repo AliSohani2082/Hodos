@@ -1,16 +1,14 @@
-// CLI. Nothing here spends money unless `run` or `judge` is given an explicit --cap-usd.
+// CLI. Live calls require an explicit approved cap (hard maximum $4.50 for the reduced pilot).
 //   bun run src/cli.ts check                          validate the gold lesson of every task in both arms (free)
 //   bun run src/cli.ts quote [--tasks pilot|all]      estimate cost from measured prompt sizes (free)
-//   bun run src/cli.ts run --tasks pilot --cap-usd 7  generate + repair (spends money)
+//   bun run src/cli.ts run --tasks pilot --cap-usd 4.50  reduced pilot, cumulative with smoke
 //   bun run src/cli.ts stub [--tasks all]             full pipeline against the offline stub (free)
 //   bun run src/cli.ts smoke --cap-usd 0.05           one tiny Haiku call: checks credentials and the request shape
 //   bun run src/cli.ts count|judge|report|q2 ...
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { AnthropicLlm, type LlmClient } from './llm.ts'
-import { costOf, PRICES, worstCase } from './cost.ts'
+import { OpenRouterLlm, type LlmClient } from './llm.ts'
+import { costOf, RESERVE_PRICES, worstCase } from './cost.ts'
 import { writeResultsCsv } from './csv.ts'
-import { runJudge } from './judge.ts'
 import { print } from './print.ts'
 import { systemPrompt, taskPrompt } from './prompts.ts'
 import { exportPairs, scorePairs } from './q2.ts'
@@ -19,6 +17,7 @@ import { readRecords, runEval } from './runner.ts'
 import { StubLlm } from './stub.ts'
 import { approvedCap, recordedSpend } from './spend.ts'
 import { goldDoc } from './synth.ts'
+import { estimateTokens } from './score.ts'
 import { contextFor, loadPack, PILOT_TASK_IDS, TASKS, taskById } from './tasks.ts'
 import { validateLesson } from './validate.ts'
 import { blocksOf } from './shared-validate.ts'
@@ -32,12 +31,13 @@ const flag = (name: string): string | undefined => {
 }
 const has = (name: string) => args.includes(`--${name}`)
 const ALL_MODELS: Model[] = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5']
+const REDUCED_PILOT_TASK_IDS = PILOT_TASK_IDS.slice(0, 6)
 const RESULTS = new URL('../results/', import.meta.url).pathname
 
 function pickTasks(): Task[] {
   const v = flag('tasks') ?? 'pilot'
   if (v === 'all') return TASKS
-  if (v === 'pilot') return PILOT_TASK_IDS.map(taskById)
+  if (v === 'pilot') return REDUCED_PILOT_TASK_IDS.map(taskById)
   return v.split(',').map(taskById)
 }
 const pickModels = (): Model[] => (flag('models') ? (flag('models')!.split(',') as Model[]) : ALL_MODELS)
@@ -54,10 +54,8 @@ function liveCap(): number {
 }
 
 function requireCredentials() {
-  const hasEnv = !!(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN)
-  const hasProfile = existsSync(`${homedir()}/.config/anthropic`)
-  if (!hasEnv && !hasProfile)
-    die('No Anthropic credentials found. Set ANTHROPIC_API_KEY (or run `ant auth login`), then re-run. Nothing was sent.')
+  if (!process.env.OPENROUTER_API_KEY)
+    die('No OpenRouter credentials found. Set OPENROUTER_API_KEY in .env, then re-run. Nothing was sent.')
 }
 
 function runDir(def: string) {
@@ -93,7 +91,7 @@ async function main() {
       let total = 0
       console.log(`${tasks.length} tasks x ${pickArms().length} arms x ${models.length} models x ${samples} sample(s) = ${tasks.length * pickArms().length * models.length * samples} generations\n`)
       for (const model of models) {
-        const p = PRICES[model]
+        const p = RESERVE_PRICES[model]
         let cost = 0, n = 0
         for (const t of tasks)
           for (const arm of pickArms()) {
@@ -106,7 +104,7 @@ async function main() {
         console.log(`${model.padEnd(20)} ${String(n).padStart(4)} generations  ~$${cost.toFixed(2)}`)
       }
       console.log(`\nestimated generation cost ~$${total.toFixed(2)} (no prompt-cache discount, spec's output and repair assumptions)`)
-      console.log('Pilot first: replace these assumptions with measured tokens, then re-quote. The judge is extra (about 648 x ~$0.05).')
+      console.log('Quote uses published OpenRouter rates for planning; live cost comes from OpenRouter usage.cost.')
       return
     }
 
@@ -122,17 +120,19 @@ async function main() {
         if ((tasksFlag === 'all' || samples > 1) && !has('confirm-full'))
           die('This is the full-run shape (all tasks or >1 sample). It needs explicit budget approval: pass --confirm-full once the budget has been approved. Nothing was sent.')
         requireCredentials()
-        client = new AnthropicLlm()
+        client = new OpenRouterLlm()
       }
       const tasks = pickTasks()
       const samples = Number(flag('samples') ?? (flag('tasks') === 'all' ? 3 : 1))
+      if (!stub && (flag('tasks') === 'all' || samples > 1))
+        die('The full run is not approved or funded. Only the reduced pilot is authorized. Nothing was sent.')
       const dir = runDir(stub ? '_stub' : flag('tasks') === 'all' ? 'full' : 'pilot')
       const cap = stub ? 1e9 : liveCap()
       const spent = stub ? 0 : recordedSpend(RESULTS)
       const priorHere = stub ? 0 : readRecords(dir).reduce((n, r) => n + r.costUSD, 0)
       if (!stub && spent >= cap) die(`Recorded spend $${spent.toFixed(2)} has reached the approved cap $${cap.toFixed(2)}. Nothing was sent.`)
       console.log(`run dir: ${dir}  cap: $${cap}  tasks: ${tasks.length}  samples: ${samples}`)
-      const res = await runEval({ run: dir.split('/').pop()!, dir, tasks, models: pickModels(), arms: pickArms(), samples, capUSD: cap, initialSpentUSD: spent - priorHere, concurrency: Number(flag('concurrency') ?? 3), maxTokens: Number(flag('max-tokens') ?? 20000), client })
+      const res = await runEval({ run: dir.split('/').pop()!, dir, tasks, models: pickModels(), arms: pickArms(), samples, capUSD: cap, initialSpentUSD: spent - priorHere, concurrency: Number(flag('concurrency') ?? 1), maxTokens: Number(flag('max-tokens') ?? 6000), client })
       writeResultsCsv(dir, readRecords(dir))
       console.log(`\ndone: ${JSON.stringify(res)}`)
       return
@@ -144,33 +144,39 @@ async function main() {
       const model: Model = 'claude-haiku-5-5'
       const system = 'You are a connectivity check. Reply with the single word OK.'
       const user = 'Reply with the single word OK.'
-      const worst = worstCase(model, system.length + user.length, 2000)
+      const worst = worstCase(model, system.length + user.length, 1000)
       if (recordedSpend(RESULTS) + worst > cap) die('Smoke reservation exceeds the approved cumulative cap. Nothing was sent.')
-      const res = await new AnthropicLlm().complete({
-        model,
-        system,
-        turns: [{ role: 'user', content: user, cache: true }],
-        maxTokens: 2000,
-      })
+      let res
+      try {
+        res = await new OpenRouterLlm().complete({
+          model,
+          system,
+          turns: [{ role: 'user', content: user, cache: true }],
+          maxTokens: 1000,
+        })
+      } catch {
+        const smokeDir = `${RESULTS}smoke`
+        mkdirSync(smokeDir, { recursive: true })
+        appendFileSync(`${smokeDir}/smoke-spend.jsonl`, JSON.stringify({ costUSD: worst, estimated: true }) + '\n')
+        die('OpenRouter smoke call failed or omitted usage; worst-case reservation recorded to preserve the cumulative cap.')
+      }
       const cost = costOf(model, res.usage)
       const smokeDir = `${RESULTS}smoke`
       mkdirSync(smokeDir, { recursive: true })
       appendFileSync(`${smokeDir}/smoke-spend.jsonl`, JSON.stringify({ costUSD: cost }) + '\n')
       console.log(`reply: ${JSON.stringify(res.text.trim())}  stop: ${res.stopReason}  usage: ${JSON.stringify(res.usage)}  cost: $${cost.toFixed(5)}  ${res.ms}ms`)
       if (cost > cap) die(`cost $${cost} exceeded the cap`)
-      console.log('request shape accepted (adaptive thinking, effort medium, cache_control on system and user turn, streaming).')
+      console.log('OpenRouter request accepted (medium reasoning, streaming, and provider-reported usage cost).')
       return
     }
 
     case 'count': {
-      requireCredentials()
       const dir = runDir('pilot')
-      const client = new AnthropicLlm()
       const file = `${dir}/tokens.json`
       const have: Record<string, number> = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {}
       for (const r of readRecords(dir)) {
         if (r.status !== 'ok' || have[r.key] !== undefined) continue
-        have[r.key] = await client.countTokens!(r.model, r.rounds[r.rounds.length - 1]!.text)
+        have[r.key] = estimateTokens(r.rounds[r.rounds.length - 1]!.text)
       }
       writeFileSync(file, JSON.stringify(have))
       console.log(`counted ${Object.keys(have).length} lessons`)
@@ -178,15 +184,7 @@ async function main() {
     }
 
     case 'judge': {
-      const cap = liveCap()
-      requireCredentials()
-      const dir = runDir('full')
-      const spent = recordedSpend(RESULTS)
-      if (spent >= cap) die(`Recorded spend $${spent.toFixed(2)} has reached the approved cap $${cap.toFixed(2)}. Nothing was sent.`)
-      const judgedHere = existsSync(`${dir}/judgments.jsonl`) ? readFileSync(`${dir}/judgments.jsonl`, 'utf8').split('\n').filter(Boolean).reduce((n, l) => n + Number(JSON.parse(l).costUSD), 0) : 0
-      const out = await runJudge({ dir, records: readRecords(dir), client: new AnthropicLlm(), capUSD: cap, initialSpentUSD: spent - judgedHere, concurrency: Number(flag('concurrency') ?? 3) })
-      console.log(JSON.stringify(out))
-      return
+      die('Quality judging belongs to the unapproved full run. Nothing was sent.')
     }
 
     case 'report': {
@@ -194,7 +192,7 @@ async function main() {
       const records = readRecords(dir)
       if (!records.length) die(`no records in ${dir}`)
       const q2 = existsSync(`${dir}/q2-score.json`) ? (JSON.parse(readFileSync(`${dir}/q2-score.json`, 'utf8')).prefM as number) : undefined
-      const md = buildReport({ run: dir.split('/').pop()!, records, dir, q2prefM: q2, iterationUsed: has('iteration-used') })
+      const md = buildReport({ run: dir.split('/').pop()!, records, dir, q2prefM: q2, iterationUsed: has('iteration-used'), totalSpendUSD: recordedSpend(RESULTS) })
       mkdirSync(dir, { recursive: true })
       writeFileSync(`${dir}/report.md`, md)
       writeResultsCsv(dir, records)

@@ -1,6 +1,5 @@
-// Prices and the budget guard. Prices are the Claude API skill's cached table (2026-10-06), $ per million tokens.
-// ASSUMPTIONS to verify against the Console after the pilot: cache writes at 1.25x input (5-minute TTL), and the
-// Haiku 5.5 cache-read rate at 0.1x input. Opus 5.5 and Sonnet 5.5 cache reads are as listed in the skill.
+// Published OpenRouter rates are used only to reserve a conservative pre-call bound, never as measured cost.
+// Actual per-call cost is taken from OpenRouter's usage.cost response field.
 import type { Usage } from './score.ts'
 import type { Model } from './types.ts'
 
@@ -11,22 +10,24 @@ export interface Price {
   cacheRead: number
 }
 
-export const PRICES: Record<Model, Price> = {
+export const RESERVE_PRICES: Record<Model, Price> = {
   'claude-opus-5-5': { input: 4, output: 20, cacheWrite: 5, cacheRead: 0.2 },
   'claude-sonnet-5-5': { input: 2, output: 10, cacheWrite: 2.5, cacheRead: 0.2 },
   'claude-haiku-5-5': { input: 0.1, output: 0.5, cacheWrite: 0.125, cacheRead: 0.01 },
 }
+export const RESERVE_MARGIN = 1.15
 
 /** Output tokens include thinking tokens, which bill as output. */
 export function costOf(model: Model, u: Usage): number {
-  const p = PRICES[model]
+  if (u.costUSD !== undefined) return u.costUSD
+  const p = RESERVE_PRICES[model]
   return (u.input * p.input + u.output * p.output + u.cacheWrite * p.cacheWrite + u.cacheRead * p.cacheRead) / 1e6
 }
 
 /** Upper bound for one call: every input token billed at the cache-write rate, and max_tokens of output. */
 export function worstCase(model: Model, inputTokensUpperBound: number, maxTokens: number): number {
-  const p = PRICES[model]
-  return (inputTokensUpperBound * Math.max(p.input, p.cacheWrite) + maxTokens * p.output) / 1e6
+  const p = RESERVE_PRICES[model]
+  return ((inputTokensUpperBound * Math.max(p.input, p.cacheWrite) + maxTokens * p.output) / 1e6) * RESERVE_MARGIN
 }
 
 /**
@@ -46,6 +47,9 @@ export class Budget {
   settle(worst: number, actual: number) {
     this.inflight = Math.max(0, this.inflight - worst)
     this.spent += actual
+  }
+  release(worst: number) {
+    this.inflight = Math.max(0, this.inflight - worst)
   }
   get remaining() {
     return this.capUSD - this.spent - this.inflight

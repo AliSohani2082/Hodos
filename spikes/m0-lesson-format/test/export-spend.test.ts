@@ -19,8 +19,8 @@ test('CSV has generation metrics and usage, with empty scores for unfinished cel
 })
 
 test('hard cap rejects missing, invalid and over $150 values', () => {
-  expect(approvedCap('150')).toBe(150)
-  for (const value of [undefined, '0', '-1', '151', 'Infinity', 'oops'])
+  expect(approvedCap('4.50')).toBe(4.5)
+  for (const value of [undefined, '0', '-1', '4.51', 'Infinity', 'oops'])
     expect(() => approvedCap(value)).toThrow()
 })
 

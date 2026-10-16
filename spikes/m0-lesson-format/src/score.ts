@@ -13,6 +13,8 @@ export interface Usage {
   cacheRead: number
   /** Reasoning tokens included in `output` (from output_tokens_details), when the API reports them. */
   thinking?: number
+  /** Exact per-request USD cost returned by OpenRouter. */
+  costUSD?: number
 }
 
 export interface RoundRecord {

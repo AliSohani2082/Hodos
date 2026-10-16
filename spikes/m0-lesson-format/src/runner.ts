@@ -2,7 +2,7 @@
 // record every round. Resumable (JSONL, one record per finished generation) and budget-capped.
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { Budget, costOf, PRICES, worstCase } from './cost.ts'
+import { Budget, costOf, RESERVE_PRICES, worstCase } from './cost.ts'
 import type { LlmClient, Turn } from './llm.ts'
 import { examples, repairPrompt, syntaxSection, systemPrompt, taskPrompt } from './prompts.ts'
 import { MAX_REPAIRS, type GenRecord, type RoundRecord } from './score.ts'
@@ -50,7 +50,7 @@ export function extractLesson(text: string): string {
 const estimateInputTokens = (system: string, turns: Turn[]) =>
   Math.ceil((system.length + turns.reduce((n, t) => n + (typeof t.content === 'string' ? t.content.length : JSON.stringify(t.content).length), 0)) / 2.8)
 
-async function runOne(cfg: RunConfig, budget: Budget, model: Model, arm: Arm, task: Task, sample: number): Promise<GenRecord> {
+async function runOne(cfg: RunConfig, budget: Budget, model: Model, arm: Arm, task: Task, sample: number, firstReservation?: number): Promise<GenRecord> {
   const pack = loadPack(task.pack)
   const ctx = contextFor(task)
   const system = systemPrompt(arm, task.allowed)
@@ -58,14 +58,23 @@ async function runOne(cfg: RunConfig, budget: Budget, model: Model, arm: Arm, ta
   const rec: GenRecord = { key: keyOf(model, arm, task.id, sample), run: cfg.run, model, arm, taskId: task.id, sample, status: 'ok', rounds: [], costUSD: 0 }
 
   for (let i = 0; i <= MAX_REPAIRS; i++) {
-    const worst = worstCase(model, estimateInputTokens(system, turns), cfg.maxTokens)
-    if (!budget.tryReserve(worst)) { rec.status = 'budget'; break }
+    const worst = i === 0 && firstReservation !== undefined ? firstReservation : worstCase(model, estimateInputTokens(system, turns), cfg.maxTokens)
+    if (i === 0 && firstReservation !== undefined) {
+      if (budget.remaining < 0) {
+        budget.release(worst)
+        rec.status = 'budget'
+        break
+      }
+    } else if (!budget.tryReserve(worst)) { rec.status = 'budget'; break }
     let res
     try {
       res = await cfg.client.complete({ model, system, turns, maxTokens: cfg.maxTokens })
     } catch (err) {
-      budget.settle(worst, 0)
+      // A connection can fail after OpenRouter accepted and billed the request. Charge the reservation
+      // conservatively so resume cannot spend it a second time.
+      budget.settle(worst, worst)
       rec.status = 'error'
+      rec.costUSD = worst
       rec.error = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
       break
     }
@@ -99,11 +108,11 @@ export async function runEval(cfg: RunConfig) {
   const budget = new Budget(cfg.capUSD)
   budget.spent = (cfg.initialSpentUSD ?? 0) + prior.reduce((n, r) => n + r.costUSD, 0)
   if (!existsSync(`${cfg.dir}/run.json`))
-    writeFileSync(`${cfg.dir}/run.json`, JSON.stringify({ run: cfg.run, startedAt: new Date().toISOString(), models: cfg.models, arms: cfg.arms, tasks: cfg.tasks.map((t) => t.id), samples: cfg.samples, capUSD: cfg.capUSD, maxTokens: cfg.maxTokens, effort: 'medium', thinking: 'adaptive', prices: PRICES, promptFingerprint: promptFingerprint() }, null, 2))
+    writeFileSync(`${cfg.dir}/run.json`, JSON.stringify({ run: cfg.run, startedAt: new Date().toISOString(), provider: 'OpenRouter', models: cfg.models, arms: cfg.arms, tasks: cfg.tasks.map((t) => t.id), samples: cfg.samples, capUSD: cfg.capUSD, maxTokens: cfg.maxTokens, effort: 'medium', pricing: 'actual usage.cost from OpenRouter; published rates are used only for pre-call reservation', reservePrices: RESERVE_PRICES, promptFingerprint: promptFingerprint(), reducedPilot: cfg.run === 'pilot' ? { tasks: cfg.tasks.length, originalPilotTasks: 12, omittedAdversarialTasks: ['adv1', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6'] } : undefined }, null, 2))
 
-  // A group = (task, model, arm); its samples run in sequence so samples 2 and 3 hit the prompt cache.
-  const groups: { task: Task; model: Model; arm: Arm }[] = []
-  for (const task of cfg.tasks) for (const model of cfg.models) for (const arm of cfg.arms) groups.push({ task, model, arm })
+  // Reserve both syntax arms' first call before either starts, so the cap cannot leave a task/model pair one-sided.
+  const groups: { task: Task; model: Model }[] = []
+  for (const task of cfg.tasks) for (const model of cfg.models) groups.push({ task, model })
 
   const stats = { ran: 0, skipped: 0, budgetStopped: 0, errors: 0 }
   let next = 0
@@ -111,15 +120,32 @@ export async function runEval(cfg: RunConfig) {
     while (next < groups.length) {
       const g = groups[next++]!
       for (let s = 1; s <= cfg.samples; s++) {
-        const key = keyOf(g.model, g.arm, g.task.id, s)
-        if (done.has(key)) { stats.skipped++; continue }
-        const rec = await runOne(cfg, budget, g.model, g.arm, g.task, s)
-        if (rec.rounds.length) appendFileSync(file, JSON.stringify(rec) + '\n')
-        if (rec.status === 'ok') stats.ran++
-        else if (rec.status === 'budget') { stats.budgetStopped++; return }
-        else { stats.errors++; log(`  ERROR ${key}: ${rec.error}`) }
-        const last = rec.rounds[rec.rounds.length - 1]
-        log(`${rec.status.padEnd(6)} ${key}  rounds=${rec.rounds.length} stop=${last?.stopReason} cost=$${rec.costUSD.toFixed(3)} total=$${budget.spent.toFixed(2)}/${cfg.capUSD}`)
+        const arms = cfg.arms.filter((arm) => !done.has(keyOf(g.model, arm, g.task.id, s)))
+        if (arms.length !== cfg.arms.length) stats.skipped += cfg.arms.length - arms.length
+        if (!arms.length) continue
+        const reservations = new Map<Arm, number>()
+        const pack = loadPack(g.task.pack)
+        for (const arm of arms) {
+          const system = systemPrompt(arm, g.task.allowed)
+          const turns: Turn[] = [{ role: 'user', content: taskPrompt(g.task, pack), cache: true }]
+          const worst = worstCase(g.model, estimateInputTokens(system, turns), cfg.maxTokens)
+          if (!budget.tryReserve(worst)) {
+            for (const held of reservations.values()) budget.release(held)
+            stats.budgetStopped += arms.length
+            return
+          }
+          reservations.set(arm, worst)
+        }
+        for (const arm of arms) {
+          const key = keyOf(g.model, arm, g.task.id, s)
+          const rec = await runOne(cfg, budget, g.model, arm, g.task, s, reservations.get(arm))
+          if (rec.rounds.length || rec.costUSD > 0) appendFileSync(file, JSON.stringify(rec) + '\n')
+          if (rec.status === 'ok') stats.ran++
+          else if (rec.status === 'budget') { stats.budgetStopped++; return }
+          else { stats.errors++; log(`  ERROR ${key}: ${rec.error}`) }
+          const last = rec.rounds[rec.rounds.length - 1]
+          log(`${rec.status.padEnd(6)} ${key}  rounds=${rec.rounds.length} stop=${last?.stopReason} cost=$${rec.costUSD.toFixed(3)} total=$${budget.spent.toFixed(2)}/${cfg.capUSD}`)
+        }
       }
     }
   }

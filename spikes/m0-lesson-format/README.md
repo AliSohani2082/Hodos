@@ -10,8 +10,8 @@ From this directory, run `bun install` and then `bun run offline`. That one comm
 
 ## Live run and budget
 
-The pilot is 12 tasks × 2 arms × 3 models × 1 sample, quoted at about $7.06 before live measurements. The full run is 648 generations plus quality judging. Both require separate explicit budget approval. The CLI requires `--cap-usd`, refuses a cap above $150, and counts recorded spend across run directories. Put an approved `ANTHROPIC_API_KEY` in an untracked `.env` based on [.env.example](.env.example); never commit it. See [RUNNING.md](RUNNING.md) for smoke, pilot, full-run, scoring, and blind-check instructions.
+The user approved an OpenRouter smoke call and a **reduced pilot** within a hard cumulative cap of **$4.50**. The reduced pilot runs 6 base tasks (one per domain) × 2 arms × 3 models = 36 first-pass generations; it omits the 6 adversarial tasks from the original 12-task pilot. The full $150 run and judging are not approved or funded. `OPENROUTER_API_KEY` is stored in the ignored `.env`; the CLI refuses a cap above $4.50 and counts recorded spend across run directories. See [RUNNING.md](RUNNING.md) for commands and limitations.
 
 ## Status and decision
 
-The 36-task set and offline harness are complete. **PENDING:** the API key, pilot approval, measured pilot, separate full-run approval, full-run results, human blind check, and go/no-go. The decision record is [ADR 0001](../../docs/adr/0001-markdoc-lesson-ir.md), currently a skeleton. The user chose the spec's Anthropic-only design and unchanged K1–K6 thresholds before any live run; non-Anthropic reliability remains untested.
+The 36-task set and offline harness are complete. OpenRouter pilot authorization is in place; **PENDING:** smoke, reduced-pilot results and spend, full-run approval, full-run results, human blind check, and go/no-go. The decision record is [ADR 0001](../../docs/adr/0001-markdoc-lesson-ir.md). The user chose the spec's Anthropic-only design and unchanged K1–K6 thresholds; non-Anthropic reliability remains untested.

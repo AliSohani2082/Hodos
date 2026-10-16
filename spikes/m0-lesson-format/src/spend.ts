@@ -1,7 +1,7 @@
 // Spend shared by pilot, full, and judging. A new run name must not reset the ticket ceiling.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 
-export const HARD_CAP_USD = 150
+export const HARD_CAP_USD = 4.5
 
 export function recordedSpend(resultsDir: string): number {
   if (!existsSync(resultsDir)) return 0
@@ -24,6 +24,6 @@ export function recordedSpend(resultsDir: string): number {
 export function approvedCap(value: string | undefined): number {
   const cap = Number(value)
   if (!value || !Number.isFinite(cap) || cap <= 0 || cap > HARD_CAP_USD)
-    throw new Error(`An explicit --cap-usd between 0 and ${HARD_CAP_USD} is required`)
+    throw new Error(`An explicit --cap-usd between 0 and ${HARD_CAP_USD.toFixed(2)} is required`)
   return cap
 }
