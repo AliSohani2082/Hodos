@@ -1,0 +1,5473 @@
+{
+  "spike": "ALI-53",
+  "date": "2026-10-16",
+  "bun": "1.4.2",
+  "limits": {
+    "wallMs": 1500,
+    "cpuMs": 1000,
+    "memoryMB": 64,
+    "maxResultBytes": 262144,
+    "safetyRssMB": 600,
+    "cgroupMB": 256
+  },
+  "idleLoopJitterBaselineMs": 14,
+  "dummyWorld": {
+    "tcpPort": "ephemeral",
+    "lanIp": "host LAN address (not recorded)",
+    "note": "all canaries are random per run; no real service was contacted"
+  },
+  "rows": [
+    {
+      "candidate": "proc-bun",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "canary readable via /proc/371483/environ",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 28.5,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "canary file: READ; /etc/hostname (informational, may be the sandbox's own): readable",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 28.5,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "outside: WROTE; into own package: WROTE | host saw the file",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 28.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 10,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 31.8,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 32.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 33.4,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "got ALI38-FAKE-PG-s6aater2\r\n | host saw 1 connection(s)",
+      "ms": 4,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 36,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 36.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "uid=1000(ali2082) gid=1000(ali2082) groups=1000(ali2082),3(sys),90(network),951(i2c),967(nopasswdlogin),980(rfkill),982(users),983(video),984(uucp),985(storage),989(lp),992(input),995(audio),998(wheel)",
+      "ms": 26,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 40,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "Function ctor: typeof process=object | indirect eval: object | require: undefined",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 37.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "resolved: node:fs, node:net, node:child_process, node:os, bun:ffi, data:text/javascript, file:<canary>",
+      "ms": 7,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 39,
+        "cpuMs": 20,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "ALLOWED",
+      "detail": "own package.json readable",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 39.2,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 34 ms",
+      "ms": 1042,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 41.8,
+        "cpuMs": 1010,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 34
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1020 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 35 ms",
+      "ms": 1026,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 34.4,
+        "cpuMs": 1020,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 35
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "WITHIN LIMITS",
+      "detail": "false | recovery: ok in 1 ms",
+      "ms": 915,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 27.7,
+        "cpuMs": 900,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "engine finished the regex inside the wall limit",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 50 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 27.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 50
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 55 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 27.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 55
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host RSS watchdog killed the worker at 610 MB | recovery: ok in 39 ms",
+      "ms": 442,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 610.1,
+        "cpuMs": 450,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host emergency watchdog",
+      "recoveryMs": 39
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Out of memory | recovery: ok in 2 ms",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 28.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host RSS watchdog killed the worker at 607 MB | recovery: ok in 41 ms",
+      "ms": 430,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 606.8,
+        "cpuMs": 450,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host emergency watchdog",
+      "recoveryMs": 41
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded. | recovery: ok in 1 ms",
+      "ms": 10,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 36.3,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "too-large after 117 ms (worker killed) | recovery: ok in 46 ms",
+      "ms": 117,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 117.6,
+        "cpuMs": 120,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 46
+    },
+    {
+      "candidate": "proc-bun",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "UNCONTAINED",
+      "detail": "spawned 48 of 48 sleep processes  | recovery: ok in 4 ms",
+      "ms": 122,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 130.7,
+        "cpuMs": 20,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "pids cap (48 spawned, 49 alive)",
+      "recoveryMs": 4
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "canary readable via /proc/371483/environ",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 49.5,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "canary file: READ; /etc/hostname (informational, may be the sandbox's own): readable",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 49.5,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "outside: WROTE; into own package: WROTE | host saw the file",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 49.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 11,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 51,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 5,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 51.1,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 5,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 51.2,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "got ALI38-FAKE-PG-s6aater2\r\n | host saw 1 connection(s)",
+      "ms": 211,
+      "hostLoopStallMs": 16,
+      "metrics": {
+        "peakRssMB": 62.6,
+        "cpuMs": 250,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 62.6,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "uid=1000(ali2082) gid=1000(ali2082) groups=1000(ali2082),3(sys),90(network),951(i2c),967(nopasswdlogin),980(rfkill),982(users),983(video),984(uucp),985(storage),989(lp),992(input),995(audio),998(wheel)",
+      "ms": 68,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 66.1,
+        "cpuMs": 40,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "Function ctor: typeof process=object | indirect eval: object | require: undefined",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 63.1,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "resolved: node:fs, node:net, node:child_process, node:os, data:text/javascript",
+      "ms": 11,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 63.2,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "ALLOWED",
+      "detail": "own package.json readable",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 63.2,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 58 ms",
+      "ms": 1059,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 68.3,
+        "cpuMs": 1010,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 58
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 57 ms",
+      "ms": 1041,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 57,
+        "cpuMs": 1010,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 57
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1020 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 58 ms",
+      "ms": 1040,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 49.4,
+        "cpuMs": 1020,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 58
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 75 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 19,
+      "metrics": {
+        "peakRssMB": 49.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 75
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 74 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 25,
+      "metrics": {
+        "peakRssMB": 49.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 74
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (runtime heap limit; exit {\"code\":null,\"signal\":\"SIGKILL\"}) | recovery: ok in 132 ms",
+      "ms": 1519,
+      "hostLoopStallMs": 43,
+      "metrics": {
+        "peakRssMB": 49.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "runtime heap limit",
+      "recoveryMs": 132
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Invalid string length | recovery: ok in 1 ms",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 49.4,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host RSS watchdog killed the worker at 611 MB | recovery: ok in 68 ms",
+      "ms": 718,
+      "hostLoopStallMs": 15,
+      "metrics": {
+        "peakRssMB": 610.9,
+        "cpuMs": 760,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host emergency watchdog",
+      "recoveryMs": 68
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded | recovery: ok in 1 ms",
+      "ms": 7,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 50.3,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "too-large after 568 ms (worker killed) | recovery: ok in 67 ms",
+      "ms": 568,
+      "hostLoopStallMs": 336,
+      "metrics": {
+        "peakRssMB": 132.2,
+        "cpuMs": 240,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 67
+    },
+    {
+      "candidate": "proc-node",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "UNCONTAINED",
+      "detail": "spawned 48 of 48 sleep processes  | recovery: ok in 4 ms",
+      "ms": 69,
+      "hostLoopStallMs": 14,
+      "metrics": {
+        "peakRssMB": 148.2,
+        "cpuMs": 40,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "pids cap (48 spawned, 49 alive)",
+      "recoveryMs": 4
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: object, Bun: undefined)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.9,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary file: Error: Access to this API has been restricted. Use --allow-fs-read to manage permissions.; /etc/hostname (informational, may be the sandbox's own): Error: Access to this API has been restricted. Use --allow-fs-read to manage permissions.",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.9,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "outside: Error: Access to this API has been restricted. Use --allow-fs-write to manage permissions.; into own package: Error: Access to this API has been restricted. Use --allow-fs-write to manage permissions. | host saw no file",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.9,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 8,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 50.3,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 50.4,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 50.5,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "got ALI38-FAKE-PG-s6aater2\r\n | host saw 1 connection(s)",
+      "ms": 71,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 61.6,
+        "cpuMs": 80,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 61.7,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: Access to this API has been restricted. Use --allow-child-process to manage permissions.",
+      "ms": 6,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 62.1,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "Function ctor: typeof process=object | indirect eval: object | require: undefined",
+      "ms": 1,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 62.1,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "resolved: node:fs, node:net, node:child_process, node:os, data:text/javascript",
+      "ms": 33,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 62.2,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "ALLOWED",
+      "detail": "own package.json readable",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 62.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 61 ms",
+      "ms": 1062,
+      "hostLoopStallMs": 17,
+      "metrics": {
+        "peakRssMB": 67.4,
+        "cpuMs": 1010,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 61
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 102 ms",
+      "ms": 1045,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 56.2,
+        "cpuMs": 1010,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 102
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 62 ms",
+      "ms": 1040,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 48.7,
+        "cpuMs": 1010,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 62
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 68 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 19,
+      "metrics": {
+        "peakRssMB": 48.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 68
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 149 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 48.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 149
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (runtime heap limit; exit {\"code\":null,\"signal\":\"SIGKILL\"}) | recovery: ok in 143 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 20,
+      "metrics": {
+        "peakRssMB": 48.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "runtime heap limit",
+      "recoveryMs": 143
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Invalid string length | recovery: ok in 1 ms",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.8,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host RSS watchdog killed the worker at 609 MB | recovery: ok in 74 ms",
+      "ms": 489,
+      "hostLoopStallMs": 14,
+      "metrics": {
+        "peakRssMB": 608.9,
+        "cpuMs": 620,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host emergency watchdog",
+      "recoveryMs": 74
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded | recovery: ok in 1 ms",
+      "ms": 4,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 49.6,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "too-large after 650 ms (worker killed) | recovery: ok in 75 ms",
+      "ms": 650,
+      "hostLoopStallMs": 422,
+      "metrics": {
+        "peakRssMB": 131.6,
+        "cpuMs": 230,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 75
+    },
+    {
+      "candidate": "proc-node-perm",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "BLOCKED",
+      "detail": "spawned 0 of 48 sleep processes (last error: Error: Access to this API has been restricted. Use --allow-child-process to manage permissions.) | recovery: ok in 1 ms",
+      "ms": 10,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 51.3,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "no subprocess API",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "canary readable via /proc/371483/environ",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 27.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 7.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "canary file: READ; /etc/hostname (informational, may be the sandbox's own): readable",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 28,
+        "cpuMs": 10,
+        "peakCgroupMB": 7.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "outside: WROTE; into own package: WROTE | host saw the file",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 28.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 7.7,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 14,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 31.5,
+        "cpuMs": 10,
+        "peakCgroupMB": 8.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 32.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 8.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "connected and read banner | host saw 1 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 32.5,
+        "cpuMs": 10,
+        "peakCgroupMB": 8.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "got ALI38-FAKE-PG-s6aater2\r\n | host saw 1 connection(s)",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 35.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 8.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 35.9,
+        "cpuMs": 10,
+        "peakCgroupMB": 8.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "uid=1000(ali2082) gid=1000(ali2082) groups=1000(ali2082),3(sys),90(network),951(i2c),967(nopasswdlogin),980(rfkill),982(users),983(video),984(uucp),985(storage),989(lp),992(input),995(audio),998(wheel)",
+      "ms": 37,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 39.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "Function ctor: typeof process=object | indirect eval: object | require: undefined",
+      "ms": 2,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 37.3,
+        "cpuMs": 0,
+        "peakCgroupMB": 9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "ESCAPED",
+      "detail": "resolved: node:fs, node:net, node:child_process, node:os, bun:ffi, data:text/javascript, file:<canary>",
+      "ms": 5,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 38.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 9.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "ALLOWED",
+      "detail": "own package.json readable",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 38.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 9.3,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 77 ms",
+      "ms": 1095,
+      "hostLoopStallMs": 17,
+      "metrics": {
+        "peakRssMB": 41,
+        "cpuMs": 1010,
+        "peakCgroupMB": 9.3,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 77
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1020 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 99 ms",
+      "ms": 1202,
+      "hostLoopStallMs": 40,
+      "metrics": {
+        "peakRssMB": 34,
+        "cpuMs": 1020,
+        "peakCgroupMB": 7.3,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 99
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1020 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 210 ms",
+      "ms": 1223,
+      "hostLoopStallMs": 48,
+      "metrics": {
+        "peakRssMB": 27.3,
+        "cpuMs": 1020,
+        "peakCgroupMB": 7.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 210
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 81 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 75,
+      "metrics": {
+        "peakRssMB": 27.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 7.7,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 81
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1531 ms (worker killed) | recovery: ok in 121 ms",
+      "ms": 1531,
+      "hostLoopStallMs": 33,
+      "metrics": {
+        "peakRssMB": 27.7,
+        "cpuMs": 0,
+        "peakCgroupMB": 7.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 121
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (kernel cgroup OOM kill, peak 256 MB of 256 MB; exit {\"code\":null,\"signal\":\"SIGKILL\"}) | recovery: ok in 99 ms",
+      "ms": 351,
+      "hostLoopStallMs": 26,
+      "metrics": {
+        "peakRssMB": 266.9,
+        "cpuMs": 300,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "kernel cgroup OOM",
+      "recoveryMs": 99
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Out of memory | recovery: ok in 1 ms",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 28.3,
+        "cpuMs": 0,
+        "peakCgroupMB": 8.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (kernel cgroup OOM kill, peak 255.5 MB of 256 MB; exit {\"code\":null,\"signal\":\"SIGKILL\"}) | recovery: ok in 109 ms",
+      "ms": 250,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 275.7,
+        "cpuMs": 240,
+        "peakCgroupMB": 255.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "kernel cgroup OOM",
+      "recoveryMs": 109
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded. | recovery: ok in 2 ms",
+      "ms": 50,
+      "hostLoopStallMs": 14,
+      "metrics": {
+        "peakRssMB": 35.8,
+        "cpuMs": 30,
+        "peakCgroupMB": 12.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "too-large after 281 ms (worker killed) | recovery: ok in 97 ms",
+      "ms": 281,
+      "hostLoopStallMs": 46,
+      "metrics": {
+        "peakRssMB": 116.5,
+        "cpuMs": 210,
+        "peakCgroupMB": 92.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 97
+    },
+    {
+      "candidate": "proc-bun-cgroup",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "spawned 24 of 48 sleep processes (last error: no pid) | recovery: ok in 86 ms",
+      "ms": 26,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 82.9,
+        "cpuMs": 10,
+        "peakCgroupMB": 15,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "pids cap (24 spawned, 0 alive)",
+      "recoveryMs": 86
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: object, Bun: object)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 31.7,
+        "cpuMs": 0,
+        "peakCgroupMB": 8.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary file: Error: ENOENT: no such file or directory, open '/home/ali2082/orca/workspaces/hodos/ali-38-03-spike-b-cordis-on-bun-and-plugin-worker-isolation/spikes/m0-cordis-plugin; /etc/hostname (informational, may be the sandbox's own): Error: ENOENT: no such file or directory, open '/etc/hostname'",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 31.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 8.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "outside: Error: ENOENT: no such file or directory, open '/home/ali2082/orca/workspaces/hodos/ali-38-03-spike-b-cordis-on-bun-and-plugin-worker-isolation/spikes/m0-cordis-plugin; into own package: Error: EROFS: read-only file system, open '/plugin/package.json.pwned' | host saw no file",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 32.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 8.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: connect ECONNREFUSED 127.0.0.1:38523 | host saw 0 connection(s)",
+      "ms": 11,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 35,
+        "cpuMs": 20,
+        "peakCgroupMB": 8.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: connect ECONNREFUSED 192.168.1.101:38523 | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 36.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 8.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: connect ENOENT /run/user/1000/ali38-fake-runner-371483.sock | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 36.2,
+        "cpuMs": 0,
+        "peakCgroupMB": 8.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "TypeError: Unable to connect. Is the computer able to access the url? | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 36.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 9.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 36.8,
+        "cpuMs": 0,
+        "peakCgroupMB": 9.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "IN-SANDBOX",
+      "detail": "uid=1000 gid=1000 groups=1000,65534",
+      "ms": 10,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 38.3,
+        "cpuMs": 10,
+        "peakCgroupMB": 9.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "IN-SANDBOX",
+      "detail": "Function ctor: typeof process=object | indirect eval: object | require: undefined",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 41.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 9.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "IN-SANDBOX",
+      "detail": "resolved: node:fs, node:net, node:child_process, node:os, bun:ffi, data:text/javascript",
+      "ms": 4,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 42.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 10,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "ALLOWED",
+      "detail": "own package.json readable",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 42.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 10,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 174 ms",
+      "ms": 1107,
+      "hostLoopStallMs": 19,
+      "metrics": {
+        "peakRssMB": 45.2,
+        "cpuMs": 1010,
+        "peakCgroupMB": 10,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 174
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 183 ms",
+      "ms": 1033,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 37.8,
+        "cpuMs": 1010,
+        "peakCgroupMB": 9.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 183
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 95 ms",
+      "ms": 1044,
+      "hostLoopStallMs": 14,
+      "metrics": {
+        "peakRssMB": 31,
+        "cpuMs": 1010,
+        "peakCgroupMB": 8.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 95
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 172 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 20,
+      "metrics": {
+        "peakRssMB": 30.8,
+        "cpuMs": 0,
+        "peakCgroupMB": 8.7,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 172
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 171 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 31.2,
+        "cpuMs": 0,
+        "peakCgroupMB": 9.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 171
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (kernel cgroup OOM kill, peak 256 MB of 256 MB; exit {\"code\":null,\"signal\":\"SIGTERM\"}) | recovery: ok in 129 ms",
+      "ms": 212,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 277.1,
+        "cpuMs": 210,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "kernel cgroup OOM",
+      "recoveryMs": 129
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Out of memory | recovery: ok in 3 ms",
+      "ms": 3,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 32.4,
+        "cpuMs": 0,
+        "peakCgroupMB": 11.3,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 3
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (kernel cgroup OOM kill, peak 256 MB of 256 MB; exit {\"code\":null,\"signal\":\"SIGTERM\"}) | recovery: ok in 647 ms",
+      "ms": 465,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 279.2,
+        "cpuMs": 230,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "kernel cgroup OOM",
+      "recoveryMs": 647
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded. | recovery: ok in 11 ms",
+      "ms": 25,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 39.4,
+        "cpuMs": 30,
+        "peakCgroupMB": 15.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 11
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "too-large after 267 ms (worker killed) | recovery: ok in 147 ms",
+      "ms": 267,
+      "hostLoopStallMs": 28,
+      "metrics": {
+        "peakRssMB": 139.5,
+        "cpuMs": 190,
+        "peakCgroupMB": 115.3,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 147
+    },
+    {
+      "candidate": "proc-bun-bwrap",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "spawned 14 of 48 sleep processes (last error: no pid) | recovery: ok (after 1 retry) in 137 ms",
+      "ms": 40,
+      "hostLoopStallMs": 17,
+      "metrics": {
+        "peakRssMB": 72.8,
+        "cpuMs": 20,
+        "peakCgroupMB": 16.3,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "pids cap (14 spawned, 32 alive)",
+      "recoveryMs": 137
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: object, Bun: object)",
+      "ms": 8,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 27.7,
+        "cpuMs": 0,
+        "peakCgroupMB": 10.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary file: Error: ENOENT: no such file or directory, open '/home/ali2082/orca/workspaces/hodos/ali-38-03-spike-b-cordis-on-bun-and-plugin-worker-isolation/spikes/m0-cordis-plugin; /etc/hostname (informational, may be the sandbox's own): readable",
+      "ms": 6,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 27.7,
+        "cpuMs": 0,
+        "peakCgroupMB": 10.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "outside: Error: ENOENT: no such file or directory, open '/home/ali2082/orca/workspaces/hodos/ali-38-03-spike-b-cordis-on-bun-and-plugin-worker-isolation/spikes/m0-cordis-plugin; into own package: Error: EROFS: read-only file system, open '/plugin/package.json.pwned' | host saw no file",
+      "ms": 4,
+      "hostLoopStallMs": 26,
+      "metrics": {
+        "peakRssMB": 27.8,
+        "cpuMs": 10,
+        "peakCgroupMB": 10.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: connect ECONNREFUSED 127.0.0.1:38523 | host saw 0 connection(s)",
+      "ms": 62,
+      "hostLoopStallMs": 30,
+      "metrics": {
+        "peakRssMB": 31.3,
+        "cpuMs": 20,
+        "peakCgroupMB": 10.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: connect ECONNREFUSED 192.168.1.101:38523 | host saw 0 connection(s)",
+      "ms": 12,
+      "hostLoopStallMs": 36,
+      "metrics": {
+        "peakRssMB": 32,
+        "cpuMs": 20,
+        "peakCgroupMB": 11,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: connect ENOENT /run/user/1000/ali38-fake-runner-371483.sock | host saw 0 connection(s)",
+      "ms": 17,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 32,
+        "cpuMs": 0,
+        "peakCgroupMB": 11,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "TypeError: Unable to connect. Is the computer able to access the url? | host saw 0 connection(s)",
+      "ms": 4,
+      "hostLoopStallMs": 20,
+      "metrics": {
+        "peakRssMB": 32.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 11,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 5,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 36,
+        "cpuMs": 0,
+        "peakCgroupMB": 11.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "IN-SANDBOX",
+      "detail": "uid=0(root) gid=0(root) groups=0(root)",
+      "ms": 186,
+      "hostLoopStallMs": 43,
+      "metrics": {
+        "peakRssMB": 73.9,
+        "cpuMs": 20,
+        "peakCgroupMB": 12.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "IN-SANDBOX",
+      "detail": "Function ctor: typeof process=object | indirect eval: object | require: undefined",
+      "ms": 39,
+      "hostLoopStallMs": 15,
+      "metrics": {
+        "peakRssMB": 37.4,
+        "cpuMs": 0,
+        "peakCgroupMB": 17.7,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "IN-SANDBOX",
+      "detail": "resolved: node:fs, node:net, node:child_process, node:os, bun:ffi, data:text/javascript",
+      "ms": 78,
+      "hostLoopStallMs": 43,
+      "metrics": {
+        "peakRssMB": 38.2,
+        "cpuMs": 20,
+        "peakCgroupMB": 22.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "ALLOWED",
+      "detail": "own package.json readable",
+      "ms": 30,
+      "hostLoopStallMs": 15,
+      "metrics": {
+        "peakRssMB": 38.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 22.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      }
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 894 ms",
+      "ms": 1295,
+      "hostLoopStallMs": 89,
+      "metrics": {
+        "peakRssMB": 40.5,
+        "cpuMs": 1010,
+        "peakCgroupMB": 22.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-5b2cb5eNb1f2adNe4cNfNeNa2aa93fNb08d8.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 894
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1020 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 924 ms",
+      "ms": 1126,
+      "hostLoopStallMs": 37,
+      "metrics": {
+        "peakRssMB": 33.5,
+        "cpuMs": 1020,
+        "peakCgroupMB": 8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-4aa55d9aNacNcf4d72d58eNcNc9b2aNa82d4ffa0ebNbac54f.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 924
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 904 ms",
+      "ms": 1179,
+      "hostLoopStallMs": 36,
+      "metrics": {
+        "peakRssMB": 27.2,
+        "cpuMs": 1010,
+        "peakCgroupMB": 7.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Ncce94fcNa43cf2caNfc8deeNafeceNc1cNcfNdN.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 904
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 811 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 25,
+      "metrics": {
+        "peakRssMB": 27.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 7.3,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-98c1eNe5dNa2cc2c34bbNafNeNeNe22bNcN.scope/container"
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 811
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (worker killed) | recovery: ok in 1110 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 26.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 7.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-fbNfc16b23e97ba07fNbNc82cNfNe0d2aNcfNaca7.scope/container"
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 1110
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (kernel cgroup OOM kill, peak 256 MB of 256 MB; exit {\"code\":137,\"signal\":null}) | recovery: ok in 623 ms",
+      "ms": 397,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 271.6,
+        "cpuMs": 230,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Na90cNaNac8edbdaf8aNc3fNff3cNd9daNc2e3.scope/container"
+      },
+      "limitEnforcedBy": "kernel cgroup OOM",
+      "recoveryMs": 623
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Out of memory | recovery: ok in 1 ms",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 27.7,
+        "cpuMs": 0,
+        "peakCgroupMB": 10.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-e0deNbfed5aNa17abNc36cc10ad19ef17c3ebNe7bafb0d.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (kernel cgroup OOM kill, peak 256 MB of 256 MB; exit {\"code\":137,\"signal\":null}) | recovery: ok in 604 ms",
+      "ms": 408,
+      "hostLoopStallMs": 15,
+      "metrics": {
+        "peakRssMB": 274.6,
+        "cpuMs": 270,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-e0deNbfed5aNa17abNc36cc10ad19ef17c3ebNe7bafb0d.scope/container"
+      },
+      "limitEnforcedBy": "kernel cgroup OOM",
+      "recoveryMs": 604
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded. | recovery: ok in 1 ms",
+      "ms": 18,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 35.4,
+        "cpuMs": 20,
+        "peakCgroupMB": 14.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-55a30fa5de57cNdNfc6bNaaa11d0c2a15fd74dNfNf3fNc.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "too-large after 182 ms (worker killed) | recovery: ok in 634 ms",
+      "ms": 182,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 136,
+        "cpuMs": 180,
+        "peakCgroupMB": 115,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-55a30fa5de57cNdNfc6bNaaa11d0c2a15fd74dNfNf3fNc.scope/container"
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 634
+    },
+    {
+      "candidate": "proc-bun-podman",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "spawned 24 of 48 sleep processes (last error: no pid) | recovery: ok (after 1 retry) in 101363 ms",
+      "ms": 23,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 71.9,
+        "cpuMs": 20,
+        "peakCgroupMB": 13.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-NecdNa7c12fNdNa56dddeNfNa3bNd5fff10d.scope/container"
+      },
+      "limitEnforcedBy": "pids cap (24 spawned, 1 alive)",
+      "recoveryMs": 101363
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: undefined, Bun: undefined)",
+      "ms": 13,
+      "hostLoopStallMs": 19,
+      "metrics": {
+        "hostRssGrowthMB": 1.4
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs",
+      "ms": 4,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs | host saw no file",
+      "ms": 5,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 18,
+      "metrics": {
+        "hostRssGrowthMB": -1
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 4,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no fetch global | host saw 0 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "hostRssGrowthMB": -1.4
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no child_process",
+      "ms": 2,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Function ctor: typeof process=undefined | indirect eval: undefined | require: undefined",
+      "ms": 6,
+      "hostLoopStallMs": 16,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "nothing resolved",
+      "ms": 4,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0.1
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "NO ACCESS",
+      "detail": "no fs at all (own files arrive as module source, not via fs)",
+      "ms": 6,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      }
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED (BLOCKS HOST EVENT LOOP)",
+      "detail": "quickjs deadline while pumping jobs | recovery: ok in 2 ms",
+      "ms": 1501,
+      "hostLoopStallMs": 1502,
+      "metrics": {
+        "hostRssGrowthMB": 8.4
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED (BLOCKS HOST EVENT LOOP)",
+      "detail": "InternalError: interrupted | recovery: ok in 15 ms",
+      "ms": 1501,
+      "hostLoopStallMs": 1501,
+      "metrics": {
+        "hostRssGrowthMB": -1.8
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 15
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED (BLOCKS HOST EVENT LOOP)",
+      "detail": "quickjs deadline while pumping jobs | recovery: ok in 0 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 1500,
+      "metrics": {
+        "hostRssGrowthMB": 1.3
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 0
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "promise can never settle (no pending jobs, no timers in QuickJS) | recovery: ok in 0 ms",
+      "ms": 0,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 0
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "ReferenceError: 'setTimeout' is not defined | recovery: ok in 0 ms",
+      "ms": 0,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 0
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "SLOW (BLOCKS HOST EVENT LOOP)",
+      "detail": "quickjs deadline while pumping jobs | recovery: ok in 0 ms",
+      "ms": 8744,
+      "hostLoopStallMs": 8745,
+      "metrics": {
+        "hostRssGrowthMB": 1939.1
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 0
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "InternalError: string too long | recovery: ok in 0 ms",
+      "ms": 7,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 0
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "InternalError: out of memory | recovery: ok in 0 ms",
+      "ms": 250,
+      "hostLoopStallMs": 250,
+      "metrics": {
+        "hostRssGrowthMB": 98.6
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 0
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "InternalError: stack overflow | recovery: ok in 0 ms",
+      "ms": 12,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "hostRssGrowthMB": 3.8
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 0
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED (BLOCKS HOST EVENT LOOP)",
+      "detail": "response 20971663 bytes | recovery: ok in 0 ms",
+      "ms": 1647,
+      "hostLoopStallMs": 1647,
+      "metrics": {
+        "hostRssGrowthMB": 19.2
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 0
+    },
+    {
+      "candidate": "quickjs-inproc",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "BLOCKED",
+      "detail": "no child_process | recovery: ok in 0 ms",
+      "ms": 0,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "hostRssGrowthMB": 0
+      },
+      "limitEnforcedBy": "no subprocess API",
+      "recoveryMs": 0
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: undefined, Bun: undefined)",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 58.8,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs | host saw no file",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 55.1,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 55.2,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no fetch global | host saw 0 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 52,
+      "metrics": {
+        "peakRssMB": 55.2,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 217,
+      "hostLoopStallMs": 217,
+      "metrics": {
+        "peakRssMB": 55.2,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no child_process",
+      "ms": 655,
+      "hostLoopStallMs": 484,
+      "metrics": {
+        "peakRssMB": 55.2,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Function ctor: typeof process=undefined | indirect eval: undefined | require: undefined",
+      "ms": 2622,
+      "hostLoopStallMs": 2728,
+      "metrics": {
+        "peakRssMB": 55.2,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "nothing resolved",
+      "ms": 80,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 55.4,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "NO ACCESS",
+      "detail": "no fs at all (own files arrive as module source, not via fs)",
+      "ms": 3,
+      "hostLoopStallMs": 20,
+      "metrics": {
+        "peakRssMB": 55.4,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "LimitError: quickjs deadline while pumping jobs | recovery: ok in 67 ms",
+      "ms": 2343,
+      "hostLoopStallMs": 1349,
+      "metrics": {
+        "peakRssMB": 68,
+        "cpuMs": 300,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 67
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "InternalError: interrupted | recovery: ok in 53 ms",
+      "ms": 1851,
+      "hostLoopStallMs": 480,
+      "metrics": {
+        "peakRssMB": 66.7,
+        "cpuMs": 200,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 53
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1900 ms (worker killed) | recovery: ok in 112 ms",
+      "ms": 1900,
+      "hostLoopStallMs": 308,
+      "metrics": {
+        "peakRssMB": 60.1,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 112
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "LimitError: promise can never settle (no pending jobs, no timers in QuickJS) | recovery: ok in 1 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 59.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "ReferenceError: 'setTimeout' is not defined | recovery: ok in 1 ms",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 55.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1040 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 137 ms",
+      "ms": 1108,
+      "hostLoopStallMs": 18,
+      "metrics": {
+        "peakRssMB": 375.9,
+        "cpuMs": 1040,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 137
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "InternalError: string too long | recovery: ok in 1 ms",
+      "ms": 11,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 58.3,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host RSS watchdog killed the worker at 604 MB | recovery: ok in 165 ms",
+      "ms": 655,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 604.1,
+        "cpuMs": 590,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host emergency watchdog",
+      "recoveryMs": 165
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "InternalError: stack overflow | recovery: ok in 1 ms",
+      "ms": 16,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 68,
+        "cpuMs": 60,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1930 ms (worker killed) | recovery: ok in 9939 ms",
+      "ms": 1930,
+      "hostLoopStallMs": 330,
+      "metrics": {
+        "peakRssMB": 66.5,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 9939
+    },
+    {
+      "candidate": "quickjs-bun",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "BLOCKED",
+      "detail": "no child_process | recovery: ok in 69 ms",
+      "ms": 7,
+      "hostLoopStallMs": 25,
+      "metrics": {
+        "peakRssMB": 51.9,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "no subprocess API",
+      "recoveryMs": 69
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: undefined, Bun: undefined)",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.8,
+        "cpuMs": 10,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs | host saw no file",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 47.8,
+        "cpuMs": 10,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 47.8,
+        "cpuMs": 0,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 47.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 3,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 48,
+        "cpuMs": 0,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no fetch global | host saw 0 connection(s)",
+      "ms": 20,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 48,
+        "cpuMs": 0,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 9,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.1,
+        "cpuMs": 10,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no child_process",
+      "ms": 1,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 48.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Function ctor: typeof process=undefined | indirect eval: undefined | require: undefined",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "nothing resolved",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.3,
+        "cpuMs": 10,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "NO ACCESS",
+      "detail": "no fs at all (own files arrive as module source, not via fs)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.3,
+        "cpuMs": 0,
+        "peakCgroupMB": 19.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      }
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1030 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 547 ms",
+      "ms": 1263,
+      "hostLoopStallMs": 44,
+      "metrics": {
+        "peakRssMB": 64.4,
+        "cpuMs": 1030,
+        "peakCgroupMB": 34.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-3bd9eNdbfNbeNdbcddNbfNbNdc0faNbNa7.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 547
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 459 ms",
+      "ms": 1197,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 61.8,
+        "cpuMs": 1020,
+        "peakCgroupMB": 29,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-1a09a94d0eNd4c28d9eNdfc3ffeNd43c3c7a26eNabe54.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 459
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 405 ms",
+      "ms": 1209,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 51.1,
+        "cpuMs": 1010,
+        "peakCgroupMB": 19.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nca8aNe1eNbae00e3cadNccNf72cfdcNa33ae1f8.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 405
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "LimitError: promise can never settle (no pending jobs, no timers in QuickJS) | recovery: ok in 1 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-aa8effdbb6c5ab9adac52db2a4c8bc8fbc9dNedcd2d8e5c38eNee28d4d.scope/container"
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "ReferenceError: 'setTimeout' is not defined | recovery: ok in 1 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.6,
+        "cpuMs": 10,
+        "peakCgroupMB": 18.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-aa8effdbb6c5ab9adac52db2a4c8bc8fbc9dNedcd2d8e5c38eNee28d4d.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (kernel cgroup OOM kill, peak 256 MB of 256 MB; exit {\"code\":137,\"signal\":null}) | recovery: ok in 329 ms",
+      "ms": 849,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 289.1,
+        "cpuMs": 610,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-aa8effdbb6c5ab9adac52db2a4c8bc8fbc9dNedcd2d8e5c38eNee28d4d.scope/container"
+      },
+      "limitEnforcedBy": "kernel cgroup OOM",
+      "recoveryMs": 329
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "InternalError: string too long | recovery: ok in 4 ms",
+      "ms": 13,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 50.2,
+        "cpuMs": 30,
+        "peakCgroupMB": 19.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-NfNb30bfNe7fd1b4fcfNed3a92fNeNbNcNddN.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 4
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "worker died from memory exhaustion (kernel cgroup OOM kill, peak 256 MB of 256 MB; exit {\"code\":137,\"signal\":null}) | recovery: ok in 331 ms",
+      "ms": 634,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 287.7,
+        "cpuMs": 320,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-NfNb30bfNe7fd1b4fcfNed3a92fNeNbNcNddN.scope/container"
+      },
+      "limitEnforcedBy": "kernel cgroup OOM",
+      "recoveryMs": 331
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "InternalError: stack overflow | recovery: ok in 1 ms",
+      "ms": 29,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 59,
+        "cpuMs": 60,
+        "peakCgroupMB": 26.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-c3c3b93eNdac0baeNab9dNfNddcNadf2a12c6cdfNcbc1c3.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 632 ms",
+      "ms": 1585,
+      "hostLoopStallMs": 14,
+      "metrics": {
+        "peakRssMB": 113.3,
+        "cpuMs": 1020,
+        "peakCgroupMB": 80.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-c3c3b93eNdac0baeNab9dNfNddcNadf2a12c6cdfNcbc1c3.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 632
+    },
+    {
+      "candidate": "quickjs-bun-podman",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "BLOCKED",
+      "detail": "no child_process | recovery: ok in 1 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 48.8,
+        "cpuMs": 10,
+        "peakCgroupMB": 19.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Na33c6dbNf0bfNf0dNbcNaNccff5e2aNd4fdNcabc.scope/container"
+      },
+      "limitEnforcedBy": "no subprocess API",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: undefined, Bun: undefined)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs | host saw no file",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no fetch global | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.7,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no child_process",
+      "ms": 5,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.8,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Function ctor: typeof process=undefined | indirect eval: undefined | require: undefined",
+      "ms": 7,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 57.9,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "nothing resolved",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.9,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "NO ACCESS",
+      "detail": "no fs at all (own files arrive as module source, not via fs)",
+      "ms": 2,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 57.9,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1020 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 63 ms",
+      "ms": 1072,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 63.2,
+        "cpuMs": 1020,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 63
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 72 ms",
+      "ms": 1057,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 65,
+        "cpuMs": 1010,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 72
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 86 ms",
+      "ms": 1034,
+      "hostLoopStallMs": 25,
+      "metrics": {
+        "peakRssMB": 57.5,
+        "cpuMs": 1010,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 86
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "LimitError: ivm wall watchdog fired | recovery: ok in 4 ms",
+      "ms": 1753,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 57.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 4
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "ReferenceError: setTimeout is not defined | recovery: ok in 2 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 58.7,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "LimitError: Isolate was disposed during execution due to memory limit | recovery: ok in 1 ms",
+      "ms": 556,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 116.8,
+        "cpuMs": 570,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Invalid string length | recovery: ok in 1 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 59.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Array buffer allocation failed | recovery: ok in 3 ms",
+      "ms": 64,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 109.4,
+        "cpuMs": 80,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 3
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded | recovery: ok in 1 ms",
+      "ms": 19,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 117.4,
+        "cpuMs": 20,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "too-large after 271 ms (worker killed) | recovery: ok in 76 ms",
+      "ms": 271,
+      "hostLoopStallMs": 50,
+      "metrics": {
+        "peakRssMB": 177.5,
+        "cpuMs": 220,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 76
+    },
+    {
+      "candidate": "ivm-node",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "BLOCKED",
+      "detail": "no child_process | recovery: ok in 1 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.5,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "no subprocess API",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: undefined, Bun: undefined)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs | host saw no file",
+      "ms": 1,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 54.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.3,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no fetch global | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 10,
+        "peakCgroupMB": 18.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no cloudflare:sockets module | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.7,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no child_process",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.8,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Function ctor: typeof process=undefined | indirect eval: undefined | require: undefined",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "nothing resolved",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "NO ACCESS",
+      "detail": "no fs at all (own files arrive as module source, not via fs)",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      }
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 1218 ms",
+      "ms": 1134,
+      "hostLoopStallMs": 31,
+      "metrics": {
+        "peakRssMB": 60.2,
+        "cpuMs": 1010,
+        "peakCgroupMB": 18.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-dfce72a1aNcadecfNb62fcNb2f24dNd3ebNce.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 1218
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 415 ms",
+      "ms": 1036,
+      "hostLoopStallMs": 17,
+      "metrics": {
+        "peakRssMB": 63.8,
+        "cpuMs": 1010,
+        "peakCgroupMB": 20.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-de0eNbaedffa4ecfeef99cb5aef14dab2acdNd6aNabNfe.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 415
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms of CPU used, budget 1000 ms): worker killed | recovery: ok in 409 ms",
+      "ms": 1033,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 56.4,
+        "cpuMs": 1020,
+        "peakCgroupMB": 19.7,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-31ebNfNaNecNdNa62e3ff5c9cNd8fNdd1c1f3a1c6.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 409
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "LimitError: ivm wall watchdog fired | recovery: ok in 3 ms",
+      "ms": 1753,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 56.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 17.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nb67da72a00b6bNf29eNf72dc7a84c71dNd43cNc.scope/container"
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 3
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "ReferenceError: setTimeout is not defined | recovery: ok in 2 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nb67da72a00b6bNf29eNf72dc7a84c71dNd43cNc.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "LimitError: Isolate was disposed during execution due to memory limit | recovery: ok in 2 ms",
+      "ms": 631,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 115.8,
+        "cpuMs": 440,
+        "peakCgroupMB": 79.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nb67da72a00b6bNf29eNf72dc7a84c71dNd43cNc.scope/container"
+      },
+      "limitEnforcedBy": "engine limit",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Invalid string length | recovery: ok in 2 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 58.8,
+        "cpuMs": 0,
+        "peakCgroupMB": 79.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nb67da72a00b6bNf29eNf72dc7a84c71dNd43cNc.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Array buffer allocation failed | recovery: ok in 1 ms",
+      "ms": 56,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 108.5,
+        "cpuMs": 70,
+        "peakCgroupMB": 79.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nb67da72a00b6bNf29eNf72dc7a84c71dNd43cNc.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded | recovery: ok in 1 ms",
+      "ms": 14,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 116.4,
+        "cpuMs": 20,
+        "peakCgroupMB": 79.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nb67da72a00b6bNf29eNf72dc7a84c71dNd43cNc.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "too-large after 624 ms (worker killed) | recovery: ok in 392 ms",
+      "ms": 624,
+      "hostLoopStallMs": 499,
+      "metrics": {
+        "peakRssMB": 188.2,
+        "cpuMs": 130,
+        "peakCgroupMB": 149.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nb67da72a00b6bNf29eNf72dc7a84c71dNd43cNc.scope/container"
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 392
+    },
+    {
+      "candidate": "ivm-node-podman",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "BLOCKED",
+      "detail": "no child_process | recovery: ok in 1 ms",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 56.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 16.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-a7fNa4cad54fNaa6c1afef15ad3bf17eba6bNaa22e6bbNeN.scope/container"
+      },
+      "limitEnforcedBy": "no subprocess API",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "workerd",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: undefined, Bun: undefined)",
+      "ms": 6,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 46.8,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs",
+      "ms": 856,
+      "hostLoopStallMs": 857,
+      "metrics": {
+        "peakRssMB": 46.8,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs | host saw no file",
+      "ms": 64,
+      "hostLoopStallMs": 69,
+      "metrics": {
+        "peakRssMB": 46.8,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 194,
+      "metrics": {
+        "peakRssMB": 46.8,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 588,
+      "hostLoopStallMs": 589,
+      "metrics": {
+        "peakRssMB": 46.9,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 3902,
+      "hostLoopStallMs": 3430,
+      "metrics": {
+        "peakRssMB": 46.9,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "got outbound denied | host saw 0 connection(s)",
+      "ms": 1230,
+      "hostLoopStallMs": 1581,
+      "metrics": {
+        "peakRssMB": 47.9,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: jsg.Error: proxy request failed, cannot connect to the specified address | host saw 0 connection(s)",
+      "ms": 685,
+      "hostLoopStallMs": 648,
+      "metrics": {
+        "peakRssMB": 50.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no child_process",
+      "ms": 814,
+      "hostLoopStallMs": 814,
+      "metrics": {
+        "peakRssMB": 50.7,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Function ctor: EvalError: Code generation from strings disallowed for this context | indirect eval: EvalError: Code generation from strings disallowed for this context | require: EvalError: Code generation from strings disallowed for this context",
+      "ms": 959,
+      "hostLoopStallMs": 1278,
+      "metrics": {
+        "peakRssMB": 50.8,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "resolved: cloudflare:sockets",
+      "ms": 568,
+      "hostLoopStallMs": 568,
+      "metrics": {
+        "peakRssMB": 51.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "NO ACCESS",
+      "detail": "no fs at all (own files arrive as module source, not via fs)",
+      "ms": 205,
+      "hostLoopStallMs": 204,
+      "metrics": {
+        "peakRssMB": 51.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      }
+    },
+    {
+      "candidate": "workerd",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "SLOW",
+      "detail": "timeout after 3745 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok in 15635 ms",
+      "ms": 3745,
+      "hostLoopStallMs": 3392,
+      "metrics": {
+        "peakRssMB": 58.3,
+        "cpuMs": 170,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 15635
+    },
+    {
+      "candidate": "workerd",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "SLOW",
+      "detail": "timeout after 4007 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok (after 1 retry) in 10900 ms",
+      "ms": 4007,
+      "hostLoopStallMs": 2609,
+      "metrics": {
+        "peakRssMB": 59.6,
+        "cpuMs": 110,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 10900
+    },
+    {
+      "candidate": "workerd",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1522 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok in 5932 ms",
+      "ms": 1522,
+      "hostLoopStallMs": 834,
+      "metrics": {
+        "peakRssMB": 55.5,
+        "cpuMs": 170,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 5932
+    },
+    {
+      "candidate": "workerd",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "HTTP 500: Internal Server Error | recovery: ok in 3 ms",
+      "ms": 278,
+      "hostLoopStallMs": 825,
+      "metrics": {
+        "peakRssMB": 56.2,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 3
+    },
+    {
+      "candidate": "workerd",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 2457 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok in 11795 ms",
+      "ms": 2457,
+      "hostLoopStallMs": 1427,
+      "metrics": {
+        "peakRssMB": 56.3,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 11795
+    },
+    {
+      "candidate": "workerd",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1775 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok (after 1 retry) in 1297 ms",
+      "ms": 1775,
+      "hostLoopStallMs": 1474,
+      "metrics": {
+        "peakRssMB": 573.9,
+        "cpuMs": 790,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 1297
+    },
+    {
+      "candidate": "workerd",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Invalid string length | recovery: ok in 955 ms",
+      "ms": 1202,
+      "hostLoopStallMs": 325,
+      "metrics": {
+        "peakRssMB": 53.6,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 955
+    },
+    {
+      "candidate": "workerd",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1602 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok in 7577 ms",
+      "ms": 1602,
+      "hostLoopStallMs": 343,
+      "metrics": {
+        "peakRssMB": 198.3,
+        "cpuMs": 100,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 7577
+    },
+    {
+      "candidate": "workerd",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded | recovery: ok in 6 ms",
+      "ms": 65,
+      "hostLoopStallMs": 54,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 10,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 6
+    },
+    {
+      "candidate": "workerd",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "SLOW",
+      "detail": "timeout after 3664 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok in 14867 ms",
+      "ms": 3664,
+      "hostLoopStallMs": 2686,
+      "metrics": {
+        "peakRssMB": 135,
+        "cpuMs": 130,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 14867
+    },
+    {
+      "candidate": "workerd",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "BLOCKED",
+      "detail": "no child_process | recovery: ok in 4 ms",
+      "ms": 1741,
+      "hostLoopStallMs": 1741,
+      "metrics": {
+        "peakRssMB": 52.3,
+        "cpuMs": 0,
+        "peakCgroupMB": null,
+        "oomKills": null,
+        "cgroup": null
+      },
+      "limitEnforcedBy": "no subprocess API",
+      "recoveryMs": 4
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: undefined, Bun: undefined)",
+      "ms": 964,
+      "hostLoopStallMs": 576,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 20.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs",
+      "ms": 396,
+      "hostLoopStallMs": 396,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 10,
+        "peakCgroupMB": 20.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs | host saw no file",
+      "ms": 1070,
+      "hostLoopStallMs": 2243,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 20.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 283,
+      "hostLoopStallMs": 288,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 20.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 4,
+      "hostLoopStallMs": 30,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 20.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 17,
+      "hostLoopStallMs": 135,
+      "metrics": {
+        "peakRssMB": 54.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 20.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "got outbound denied | host saw 0 connection(s)",
+      "ms": 689,
+      "hostLoopStallMs": 433,
+      "metrics": {
+        "peakRssMB": 55.3,
+        "cpuMs": 10,
+        "peakCgroupMB": 27.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: jsg.Error: proxy request failed, cannot connect to the specified address | host saw 0 connection(s)",
+      "ms": 912,
+      "hostLoopStallMs": 240,
+      "metrics": {
+        "peakRssMB": 58,
+        "cpuMs": 20,
+        "peakCgroupMB": 41.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no child_process",
+      "ms": 6,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 58,
+        "cpuMs": 0,
+        "peakCgroupMB": 41.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Function ctor: EvalError: Code generation from strings disallowed for this context | indirect eval: EvalError: Code generation from strings disallowed for this context | require: EvalError: Code generation from strings disallowed for this context",
+      "ms": 3,
+      "hostLoopStallMs": 44,
+      "metrics": {
+        "peakRssMB": 58.1,
+        "cpuMs": 0,
+        "peakCgroupMB": 41.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "resolved: cloudflare:sockets",
+      "ms": 351,
+      "hostLoopStallMs": 389,
+      "metrics": {
+        "peakRssMB": 58.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 41.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "NO ACCESS",
+      "detail": "no fs at all (own files arrive as module source, not via fs)",
+      "ms": 40,
+      "hostLoopStallMs": 40,
+      "metrics": {
+        "peakRssMB": 58.6,
+        "cpuMs": 0,
+        "peakCgroupMB": 42.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      }
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1917 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok in 2759 ms",
+      "ms": 1917,
+      "hostLoopStallMs": 513,
+      "metrics": {
+        "peakRssMB": 65.4,
+        "cpuMs": 340,
+        "peakCgroupMB": 51.8,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 2759
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms used, budget 1000 ms): workerd killed (it has no CPU limit of its own) | recovery: ok in 2110 ms",
+      "ms": 1347,
+      "hostLoopStallMs": 45,
+      "metrics": {
+        "peakRssMB": 63.4,
+        "cpuMs": 1010,
+        "peakCgroupMB": 21.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 2110
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms used, budget 1000 ms): workerd killed (it has no CPU limit of its own) | recovery: ok in 2123 ms",
+      "ms": 1033,
+      "hostLoopStallMs": 21,
+      "metrics": {
+        "peakRssMB": 55.1,
+        "cpuMs": 1010,
+        "peakCgroupMB": 20.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 2123
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "HTTP 500: Internal Server Error | recovery: ok in 3 ms",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 53.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 3
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1500 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok in 2110 ms",
+      "ms": 1500,
+      "hostLoopStallMs": 11,
+      "metrics": {
+        "peakRssMB": 54,
+        "cpuMs": 0,
+        "peakCgroupMB": 18.7,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 2110
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "socket hang up (exit {\"code\":null,\"signal\":\"SIGKILL\"}) | recovery: ok in 92 ms",
+      "ms": 275,
+      "hostLoopStallMs": 13,
+      "metrics": {
+        "peakRssMB": 283.7,
+        "cpuMs": 270,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "crash",
+      "recoveryMs": 92
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Invalid string length | recovery: ok in 2 ms",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 53.2,
+        "cpuMs": 0,
+        "peakCgroupMB": 18,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "socket hang up (exit {\"code\":null,\"signal\":\"SIGKILL\"}) | recovery: ok in 93 ms",
+      "ms": 289,
+      "hostLoopStallMs": 23,
+      "metrics": {
+        "peakRssMB": 290,
+        "cpuMs": 230,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "crash",
+      "recoveryMs": 93
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded | recovery: ok in 1 ms",
+      "ms": 5,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 55.2,
+        "cpuMs": 0,
+        "peakCgroupMB": 17.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "response over 262144 bytes | recovery: ok in 75 ms",
+      "ms": 96,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 156.7,
+        "cpuMs": 90,
+        "peakCgroupMB": 122.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 75
+    },
+    {
+      "candidate": "workerd-cgroup",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "BLOCKED",
+      "detail": "no child_process | recovery: ok in 2 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 52.8,
+        "cpuMs": 0,
+        "peakCgroupMB": 18,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/app.slice/run-pN-iN.scope"
+      },
+      "limitEnforcedBy": "no subprocess API",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "env",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "canary not reachable (process: undefined, Bun: undefined)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 52.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 21,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "fs-outside",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 52.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 21,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "fs-write",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:fs | host saw no file",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 52.9,
+        "cpuMs": 0,
+        "peakCgroupMB": 21,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "net-loopback",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 53,
+        "cpuMs": 0,
+        "peakCgroupMB": 21,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "net-lan",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 53,
+        "cpuMs": 0,
+        "peakCgroupMB": 21,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "net-unix",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no node:net | host saw 0 connection(s)",
+      "ms": 4,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 53,
+        "cpuMs": 10,
+        "peakCgroupMB": 21.1,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "fetch",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "got outbound denied | host saw 0 connection(s)",
+      "ms": 37,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 53.7,
+        "cpuMs": 10,
+        "peakCgroupMB": 27.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "cf-connect",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Error: jsg.Error: proxy request failed, cannot connect to the specified address | host saw 0 connection(s)",
+      "ms": 89,
+      "hostLoopStallMs": 18,
+      "metrics": {
+        "peakRssMB": 56.4,
+        "cpuMs": 20,
+        "peakCgroupMB": 41,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "spawn",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "no child_process",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 56.4,
+        "cpuMs": 0,
+        "peakCgroupMB": 41,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "escape",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "Function ctor: EvalError: Code generation from strings disallowed for this context | indirect eval: EvalError: Code generation from strings disallowed for this context | require: EvalError: Code generation from strings disallowed for this context",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 56.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 41,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "imports",
+      "kind": "capability",
+      "verdict": "BLOCKED",
+      "detail": "resolved: cloudflare:sockets",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57,
+        "cpuMs": 0,
+        "peakCgroupMB": 41,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "fs-inside",
+      "kind": "control",
+      "verdict": "NO ACCESS",
+      "detail": "no fs at all (own files arrive as module source, not via fs)",
+      "ms": 3,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 57,
+        "cpuMs": 0,
+        "peakCgroupMB": 41,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      }
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "cpu-loop",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms used, budget 1000 ms): workerd killed (it has no CPU limit of its own) | recovery: ok in 2746 ms",
+      "ms": 1097,
+      "hostLoopStallMs": 14,
+      "metrics": {
+        "peakRssMB": 63.9,
+        "cpuMs": 1010,
+        "peakCgroupMB": 44.2,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-Nfe40e8e1eNdNd45f42bbfNfNb65cabaNb4f34af62.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 2746
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "async-spin",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms used, budget 1000 ms): workerd killed (it has no CPU limit of its own) | recovery: ok in 2831 ms",
+      "ms": 1045,
+      "hostLoopStallMs": 19,
+      "metrics": {
+        "peakRssMB": 63.4,
+        "cpuMs": 1020,
+        "peakCgroupMB": 19.9,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-7c0efNd4eNbNcee1cb4c9f67dNc21bNcd62be8b35da1a.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 2831
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "redos",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "host CPU budget exceeded (1010 ms used, budget 1000 ms): workerd killed (it has no CPU limit of its own) | recovery: ok in 2613 ms",
+      "ms": 1103,
+      "hostLoopStallMs": 12,
+      "metrics": {
+        "peakRssMB": 50.4,
+        "cpuMs": 1010,
+        "peakCgroupMB": 15.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-NcbefNdNadfNdaNe31cNba9c4bNd3deda26bbcN.scope/container"
+      },
+      "limitEnforcedBy": "host CPU budget",
+      "recoveryMs": 2613
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "hang-promise",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "HTTP 500: Internal Server Error | recovery: ok in 1 ms",
+      "ms": 2,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 52.2,
+        "cpuMs": 0,
+        "peakCgroupMB": 16.3,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-92d95a5e2fc67cNdNeNcc07a3f5ce01cceaNa6f82bNe3f8f63.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "sleep-wall",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "timeout after 1501 ms (workerd killed: it has no per-request CPU or wall limit of its own) | recovery: ok in 2619 ms",
+      "ms": 1501,
+      "hostLoopStallMs": 14,
+      "metrics": {
+        "peakRssMB": 52.2,
+        "cpuMs": 0,
+        "peakCgroupMB": 16.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-92d95a5e2fc67cNdNeNcc07a3f5ce01cceaNa6f82bNe3f8f63.scope/container"
+      },
+      "limitEnforcedBy": "host wall-clock kill",
+      "recoveryMs": 2619
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "mem-array",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "socket hang up (exit {\"code\":null,\"signal\":\"SIGKILL\"}) | recovery: ok in 425 ms",
+      "ms": 319,
+      "hostLoopStallMs": 14,
+      "metrics": {
+        "peakRssMB": 282.1,
+        "cpuMs": 310,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-eNe00cNc41f6cfNcd81bNb3aNbeNbe15bcNa76a76d8c.scope/container"
+      },
+      "limitEnforcedBy": "crash",
+      "recoveryMs": 425
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "mem-string",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Invalid string length | recovery: ok in 2 ms",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 52.5,
+        "cpuMs": 0,
+        "peakCgroupMB": 18,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-c06fNcNcNf5f4e8fbdNb7afbdNd87d74e3bNf33bfNc.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 2
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "mem-buffer",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "socket hang up (exit {\"code\":null,\"signal\":\"SIGKILL\"}) | recovery: ok in 575 ms",
+      "ms": 191,
+      "hostLoopStallMs": 15,
+      "metrics": {
+        "peakRssMB": 286.8,
+        "cpuMs": 180,
+        "peakCgroupMB": 256,
+        "oomKills": 1,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-c06fNcNcNf5f4e8fbdNb7afbdNd87d74e3bNf33bfNc.scope/container"
+      },
+      "limitEnforcedBy": "crash",
+      "recoveryMs": 575
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "stack",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "RangeError: Maximum call stack size exceeded | recovery: ok in 1 ms",
+      "ms": 4,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 54.3,
+        "cpuMs": 0,
+        "peakCgroupMB": 22.6,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-NdNc5b6fd7c66dc2e72a6bNcbdfbdNe6b3ac0ea18baa8.scope/container"
+      },
+      "limitEnforcedBy": "in-guest error",
+      "recoveryMs": 1
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "flood",
+      "kind": "resource",
+      "verdict": "CONTAINED",
+      "detail": "response over 262144 bytes | recovery: ok in 361 ms",
+      "ms": 72,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 143.1,
+        "cpuMs": 70,
+        "peakCgroupMB": 125.5,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-NdNc5b6fd7c66dc2e72a6bNcbdfbdNe6b3ac0ea18baa8.scope/container"
+      },
+      "limitEnforcedBy": "host size cap",
+      "recoveryMs": 361
+    },
+    {
+      "candidate": "workerd-podman",
+      "attack": "fork",
+      "kind": "resource",
+      "verdict": "BLOCKED",
+      "detail": "no child_process | recovery: ok in 1 ms",
+      "ms": 1,
+      "hostLoopStallMs": 10,
+      "metrics": {
+        "peakRssMB": 52.8,
+        "cpuMs": 10,
+        "peakCgroupMB": 18.4,
+        "oomKills": 0,
+        "cgroup": "/user.slice/user-N.slice/user@N.service/user.slice/libpod-NfcfNdNe53aNbNedNa1db9e1adNe80eaebc73bNf.scope/container"
+      },
+      "limitEnforcedBy": "no subprocess API",
+      "recoveryMs": 1
+    }
+  ],
+  "forgery": [
+    {
+      "mechanism": "quickjs-inproc",
+      "variant": "always-correct",
+      "host": "ACCEPTED score=1 revealsAnswer=false"
+    },
+    {
+      "mechanism": "quickjs-inproc",
+      "variant": "out-of-range",
+      "host": "REJECTED by host validator: grade.score: expected a finite number in [0, 1], got 99"
+    },
+    {
+      "mechanism": "quickjs-inproc",
+      "variant": "nan",
+      "host": "REJECTED by host validator: grade.score: expected a finite number in [0, 1], got null"
+    },
+    {
+      "mechanism": "quickjs-inproc",
+      "variant": "negative",
+      "host": "REJECTED by host validator: grade.score: expected a finite number in [0, 1], got -5"
+    },
+    {
+      "mechanism": "quickjs-inproc",
+      "variant": "huge-feedback",
+      "host": "REJECTED by host validator: grade.feedback.text: expected string up to 2000 chars"
+    },
+    {
+      "mechanism": "quickjs-inproc",
+      "variant": "proto",
+      "host": "ACCEPTED score=1 revealsAnswer=false"
+    },
+    {
+      "mechanism": "quickjs-inproc",
+      "variant": "reveal",
+      "host": "ACCEPTED score=0 revealsAnswer=true"
+    },
+    {
+      "mechanism": "proc-bun",
+      "variant": "always-correct",
+      "host": "ACCEPTED score=1 revealsAnswer=false"
+    },
+    {
+      "mechanism": "proc-bun",
+      "variant": "out-of-range",
+      "host": "REJECTED by host validator: grade.score: expected a finite number in [0, 1], got 99"
+    },
+    {
+      "mechanism": "proc-bun",
+      "variant": "nan",
+      "host": "REJECTED by host validator: grade.score: expected a finite number in [0, 1], got null"
+    },
+    {
+      "mechanism": "proc-bun",
+      "variant": "negative",
+      "host": "REJECTED by host validator: grade.score: expected a finite number in [0, 1], got -5"
+    },
+    {
+      "mechanism": "proc-bun",
+      "variant": "huge-feedback",
+      "host": "REJECTED by host validator: grade.feedback.text: expected string up to 2000 chars"
+    },
+    {
+      "mechanism": "proc-bun",
+      "variant": "proto",
+      "host": "ACCEPTED score=1 revealsAnswer=false"
+    },
+    {
+      "mechanism": "proc-bun",
+      "variant": "reveal",
+      "host": "ACCEPTED score=0 revealsAnswer=true"
+    },
+    {
+      "note": "prototype pollution check",
+      "polluted": false
+    }
+  ],
+  "provenance": {
+    "note": "Three candidates hit the original 10 s startup readiness timeout during another spike load spike. Their 23 rows each were rerun with a 60 s startup allowance, then substituted into this matrix; per-call limits are unchanged.",
+    "rerunCandidates": [
+      "quickjs-bun-podman",
+      "ivm-node",
+      "ivm-node-podman"
+    ]
+  }
+}

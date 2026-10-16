@@ -1,0 +1,132 @@
+{
+  "spike": "ALI-51",
+  "bun": "1.4.2",
+  "cordis": "4.0.0-rc.11",
+  "adapters": {
+    "cordis-adapter": [
+      {
+        "id": "A01",
+        "title": "first-party plugin registers block, layout, exercise kind, preset; hooks are async",
+        "ok": true,
+        "detail": {
+          "sizes": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      {
+        "id": "A02",
+        "title": "dispose leaves nothing behind",
+        "ok": true
+      },
+      {
+        "id": "A03",
+        "title": "name clash fails only the second plugin and rolls back its partial work",
+        "ok": true
+      },
+      {
+        "id": "A04",
+        "title": "a throwing plugin ends failed with its error and no leftovers",
+        "ok": true
+      },
+      {
+        "id": "A05",
+        "title": "update(config) re-applies without duplicates",
+        "ok": true
+      },
+      {
+        "id": "A06",
+        "title": "scopes are isolated: a plugin loaded in course A is invisible in course B; disposing the parent disposes the scopes",
+        "ok": true
+      },
+      {
+        "id": "A07",
+        "title": "events: registered / unregistered with plugin id",
+        "ok": true
+      },
+      {
+        "id": "A08",
+        "title": "sandboxed plugin (QuickJS-wasm in process): data registered, hooks proxied over RPC, results match first-party, dispose stops the worker",
+        "ok": true
+      },
+      {
+        "id": "A09",
+        "title": "sandboxed plugin (plain Bun process): data registered, hooks proxied over RPC, results match first-party, dispose stops the worker",
+        "ok": true
+      },
+      {
+        "id": "A10",
+        "title": "a sandboxed plugin whose worker returns a forged GradeResult is rejected by the host, not believed",
+        "ok": true
+      },
+      {
+        "id": "A11",
+        "title": "disposing a cordis fiber stops its confined QuickJS worker and removes its container",
+        "ok": true
+      }
+    ],
+    "map-adapter": [
+      {
+        "id": "A01",
+        "title": "first-party plugin registers block, layout, exercise kind, preset; hooks are async",
+        "ok": true,
+        "detail": {
+          "sizes": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      {
+        "id": "A02",
+        "title": "dispose leaves nothing behind",
+        "ok": true
+      },
+      {
+        "id": "A03",
+        "title": "name clash fails only the second plugin and rolls back its partial work",
+        "ok": true
+      },
+      {
+        "id": "A04",
+        "title": "a throwing plugin ends failed with its error and no leftovers",
+        "ok": true
+      },
+      {
+        "id": "A05",
+        "title": "update(config) re-applies without duplicates",
+        "ok": true
+      },
+      {
+        "id": "A06",
+        "title": "scopes are isolated: a plugin loaded in course A is invisible in course B; disposing the parent disposes the scopes",
+        "ok": true
+      },
+      {
+        "id": "A07",
+        "title": "events: registered / unregistered with plugin id",
+        "ok": true
+      },
+      {
+        "id": "A08",
+        "title": "sandboxed plugin (QuickJS-wasm in process): data registered, hooks proxied over RPC, results match first-party, dispose stops the worker",
+        "ok": true
+      },
+      {
+        "id": "A09",
+        "title": "sandboxed plugin (plain Bun process): data registered, hooks proxied over RPC, results match first-party, dispose stops the worker",
+        "ok": true
+      },
+      {
+        "id": "A10",
+        "title": "a sandboxed plugin whose worker returns a forged GradeResult is rejected by the host, not believed",
+        "ok": true
+      }
+    ]
+  }
+}
