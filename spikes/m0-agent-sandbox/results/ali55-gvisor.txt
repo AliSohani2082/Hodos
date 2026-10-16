@@ -1,0 +1,16 @@
+2026-10-16, x86_64, rootless Podman 6.1.2, gVisor runsc release-20261005.0.
+Downloaded https://storage.googleapis.com/gvisor/releases/release/latest/x86_64/gvisor.tar.bz2
+and the adjacent gvisor.tar.bz2.sha512 into ignored .tools/.
+sha512sum -c gvisor.tar.bz2.sha512: gvisor.tar.bz2: OK
+SHA512: 79869ae9a589355a46d46fdac068d9a954e741741ffe77c64e38c56ea955498c1cb04e9bce44e1cce5155333e6b76bee72347c6661bb7c78fd2fe3aad198c8fe
+
+RUNTIME="$PWD/.tools/runsc" ./scripts/sandbox-exec.sh gvisor "$PWD/work/checkouts/job-smoke" -- id
+Exit 126: systemd error: Access denied as the requested operation requires interactive authentication.
+
+podman --cgroup-manager=cgroupfs run --rm --pull=never --runtime "$PWD/.tools/runsc" --network none docker.io/library/node:24-slim id
+Exit 126: cannot set up cgroup for root: open /sys/fs/cgroup/cgroup.subtree_control: permission denied.
+
+podman run --rm --pull=never --cgroups=disabled --runtime "$PWD/.tools/runsc" --network none docker.io/library/node:24-slim id
+Exit 125: requested OCI runtime ... runsc is not compatible with NoCgroups.
+
+No privileged operation was attempted. The rootless crun profile is the tested baseline; gVisor is unavailable under this host's cgroup delegation.

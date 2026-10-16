@@ -104,7 +104,8 @@ sandbox_args() {
     --tmpfs /tmp:rw,nosuid,nodev,size=128m
     --tmpfs /home/agent:rw,nosuid,nodev,size=512m,mode=1777
     -v "$checkout:/workspace:rw"
-    --memory 1g --memory-swap 1g --pids-limit 256 --ulimit nofile=2048:2048
+    --tmpfs /workspace/.codex:ro,nosuid,nodev,notmpcopyup,size=16m,mode=0555
+    --cpus 1 --memory 1g --memory-swap 1g --pids-limit 256 --ulimit nofile=2048:2048
     --timeout "${JOB_TIMEOUT_S:-900}"
     -w /workspace
   )
