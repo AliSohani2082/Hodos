@@ -71,12 +71,12 @@ def run_one(cell: Cell, seed: int, idx: int) -> dict:
     first_miss = cell.params_key == "first_miss=on"  # a miss before the hint counts as a failure
     p = learner.p0_est
     window: list[Attempt] = []
-    ckpt_ok = 0
+    ckpt_ok: set[str] = set()
     t_open, mastered_at_open, acc_at_open = None, None, None
     n_ckpt = 0
     for t in range(1, CAP + 1):
         item = pool.next()
-        mode = "checkpoint" if (v["unassisted"] and p >= cell.theta and ckpt_ok < v["k"]) else "practice"
+        mode = "checkpoint" if (v["unassisted"] and p >= cell.theta and len(ckpt_ok) < v["k"]) else "practice"
         x, level, first_ok = learner.attempt(item, mode)
         if first_miss and first_ok is False:
             x = 0.0
@@ -89,9 +89,9 @@ def run_one(cell: Cell, seed: int, idx: int) -> dict:
         else:
             n_ckpt += 1
             if e >= 0.8 and h == 0.0:
-                ckpt_ok += 1
+                ckpt_ok.add(str(item.id))
             else:  # a failed checkpoint attempt starts a new gate window
-                window, ckpt_ok = [], 0
+                window, ckpt_ok = [], set()
         if p >= cell.theta and gate_open(
             p, window, theta=cell.theta,
             require_unassisted_checkpoint=v["unassisted"], require_distinct_items=v["distinct"],

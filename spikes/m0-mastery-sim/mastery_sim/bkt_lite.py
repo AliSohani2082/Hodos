@@ -188,7 +188,7 @@ def gate_open(
     if p < theta:
         return False
     if require_unassisted_checkpoint and (
-        sum(1 for a in attempts if a.mode == "checkpoint" and a.e >= min_checkpoint_e and a.h == 0.0)
+        len({a.item_id for a in attempts if a.mode == "checkpoint" and a.e >= min_checkpoint_e and a.h == 0.0})
         < min_unassisted_checkpoints
     ):
         return False

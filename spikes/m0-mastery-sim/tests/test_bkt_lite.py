@@ -82,6 +82,14 @@ def test_score_outside_unit_interval_is_rejected():
         update(0.5, x=-0.1)
 
 
+def test_multiple_checkpoint_successes_must_use_distinct_items():
+    repeated = [Attempt("a", "checkpoint", 1.0, 0.0), Attempt("a", "checkpoint", 1.0, 0.0),
+                Attempt("b", "practice", 1.0, 0.0), Attempt("c", "practice", 1.0, 0.0)]
+    assert not gate_open(0.99, repeated, min_unassisted_checkpoints=2)
+    distinct = [*repeated, Attempt("b", "checkpoint", 1.0, 0.0)]
+    assert gate_open(0.99, distinct, min_unassisted_checkpoints=2)
+
+
 # ---- hint discount -----------------------------------------------------------------------------
 def test_hint_fraction_and_discount_formula():
     assert hint_fraction(0, 5) == 0 and hint_fraction(5, 5) == 1 and hint_fraction(2, 5) == pytest.approx(0.4)
