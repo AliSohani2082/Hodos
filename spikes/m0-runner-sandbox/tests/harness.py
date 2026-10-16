@@ -117,10 +117,20 @@ def parse_obs(text):
     return out
 
 
-def leftovers():
-    names = subprocess.run(["podman", "ps", "-a", "--format", "{{.Names}}"], capture_output=True, text=True).stdout.split()
-    procs = subprocess.run(["pgrep", "-fc", "sandbox_init.py"], capture_output=True, text=True).stdout.strip() or "0"
-    return {"ali40_containers": [n for n in names if n.startswith("ali40-")], "sandbox_init_procs": int(procs)}
+def leftovers(settle=5.0):
+    """What this spike left running. `podman rm -f` is asynchronous, so after a killed container
+    (e.g. a fork bomb) the container/supervisor can take a moment to disappear; poll until the state
+    is clean or `settle` seconds elapse. A persistent leftover still shows up (it never clears)."""
+    deadline = time.monotonic() + settle
+    while True:
+        names = subprocess.run(["podman", "ps", "-a", "--format", "{{.Names}}"], capture_output=True, text=True).stdout.split()
+        # pgrep -fc would self-match on a shell wrapper; pgrep (no -c) excludes its own pid, so count lines.
+        out = subprocess.run(["pgrep", "-f", "sandbox_init.py"], capture_output=True, text=True).stdout.split()
+        containers = [n for n in names if n.startswith("ali40-")]
+        res = {"ali40_containers": containers, "sandbox_init_procs": len(out)}
+        if (not containers and not out) or time.monotonic() >= deadline:
+            return res
+        time.sleep(0.25)
 
 
 def substitute(src, **kw):
