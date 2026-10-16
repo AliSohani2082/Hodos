@@ -1,0 +1,63 @@
+ALI-59 sandbox escape attempts; 2026-10-16T18:04:52Z
+Model responses are scripted by the local mock provider; no real LLM or credential used.
+--- private-address recheck on a test-only allowlisted CONNECT target ---
+proxy_allowlisted_private_target=denied
+{"ts":"2026-10-16T18:04:53.270Z","component":"proxy","event":"egress","decision":"deny","reason":"resolves_to_private_address:10.139.1.5","kind":"connect","target":"ali39-postgres:5432","src":"10.139.0.27"}
+--- claude ACP agent attempt ---
+ALI39_MOCK_OK
+agent_tool_calls=1
+--- codex ACP agent attempt ---
+agent_tool_calls=0
+--- Codex job-profile shell control (mock sent a Responses shell_call event; Codex ACP returned end_turn without an ACP tool_call) ---
+identity uid=10001 capeff=0000000000000000
+app_environment=absent
+pid1_app_environment=absent
+file_read=blocked:/app.env
+file_read=blocked:/run/secrets/app.env
+file_read=blocked:/workspace/../work/canary/app.env
+file_read=blocked:/workspace/../checkouts/job-OTHER/SECRET.md
+file_read=blocked:/var/run/docker.sock
+file_read=blocked:/run/podman/podman.sock
+direct_tcp=blocked:ali39-postgres:5432
+direct_tcp=blocked:ali39-runner:7070
+direct_tcp=blocked:ali39-mcp:7000
+direct_tcp=blocked:ali39-mcp:7001
+direct_http=blocked:http://192.168.1.101:19939/:000
+direct_http=blocked:http://192.168.1.250:19939/:000
+direct_http=blocked:http://169.254.169.254/latest/meta-data/:000
+direct_http=blocked:https://1.1.1.1/:000
+direct_http=blocked:https://example.com/:000
+dns_example_com=blocked
+proxy_connect_example.com=denied
+proxy_connect_127.0.0.1=denied
+proxy_connect_169.254.169.254=denied
+proxy_connect_ali39-postgres=denied
+proxy_absolute_http=403
+proxy_admin_route=403
+--- positive controls from an ordinary ali39-app network container ---
+postgres=reachable
+runner_http=200
+lan_device_http=200
+--- dummy listener log summary ---
+sandbox_source_connection=none
+--- proxy deny log summary ---
+{"ts":"2026-10-16T18:03:16.277Z","component":"proxy","event":"egress","decision":"deny","reason":"plain_http_forwarding_disabled","status":403,"kind":"forward","method":"GET","target":"http://example.com/","src":"10.139.0.23"}
+{"ts":"2026-10-16T18:03:16.289Z","component":"proxy","event":"egress","decision":"deny","reason":"no_such_route","status":403,"kind":"gateway","method":"GET","path":"/admin/jobs","src":"10.139.0.23"}
+{"ts":"2026-10-16T18:03:22.263Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"example.com:443","src":"10.139.0.25"}
+{"ts":"2026-10-16T18:03:22.275Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"127.0.0.1:443","src":"10.139.0.25"}
+{"ts":"2026-10-16T18:03:22.288Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"169.254.169.254:443","src":"10.139.0.25"}
+{"ts":"2026-10-16T18:03:22.305Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"ali39-postgres:443","src":"10.139.0.25"}
+{"ts":"2026-10-16T18:03:22.318Z","component":"proxy","event":"egress","decision":"deny","reason":"plain_http_forwarding_disabled","status":403,"kind":"forward","method":"GET","target":"http://example.com/","src":"10.139.0.25"}
+{"ts":"2026-10-16T18:03:22.329Z","component":"proxy","event":"egress","decision":"deny","reason":"no_such_route","status":403,"kind":"gateway","method":"GET","path":"/admin/jobs","src":"10.139.0.25"}
+{"ts":"2026-10-16T18:04:57.997Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"example.com:443","src":"10.139.0.28"}
+{"ts":"2026-10-16T18:04:58.008Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"127.0.0.1:443","src":"10.139.0.28"}
+{"ts":"2026-10-16T18:04:58.020Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"169.254.169.254:443","src":"10.139.0.28"}
+{"ts":"2026-10-16T18:04:58.031Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"ali39-postgres:443","src":"10.139.0.28"}
+{"ts":"2026-10-16T18:04:58.042Z","component":"proxy","event":"egress","decision":"deny","reason":"plain_http_forwarding_disabled","status":403,"kind":"forward","method":"GET","target":"http://example.com/","src":"10.139.0.28"}
+{"ts":"2026-10-16T18:04:58.053Z","component":"proxy","event":"egress","decision":"deny","reason":"no_such_route","status":403,"kind":"gateway","method":"GET","path":"/admin/jobs","src":"10.139.0.28"}
+{"ts":"2026-10-16T18:05:04.283Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"example.com:443","src":"10.139.0.30"}
+{"ts":"2026-10-16T18:05:04.295Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"127.0.0.1:443","src":"10.139.0.30"}
+{"ts":"2026-10-16T18:05:04.306Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"169.254.169.254:443","src":"10.139.0.30"}
+{"ts":"2026-10-16T18:05:04.317Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"ali39-postgres:443","src":"10.139.0.30"}
+{"ts":"2026-10-16T18:05:04.329Z","component":"proxy","event":"egress","decision":"deny","reason":"plain_http_forwarding_disabled","status":403,"kind":"forward","method":"GET","target":"http://example.com/","src":"10.139.0.30"}
+{"ts":"2026-10-16T18:05:04.341Z","component":"proxy","event":"egress","decision":"deny","reason":"no_such_route","status":403,"kind":"gateway","method":"GET","path":"/admin/jobs","src":"10.139.0.30"}

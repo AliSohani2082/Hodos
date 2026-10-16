@@ -19,9 +19,9 @@ A CLI that can't run under AI-7 is not supported on multi-account instances (PRD
 
 **Safety.** This spike runs agents against a sandbox you are trying to escape from. Run it in a disposable VM or container host, and use a spend-capped API key.
 
-**Status.** In progress (handed off mid-spike, see below). Built and unit-checked: MCP server with per-job tokens (`src/mcp/`, self-test passes), egress proxy (`src/proxy/`), canary/mock listeners (`src/canary/`), sandbox image (`sandbox/Containerfile`, built), sandbox profile (`scripts/lib.sh`), ACP client (`src/client/`). Not yet run end to end: the sandbox profile, the proxy, the escape tests, any real LLM turn. No provider keys were available (coordinator: "mock only"), so injection can only be shown against the mock upstream until a spend-capped key is supplied.
+**Status.** Spike complete. Both ACP harnesses completed mock-backed turns inside the rootless agent-job container. Claude completed an MCP tool call through the proxy and ran the scripted escape probe; Codex completed a turn but the mock did not result in an ACP tool call, so its escape probe was run directly in the same job profile. Egress denials, config-discovery controls, positive controls, and the gVisor limitation are recorded in `results/`. No real provider keys were available; real provider turns remain untested. See [ADR-0003](../../docs/adr/0003-agent-sandbox-egress.md) for separate per-harness verdicts and limits.
 
-**Layout (WIP).**
+**Layout.**
 
 | Path | What |
 |---|---|
@@ -33,7 +33,10 @@ A CLI that can't run under AI-7 is not supported on multi-account instances (PRD
 | `src/proxy/egress-proxy.ts` | ALI-56: default-deny proxy, key-injecting gateway routes, optional CONNECT allowlist, upstream chaining |
 | `src/client/` | ALI-54: `acp-client.ts`, `harnesses.ts`, `policy.ts`, `handshake.ts` |
 | `policies/` | permission policies (`readonly-plus-mcp`, `allow-all`, `deny-all`) |
+| `CONFIG-DISCOVERY.md`, `fixtures/config-plant/`, `scripts/config-test.sh` | ALI-58: tested Claude/Codex config isolation and positive controls; Gemini/OpenCode docs-only table |
+| `fixtures/escape-probe.sh`, `scripts/escape-tests.sh` | ALI-59: repeatable canary, network, proxy and positive-control probes |
+| `results/` | Recorded test outputs, proxy/MCP audit evidence, and runtime facts |
 
-**Run (once the remaining work is done).** `npm install`; `podman build -t localhost/ali39-agent:dev -f sandbox/Containerfile sandbox` (without proxy env); `./scripts/up.sh`; `node src/client/acp-client.ts --harness claude --job j1 --checkout $PWD/work/checkouts/j1 --prompt "..."`; `./scripts/down.sh`. Provider keys go in an untracked `.env` (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`), read only by the proxy container. See the handoff notes in the Linear comments on ALI-39 for the open items.
+**Run.** From this directory, install pinned npm dependencies and build the image if it is not already present. Then run `./scripts/up.sh`, `./scripts/proxy-test.sh`, `./scripts/config-test.sh`, and `./scripts/escape-tests.sh`; finish with `./scripts/down.sh`. The tests use local mock upstreams and generated canaries only. To test with providers later, put dedicated spend-capped keys in an untracked `.env` (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`); only the proxy container receives them.
 
-**Verdict.** ADR pending, see [`docs/adr/`](../../docs/adr/).
+**Decision.** Go with changes for Claude Code and Codex, subject to the limits and follow-ups in [ADR-0003](../../docs/adr/0003-agent-sandbox-egress.md). The baseline uses rootless Podman with crun; the host's rootless gVisor trial could not configure cgroups.

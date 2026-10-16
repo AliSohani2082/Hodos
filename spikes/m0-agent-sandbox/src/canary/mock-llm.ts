@@ -20,20 +20,21 @@ createServer(async (req, res) => {
     bytes: Buffer.concat(chunks).length,
   });
   const body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
-  log("request_shape", { url: req.url, keys: Object.keys(body), toolNames: (body.tools ?? []).map((t: any) => t.name ?? t.function?.name), messageTypes: (body.messages ?? []).map((m: any) => m.role), plantedClaudeSeen: JSON.stringify(body).includes("ALI39_PLANTED_CLAUDE_CANARY"), plantedCodexSeen: JSON.stringify(body).includes("ALI39_PLANTED_CODEX_CANARY"), stream: body.stream });
+  log("request_shape", { url: req.url, keys: Object.keys(body), toolNames: (body.tools ?? []).map((t: any) => t.name ?? t.function?.name), messageTypes: (body.messages ?? []).map((m: any) => m.role), plantedClaudeSeen: JSON.stringify(body).includes("ALI39_PLANTED_CLAUDE_CANARY"), plantedCodexSeen: JSON.stringify(body).includes("ALI39_PLANTED_CODEX_CANARY"), escapePromptSeen: JSON.stringify(body).includes("ALI39_ESCAPE_TEST"), stream: body.stream });
   const stamp = { seenXApiKey: key, seenAuthorization: auth, url: req.url };
   if (new URL(req.url ?? "/", "http://mock.local").pathname === "/v1/messages") {
     const hasToolResult = (body.messages ?? []).some((m: any) => JSON.stringify(m).includes("tool_result"));
     const shellCall = JSON.stringify(body).includes("ALI39_RUN_SHELL") && !hasToolResult;
     const mcpCall = JSON.stringify(body).includes("ALI39_CALL_MCP") && !hasToolResult;
+    const escapeCall = JSON.stringify(body).includes("ALI39_ESCAPE_TEST") && !hasToolResult;
     const msg = { id: "msg_ali39_mock", type: "message", role: "assistant", model: body.model ?? "claude-sonnet-4-5", content: [{ type: "text", text: "ALI39_MOCK_OK" }], stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 10, output_tokens: 4 } };
     if (body.stream) {
       res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" });
       const event = (name: string, data: unknown) => res.write(`event: ${name}\ndata: ${JSON.stringify(data)}\n\n`);
       event("message_start", { type: "message_start", message: { ...msg, content: [], stop_reason: null, usage: { input_tokens: 10, output_tokens: 0 } } });
-      if (shellCall || mcpCall) {
+      if (shellCall || mcpCall || escapeCall) {
         const name = mcpCall ? "mcp__hodos__lesson_validate" : "Bash";
-        const input = mcpCall ? { draftId: "d1", path: "lessons/01.md", markdown: "---\ntitle: Test\n---\nBody" } : { command: "touch /workspace/ali39-permission-marker" };
+        const input = mcpCall ? { draftId: "d1", path: "lessons/01.md", markdown: "---\ntitle: Test\n---\nBody" } : { command: escapeCall ? "sh /workspace/ali39-escape-probe.sh" : "touch /workspace/ali39-permission-marker" };
         event("content_block_start", { type: "content_block_start", index: 0, content_block: { type: "tool_use", id: "toolu_ali39", name, input: {} } });
         event("content_block_delta", { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: JSON.stringify(input) } });
         event("content_block_stop", { type: "content_block_stop", index: 0 });
@@ -51,6 +52,21 @@ createServer(async (req, res) => {
     return res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(msg));
   }
   if (new URL(req.url ?? "/", "http://mock.local").pathname === "/v1/responses") {
+    const inputText = JSON.stringify(body);
+    const escapeCall = inputText.includes("ALI39_ESCAPE_TEST") && !inputText.includes("function_call_output");
+    const callId = "call_ali39_escape";
+    if (body.stream && escapeCall) {
+      res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" });
+      const event = (name: string, data: unknown) => res.write(`event: ${name}\ndata: ${JSON.stringify(data)}\n\n`);
+      const response = { id: "resp_ali39_escape", object: "response", created_at: Math.floor(Date.now() / 1000), status: "in_progress", model: body.model ?? "gpt-5.2-codex", output: [] };
+      event("response.created", { type: "response.created", response });
+      const item = { id: callId, type: "shell_call", call_id: callId, action: { commands: [], timeout_ms: 30_000, max_output_length: 8192 }, status: "in_progress" };
+      event("response.output_item.added", { type: "response.output_item.added", output_index: 0, item });
+      const shellCall = { ...item, action: { ...item.action, commands: ["sh /workspace/ali39-escape-probe.sh"] } };
+      event("response.output_item.done", { type: "response.output_item.done", output_index: 0, item: shellCall });
+      event("response.completed", { type: "response.completed", response: { ...response, status: "completed", output: [shellCall] } });
+      return res.end();
+    }
     const response = { id: "resp_ali39_mock", object: "response", created_at: Math.floor(Date.now() / 1000), status: "completed", model: body.model ?? "gpt-5.2-codex", output: [{ id: "msg_ali39", type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: "ALI39_MOCK_OK", annotations: [] }] }], usage: { input_tokens: 10, output_tokens: 4, total_tokens: 14 } };
     if (body.stream) {
       res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" });
