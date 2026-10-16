@@ -45,7 +45,7 @@
   "id": "L-MEM-1",
   "claim": "memory cap 256 MiB (no swap): allocator is OOM-killed, supervisor survives and reports",
   "expected": "learner exit -9, never reaches 'survived', oom_kill>=1, last alloc < 256 MiB",
-  "actual": "exit=-9 last_alloc_mib=240 oom_kill=1 memory.peak=256MiB survived=False",
+  "actual": "exit=-9 last_alloc_mib=240 oom_kill=1 memory.peak=255MiB survived=False",
   "ok": true
  },
  {
@@ -59,35 +59,35 @@
   "id": "L-DISK-2",
   "claim": "inode exhaustion of /work is bounded (podman cannot set nr_inodes; the 256 MiB memory cap is the real bound)",
   "expected": "60k empty files either hit ENOSPC or complete without killing the supervisor/host",
-  "actual": "inodes.created=60000 inodes.error=none exit=0 memory.peak=70MiB",
+  "actual": "inodes.created=60000 inodes.error=none exit=0 memory.peak=69MiB",
   "ok": true
  },
  {
   "id": "L-OUT-1",
   "claim": "output cap: an unbounded stdout+stderr flood is cut by the supervisor (kept 32 KiB/stream, killed past 8x)",
   "expected": "reason=output_flood, kept <= 32 KiB per stream, killed within 2 s, runner stdout stays 1 line",
-  "actual": "reason=output_flood stdout_kept=32768 stderr_kept=32768 read_total=692224 ms=38",
+  "actual": "reason=output_flood stdout_kept=32768 stderr_kept=32768 read_total=695296 ms=35",
   "ok": true
  },
  {
   "id": "L-TIME-1",
   "claim": "wall-time cap: busy loop killed at the 2.0 s per-case limit and nothing survives",
   "expected": "reason=timeout, 2.0 s <= ms < 2.5 s, kill_ms < 250",
-  "actual": "reason=timeout ms=2023 kill_ms=10",
+  "actual": "reason=timeout ms=2056 kill_ms=41",
   "ok": true
  },
  {
   "id": "L-TIME-2",
   "claim": "a sleeping program is also killed at the wall limit",
   "expected": "reason=timeout",
-  "actual": "reason=timeout ms=2035",
+  "actual": "reason=timeout ms=2028",
   "ok": true
  },
  {
   "id": "L-CPU-1",
   "claim": "CPU cap (cpus=1): 4 spinning processes for 1.5 s wall consume ~1.5 CPU-s, not 6",
   "expected": "cgroup CPU usage <= 2.2 s (4x1.5 = 6.0 s uncapped)",
-  "actual": "cpu_usage_s=1.88 wall_s=1.57 nr_throttled=16",
+  "actual": "cpu_usage_s=2.01 wall_s=1.8 nr_throttled=17",
   "ok": true
  },
  {
@@ -129,7 +129,7 @@
   "id": "L-PERF-1",
   "claim": "end-to-end latency of a 3-case run (container create+start+run+teardown), 20 sequential runs",
   "expected": "recorded (no threshold)",
-  "actual": "p50=864.5 ms p95=1199 ms min=677 max=1356",
+  "actual": "p50=764.5 ms p95=878 ms min=597 max=902",
   "ok": true
  },
  {
