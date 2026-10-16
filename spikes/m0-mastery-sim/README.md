@@ -14,6 +14,32 @@ Simulations use synthetic learners, so they are not evidence about real ones (`i
 
 **Exit.** A written go/no-go on both models and their default parameters.
 
-**Status.** Not started.
+**Status.** Simulation complete. Run the command below from this directory to regenerate every CSV and table:
 
-**Verdict.** ADR pending, see [`docs/adr/`](../../docs/adr/).
+```sh
+uv run python run.py
+```
+
+`uv run pytest -q` checks the estimator and simulation invariants. `uv run python run.py --quick` is a smoke run with fewer learners; its numbers are not the committed results. Python 3.12, `fsrs==6.3.2`, and `pytest==9.1.1` are pinned in `pyproject.toml` and `uv.lock`. The full run uses fixed seeds and takes several minutes; outputs are in [`results/`](results/).
+
+## Gate model and interpretation
+
+Each binary learner begins unmastered (except the knower and diagnostic populations). Practice changes latent knowledge from 0 to 1 with a learner-specific probability drawn from a clipped log-normal distribution (median 0.12, spread 0.6); checkpoints teach nothing. Learner slip is uniform 0.05–0.15. Guess is uniform 0.20–0.40 on four-option MCQ and 0.05–0.20 on open response. The estimator instead uses fixed `T=0.15`, `s0=0.10`, and `g0=0.25` (MCQ) or `0.15` (open response). A separate graded-ability population gains logit ability each practice item; its truth criterion is at least 85% expected unaided accuracy, since it has no binary learning event.
+
+An item pool has 15 questions with true difficulty drawn from N(0, 0.7²); the estimator sees difficulty with N(0, 0.5²) noise. Ids do not repeat until the pool cycles. The five-level hint ladder adds assumed solve boosts of 0.05, 0.15, 0.35, 0.70, and 0.98. Honest learners request hints after a miss with probability drawn uniformly from 0.2–0.9. Chance and test-wise guessers never learn or ask for hints; hint-first and hint-retry abusers never learn and seek help before or after their first try. These choices are hypotheses, not measurements of learner behavior.
+
+One opportunity is one item. Above the threshold, the next item is an unassisted checkpoint when that clause is enabled. A failed checkpoint clears the current gate window. We cap each learner at 60 opportunities and censor any unopened gate. False mastery means the learner is not truly mastered when the gate opens; the report gives both false openings divided by openings and, for adversaries, pass-through divided by learners. Opportunities-to-mastery count all practice and checkpoint items. The `bkt_only`, `distinct_only`, `checkpoint_only`, and `full_ms2` variants isolate the PRD clauses. `full_k2`, `full_k3`, and `first_miss` test proposed changes. Twenty seeds of 200 learners per cell give 4,000 learners; rate intervals are 95% Wilson intervals.
+
+At θ=0.95 on MCQ, the PRD gate has median 9 opportunities and 9.9% false openings for typical learners. Its single checkpoint lets 80.5% of never-learning hint-retry abusers through within 60 opportunities; three checkpoint successes plus recording the first miss reduces this to 6.7%, with median 14 opportunities and 1.0% false openings for typical learners. Constant hint-first help alone rarely passes (0.8%). On open response, the PRD gate has 2.4% false openings for typical learners. Exact tables, intervals, populations, and sensitivity results are in [`results/RESULTS.md`](results/RESULTS.md).
+
+This simulation checks internal behavior under its stated assumptions. It does not measure real learner or hint behavior, item quality, adaptive selection, teacher overrides, checkpoint retry policy, skill transfer, or later retention. In particular, the estimated `P(L)` is not calibrated as a literal probability for graded ability.
+
+## Files
+
+- `run.py`: the single reproduction entry point.
+- `mastery_sim/bkt_lite.py`: portable estimator; `fixtures/bkt_golden.json`: vectors for the later TypeScript port.
+- `mastery_sim/learners.py`, `gate_sim.py`, `gate_report.py`: populations, protocol, tables.
+- `mastery_sim/fsrs_sim.py`, `fsrs_report.py`: per-skill review model and tables.
+- `results/`: committed CSV and Markdown outputs.
+
+**Verdict.** Go with changes for BKT-lite and FSRS defaults; see [ADR-0005](../../docs/adr/0005-bkt-lite-and-fsrs-defaults.md).
