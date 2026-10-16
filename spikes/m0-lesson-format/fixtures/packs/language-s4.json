@@ -1,0 +1,100 @@
+{
+ "id": "language-s4",
+ "chunks": [
+  {
+   "id": "src:wiki-grammatical-gender#c1",
+   "outlet": "src:wiki-grammatical-gender",
+   "title": "Grammatical gender",
+   "text": "In linguistics, a grammatical gender system is a specific form of a noun class system, where nouns are assigned to gender categories that are often not related to the real-world qualities of the entities denoted by those nouns. English does not have this system, though most other Indo-European languages have it. In languages with grammatical gender, most or all nouns inherently carry one value of the grammatical category called gender. The values present in a given language, of which there are usually two or three, are called the genders of that language. Determiners, adjectives, and pronouns also change their form depending on the noun to which they refer."
+  },
+  {
+   "id": "src:wiki-grammatical-gender#c2",
+   "outlet": "src:wiki-grammatical-gender",
+   "title": "Grammatical gender",
+   "text": "Languages with grammatical gender usually have two to four different genders, but some are attested with up to 20. Common gender divisions include masculine and feminine; masculine, feminine, and neuter; or animate and inanimate. Nouns that denote specifically male persons (or animals) are normally of masculine gender; those that denote specifically female persons (or animals) are normally of feminine gender; and nouns that denote something that does not have any gender, or do not specify the gender of their referent, have come to belong to one or other of the genders, in a way that may appear arbitrary. , Hindustani), and the Afroasiatic languages."
+  },
+  {
+   "id": "src:wiki-grammatical-gender#c3",
+   "outlet": "src:wiki-grammatical-gender",
+   "title": "Grammatical gender",
+   "text": "This is similar to systems with a masculine–feminine contrast, except that there is a third available gender, so nouns with gender-less or unspecified-gender referents may be either masculine, feminine, or neuter. There are also certain exceptional nouns whose gender does not follow the denoted gender, such as the German Mädchen, meaning \"girl\", which is neuter. This is because it is actually a diminutive of Magd and all diminutive forms with the suffix -chen are neuter. Examples of languages with such a system include later forms of Proto-Indo-European (see below), Sanskrit, some Germanic languages, most Slavic languages, a few Romance languages (Romanian, Asturian and Neapolitan), Marathi, Latin, and Greek  (Modern and  Ancient)."
+  },
+  {
+   "id": "src:wiki-grammatical-gender#c4",
+   "outlet": "src:wiki-grammatical-gender",
+   "title": "Grammatical gender",
+   "text": "Here nouns that denote animate things (humans and animals) generally belong to one gender, and those that denote inanimate things to another (although there may be some deviation from that principle). Examples include earlier forms of Proto-Indo-European and the earliest family known to have split off from it, the extinct Anatolian languages (see below). Modern examples include Algonquian languages such as Ojibwe. Some gender contrasts are referred to as classes (for some examples, see Noun class). In some of the Slavic languages, for example, within the masculine and sometimes feminine and neuter genders, there is a further division between animate and inanimate nouns—and in Polish, also sometimes between nouns denoting humans and non-humans (for details, see below). A human–non-human (or \"rational–non-rational\") distinction is also found in Dravidian languages (see below)."
+  },
+  {
+   "id": "src:wiki-french-grammar#c1",
+   "outlet": "src:wiki-french-grammar",
+   "title": "French grammar",
+   "text": "French grammar is the set of rules by which the French language creates statements, questions and commands. In many respects, it is quite similar to that of the other Romance languages. French is a moderately inflected language. Nouns and most pronouns are inflected for number (singular or plural, though in most nouns the plural is pronounced the same as the singular even if spelled differently); adjectives, for number and gender (masculine or feminine) of their nouns; personal pronouns and a few other pronouns, for person, number, gender, and case; and verbs, for tense, aspect, mood, and the person and number of their subjects. Case is primarily marked using word order and prepositions, while certain verb features are marked using auxiliary verbs."
+  },
+  {
+   "id": "src:wiki-french-grammar#c2",
+   "outlet": "src:wiki-french-grammar",
+   "title": "French grammar",
+   "text": "Nouns in French are not inflected for any other grammatical categories. ) Articles and determiners agree in gender and number with the noun they determine; unlike with nouns, this inflection is made in speech as well as in writing. French has three articles: definite, indefinite, and partitive. The difference between the definite and indefinite articles is similar to that in English (definite: the; indefinite: a, an), except that the indefinite article has a plural form (similar to some, though English normally does not use an article before indefinite plural nouns). The partitive article is similar to the indefinite article but used for uncountable singular nouns."
+  },
+  {
+   "id": "src:wiki-french-grammar#c3",
+   "outlet": "src:wiki-french-grammar",
+   "title": "French grammar",
+   "text": "On the other hand, if the masculine and feminine forms have different pronunciations and liaison does occur, all four forms can be distinguishable in pronunciation. Adjective declension is therefore important in spoken French, though to a lesser extent than in writing. ) As in English, adverbs in French are used to modify adjectives, other adverbs, verbs, or clauses. g. g. patient → patiemment \"patiently\", malaisé → malaisément \"uneasily\"), some adverbs are derived irregularly (bon \"good\" → bien \"well\") and others do not derive from adjectives at all. Adverbs themselves are generally invariable. g. \" — when beginning with a vowel however: tout entier, tout entiers, tout entière, tout entières \"completely, as a whole\" (with liaison))."
+  },
+  {
+   "id": "src:wiki-french-grammar#c4",
+   "outlet": "src:wiki-french-grammar",
+   "title": "French grammar",
+   "text": "French prepositions link two related parts of a sentence. In word order, they are placed in front of a noun in order to specify the relationship between the noun and the verb, adjective, or other noun that precedes it. Some common French prepositions are: Alongside prepositions, French also has two postpositions, durant and y compris (which also work as prepositions). Lastly, there is one circumposition: à X près (~with a margin of error of X) French usually expresses negation in two parts, with the particle ne attached to the verb, and one or more negative words (connegatives) that modify the verb or one of its arguments. Negation encircles a conjugated verb with ne after the subject and the connegative after the verb, if the verb is finite or a gerund. However, both parts of the negation come before the targeted verb when it is in its infinitive form. For example:"
+  },
+  {
+   "id": "src:wiki-noun-class#c1",
+   "outlet": "src:wiki-noun-class",
+   "title": "Noun class",
+   "text": "In linguistics, a noun class is a particular category of nouns. A noun may belong to a given class because of the characteristic features of its referent, such as gender, animacy, shape, but such designations are often clearly conventional. Some authors use the term \"grammatical gender\" as a synonym of \"noun class\", but others consider these different concepts. Noun classes should not be confused with noun classifiers. The Ojibwe language and other members of the Algonquian languages distinguish between animate and inanimate classes. Some sources argue that the distinction is between things which are powerful and things which are not. Living things, as well as sacred things and things connected to the Earth, are considered powerful and belong to the animate class. Still, the assignment is somewhat arbitrary, as \"raspberry\" is animate, but \"strawberry\" is inanimate."
+  },
+  {
+   "id": "src:wiki-noun-class#c2",
+   "outlet": "src:wiki-noun-class",
+   "title": "Noun class",
+   "text": "In Navajo (Southern Athabaskan) nouns are classified according to their animacy, shape, and consistency. Morphologically, however, the distinctions are not expressed on the nouns themselves, but on the verbs of which the nouns are the subject or direct object. For example, in the sentence Shi’éé’ tsásk’eh bikáa’gi dah siłtsooz \"My shirt is lying on the bed\", the verb siłtsooz \"lies\" is used because the subject shi’éé’ \"my shirt\" is a flat, flexible object. In the sentence Siziiz tsásk’eh bikáa’gi dah silá \"My belt is lying on the bed\", the verb silá \"lies\" is used because the subject siziiz \"my belt\" is a slender, flexible object. Koyukon (Northern Athabaskan) has a more intricate system of classification. Like Navajo, it has classificatory verb stems that classify nouns according to animacy, shape, and consistency. However, in addition to these verb stems, Koyukon verbs have what are called \"gender prefixes\" that further classify nouns. That is, Koyukon has two different systems that classify nouns: (a) a classificatory verb system and (b) a gender system. To illustrate, the verb stem -tonh is used for enclosed objects."
+  },
+  {
+   "id": "src:wiki-noun-class#c3",
+   "outlet": "src:wiki-noun-class",
+   "title": "Noun class",
+   "text": "When -tonh is combined with different gender prefixes, it can result in daaltonh which refers to objects enclosed in boxes or etltonh which refers to objects enclosed in bags. The Dyirbal language is well known for its system of four noun classes, which tend to be divided along the following semantic lines: The class usually labeled \"feminine\", for instance, includes the word for fire and nouns relating to fire, as well as all dangerous creatures and phenomena. ) The Ngangikurrunggurr language has noun classes reserved for canines and hunting weapons. The Anindilyakwa language has a noun class for things that reflect light. The Diyari language distinguishes only between female and other objects. Perhaps the most noun classes in any Australian language are found in Yanyuwa, which has 16 noun classes, including nouns associated with food, trees and abstractions, in addition to separate classes for men and masculine things, women and feminine things. In the men's dialect, the classes for men and for masculine things have simplified to a single class, marked the same way as the women's dialect marker reserved exclusively for men."
+  },
+  {
+   "id": "src:wiki-noun-class#c4",
+   "outlet": "src:wiki-noun-class",
+   "title": "Noun class",
+   "text": "Basque has two classes, animate and inanimate; however, the only difference is in the declension of locative cases (inessive, ablative, allative, terminal allative, and directional allative). For inanimate nouns, the locative case endings are attached directly if the noun is singular, and plural and indefinite number are marked by the suffixes -eta- and -(e)ta-, respectively, before the case ending (this is in contrast to the non-locative cases, which follow a different system of number marking where the indefinite form of the ending is the most basic). For example, the noun etxe \"house\" has the singular ablative form etxetik \"from the house\", the plural ablative form etxeetatik \"from the houses\", and the indefinite ablative form etxetatik (the indefinite form is mainly used with determiners that precede the noun: zenbat etxetatik \"from how many houses\"). For animate nouns, on the other hand, the locative case endings are attached (with some phonetic adjustments) to the suffix -gan-, which is itself attached to the singular, plural, or indefinite genitive case ending. Alternatively, -gan- may attach to the absolutive case form of the word if it ends in a vowel."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-grammatical-gender",
+   "title": "Grammatical gender",
+   "url": "https://en.wikipedia.org/wiki/Grammatical_gender",
+   "revid": 1380524823,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-french-grammar",
+   "title": "French grammar",
+   "url": "https://en.wikipedia.org/wiki/French_grammar",
+   "revid": 1375749942,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-noun-class",
+   "title": "Noun class",
+   "url": "https://en.wikipedia.org/wiki/Noun_class",
+   "revid": 1374478817,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

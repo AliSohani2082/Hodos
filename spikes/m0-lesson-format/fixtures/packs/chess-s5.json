@@ -1,0 +1,100 @@
+{
+ "id": "chess-s5",
+ "chunks": [
+  {
+   "id": "src:wiki-chess-endgame#c1",
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "text": "The endgame (or ending) is the final stage of a chess game which occurs after the middlegame. It begins when few pieces are left on the board. There is no strict criterion for when an endgame begins, and different authors have different opinions. \" Using the standard system for chess piece relative value, Speelman considers that endgames are positions in which each player has thirteen or fewer points in material (not counting the king). Alternatively, they are positions in which the king can be used actively, but there are some famous exceptions to that. Minev characterizes endgames as positions having four or fewer pieces other than kings and pawns. Fine considers endgames to be positions without queens. Flear considers endgames to be positions where both players have at most one piece (other than kings and pawns) whereas Dvoretsky considers them to be positions in which at least one player has such a material configuration. Some problem composers believe that the endgame starts when the player to move can force a win or a draw against any variation of moves. Alburt and Krogius give three characteristics of an endgame:"
+  },
+  {
+   "id": "src:wiki-chess-endgame#c2",
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "text": "Generally, the player having a material advantage tries to exchange pieces but avoids exchanging pawns in the endgame. Some exceptions to this are: Many endings without pawns have been solved, that is, best play for both sides from any starting position can be determined, and the outcome (win, loss, or draw) is known. For example, the following are all wins for the side with pieces: Two of the most common pawnless endgames (when the defense has a piece in addition to the king) are (1) a queen versus a rook and (2) a rook and bishop versus a rook. A queen wins against a rook — see Queen versus rook endgame. A rook and bishop versus a rook is generally a theoretical draw, but the defense is difficult and there are winning positions (see Rook and bishop versus rook endgame)."
+  },
+  {
+   "id": "src:wiki-chess-endgame#c3",
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "text": "This is one of the most basic endgames. A draw results if the defending king can reach the square in front of the pawn or the square in front of that (or capture the pawn). If the attacking king can prevent that, the king will assist the pawn in being promoted to a queen or rook, and checkmate can be achieved. A rook pawn is an exception because the king may not be able to get out of the way of its pawn. Knight and pawn endgames feature clever manoeuvring by the knights to capture opponent pawns. While a knight is poor at chasing a passed pawn, it is the ideal piece to block a passed pawn. Knights cannot lose a tempo, so knight and pawn endgames have much in common with king and pawn endgames. ”"
+  },
+  {
+   "id": "src:wiki-chess-endgame#c4",
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "text": "This is generally a draw since the knight can be sacrificed for the pawn, however, the king and knight must be covering squares in the pawn's path. If the pawn reaches the seventh rank and is supported by its king and knight, it usually promotes and wins. In this position, White to move wins: 1. b6 Nb7! 2. Ne6! Na5 3. Kc8! N-any 4. Nc7#. If Black plays the knight to any other square on move 2, White plays Kc8 anyway, threatening b7+ and promotion if the knight leaves the defense of the b7 square. Black to move draws starting with 1... Nc4 because White cannot gain a tempo. Bishop and pawn endgames come in two distinctly different variants. If the opposing bishops go on the same color of square, the mobility of the bishops is a crucial factor. A bad bishop is one that is hemmed in by pawns of its own color, and has the burden of defending them. The adjacent diagram, from Molnar–Nagy, Hungary 1966, illustrates the concepts of good bishop versus bad bishop, opposition, zugzwang, and outside passed pawn. White wins with 1. e6! (vacating e5 for his king) 1... Bxe6 2. Bc2! (threatening Bxg6) 2... Bf7 3. Be4! (threatening Bxc6) 3... Be8 4. Ke5! e."
+  },
+  {
+   "id": "src:wiki-opposition-chess#c1",
+   "outlet": "src:wiki-opposition-chess",
+   "title": "Opposition (chess)",
+   "text": "In chess, opposition (or direct opposition) is a situation in which both kings are two squares apart on the same rank or file. Since kings cannot move adjacent to each other, each king prevents the other's advance, creating a mutual blockade. In this situation, the player not having to move is said to have the opposition. It is a special type of zugzwang and most often occurs in endgames with only kings and pawns. The side with the move may have to move their king away, potentially allowing the opposing king access to important squares. Taking the opposition is a means to an end, normally to force the opponent's king to move to a weaker position, and is not always the best thing to do. There are extensions of direct opposition, such as diagonal opposition and distant opposition, which can be conducive to reaching direct opposition. All three types may be referred to simply as opposition if the type is unambiguous in context."
+  },
+  {
+   "id": "src:wiki-opposition-chess#c2",
+   "outlet": "src:wiki-opposition-chess",
+   "title": "Opposition (chess)",
+   "text": "Direct opposition is a position in which the kings are on the same rank or file and are separated by one square. When the term opposition is used, it normally refers to direct opposition. In this diagram, the player whose turn it is not to move has the opposition. If it is Black's turn to move, White has the opposition and wins. ) If it were White's turn to move, Black would have the opposition and the position would be a draw. In order to ensure correct play in situations like in the diagram, it may be helpful to remember that each time the pawn steps forward, it must be without giving check. If the pawn checks the opponent's king, the opposition will be lost and the game drawn."
+  },
+  {
+   "id": "src:wiki-opposition-chess#c3",
+   "outlet": "src:wiki-opposition-chess",
+   "title": "Opposition (chess)",
+   "text": "In the game Svetozar Gligorić–Bobby Fischer, 1959, Black can draw by keeping the white king from getting to any of the key squares (marked by dots). This is accomplished by not allowing White to get the opposition, and seizing the opposition if the white king advances. 57... Kb8! This waiting move is the only move to draw. ) Other moves allow White to get the opposition and then get to a key square. If the white king gets to a key square, White wins. Kb7? Kb5, then the black king moves and the white king gets to a key square and then wins by forcing promotion of the pawn. Opposition along a diagonal is called diagonal opposition. Sometimes diagonal opposition is used to achieve direct opposition. An example is the position in the first diagram, with Black to move. White has the direct opposition in this position, but it does him no good because his king cannot attack the black pawn after the black king moves away. White needs to achieve direct opposition closer to the pawn."
+  },
+  {
+   "id": "src:wiki-opposition-chess#c4",
+   "outlet": "src:wiki-opposition-chess",
+   "title": "Opposition (chess)",
+   "text": "Distant opposition is a position in which the kings are on the same rank or file but are separated by more than one square. If there are an odd number of squares between the kings, the player not having the move has the (distant) opposition. As with diagonal opposition, it is often converted to direct opposition, as in the diagram: 1... Ke7 and now Black has the distant opposition and draws. Kf7. White must remember that the aim of the opposition is to penetrate, so to step sideways and forward with ... This position is very similar to the previous position. White is to checkmate, moving the rook only once in the process. The main line is:"
+  },
+  {
+   "id": "src:wiki-king-and-pawn-versus-king-endgame#c1",
+   "outlet": "src:wiki-king-and-pawn-versus-king-endgame",
+   "title": "King and pawn versus king endgame",
+   "text": "The chess endgame with a king and a pawn versus a king is one of the most important and fundamental endgames,  other than the basic checkmates. It is an important endgame for chess players to master, since most other endgames have the potential of reducing to this type of endgame via exchanges of pieces. Players need to be able to determine quickly whether a given position is a win or a draw, and to know the technique for playing it. The crux of this endgame is whether or not the pawn can be promoted (or queened), so checkmate can be forced. In the first paragraph of one of his books on endgames, Peter Griffiths emphasized the importance of this endgame:"
+  },
+  {
+   "id": "src:wiki-king-and-pawn-versus-king-endgame#c2",
+   "outlet": "src:wiki-king-and-pawn-versus-king-endgame",
+   "title": "King and pawn versus king endgame",
+   "text": "The most basic rule applies when the pawn can queen unassisted by its king. The rule of the square determines if this is possible. In the depicted position, the pawn is on the fifth square from the queening square (counting the queening square itself). A square of 5×5 squares with the queening square in one corner and the pawn in an adjacent corner can be imagined. ) This square denotes where the Chebyshev distance from the pawn's promotion square is no greater than the number of moves the pawn needs to promote, and thus, if the black king can move into this square, he can catch the pawn, otherwise the pawn wins the race. Kb4 and enter the square, catching the pawn. If it is White's move, the pawn advances, the square shrinks to 4×4, and the king cannot move into the square, so the pawn queens. )"
+  },
+  {
+   "id": "src:wiki-king-and-pawn-versus-king-endgame#c3",
+   "outlet": "src:wiki-king-and-pawn-versus-king-endgame",
+   "title": "King and pawn versus king endgame",
+   "text": "Even if the defending king can move inside the square of the pawn, the attacking king may be able to block it, as in the diagram from Alexander Fishbein. Note that in some cases, the king can catch a pawn when he is outside the square by creating threats that must be parried, and gain a tempo. In the Réti endgame study (by Richard Réti, 1921), the white king is outside the square of the black pawn, two tempi short of catching the pawn. White can draw, however, by \"going after two birds at once\". If the defending king is within the \"square\", then the pawn cannot queen without the help of its own king. The first concept that needs to be introduced is that of the key square, also known as a critical square. A key square is a square such that if White's king occupies it, White can force the pawn to promotion, regardless of where the black king is and regardless of which side is to move, and against any defense (assuming that the black king cannot capture the pawn). The key squares are relative to the position of the pawn. Whether or not the white king can reach a key square depends on the position of the pieces. Of course, even if the white king occupies a key square, accurate play is still required in order to promote the pawn. Note that the key square is in front of the pawn."
+  },
+  {
+   "id": "src:wiki-king-and-pawn-versus-king-endgame#c4",
+   "outlet": "src:wiki-king-and-pawn-versus-king-endgame",
+   "title": "King and pawn versus king endgame",
+   "text": "Endgame expert Yuri Averbakh said, just as a father leads his child across the road rather than pushing the child in front, the king should also lead the pawn to the queening square. A rook pawn (on the a-file or h-file) has much less chance of promoting than other pawns. The reason is that if the opposing king can get to any square in front of the pawn, it cannot be driven away from the file, and the pawn cannot queen. Black can always draw if he can reach the c8-square for an a-pawn (pawn on the a-file), or the equivalent f8 for an h-pawn, except for the position in the next diagram, with White to move. Therefore, an advanced rook pawn generally has two key squares: b7 and b8 for an a-pawn, and g7 and g8 for an h-pawn. The key squares are indicated by the black dots in the position in the diagram. If White's king can reach either of the two key squares, he can keep Black's king away and the pawn will promote. If the black king can reach any of the squares marked with a dot or a cross, it stops the pawn."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "url": "https://en.wikipedia.org/wiki/Chess_endgame",
+   "revid": 1379416665,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-opposition-chess",
+   "title": "Opposition (chess)",
+   "url": "https://en.wikipedia.org/wiki/Opposition_(chess)",
+   "revid": 1356336308,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-king-and-pawn-versus-king-endgame",
+   "title": "King and pawn versus king endgame",
+   "url": "https://en.wikipedia.org/wiki/King_and_pawn_versus_king_endgame",
+   "revid": 1369231680,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

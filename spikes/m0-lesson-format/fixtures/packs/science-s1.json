@@ -1,0 +1,100 @@
+{
+ "id": "science-s1",
+ "chunks": [
+  {
+   "id": "src:wiki-photosynthesis#c1",
+   "outlet": "src:wiki-photosynthesis",
+   "title": "Photosynthesis",
+   "text": "CO2carbondioxide + 2H2Aelectron donor + photonslight energy → [CH2O]carbohydrate + 2Aoxidizedelectrondonor + H2Owater Since water is used as the electron donor in oxygenic photosynthesis, the equation for this process is: CO2carbondioxide + 2H2Owater + photonslight energy → [CH2O]carbohydrate + O2oxygen + H2Owater This equation emphasizes that water is both a reactant in the light-dependent reaction and a product of the light-independent reaction, but canceling n water molecules from each side gives the net equation: CO2carbondioxide + H2O water  + photonslight energy → [CH2O]carbohydrate + O2 oxygen  Other processes substitute other compounds (such as arsenite) for water in the electron-supply role; for example some microbes use sunlight to oxidize arsenite to arsenate: The equation for this reaction is:"
+  },
+  {
+   "id": "src:wiki-photosynthesis#c2",
+   "outlet": "src:wiki-photosynthesis",
+   "title": "Photosynthesis",
+   "text": "In the light-dependent reactions, one molecule of the pigment chlorophyll absorbs one photon and loses one electron. This electron is taken up by a modified form of chlorophyll called pheophytin, which passes the electron to a quinone molecule, starting the flow of electrons down an electron transport chain that leads to the ultimate reduction of NADP to NADPH. In addition, this creates a proton gradient (energy gradient) across the chloroplast membrane, which is used by ATP synthase in the synthesis of ATP. The chlorophyll molecule ultimately regains the electron it lost when a water molecule is split in a process called photolysis, which releases oxygen. The overall equation for the light-dependent reactions under the conditions of non-cyclic electron flow in green plants is:"
+  },
+  {
+   "id": "src:wiki-photosynthesis#c3",
+   "outlet": "src:wiki-photosynthesis",
+   "title": "Photosynthesis",
+   "text": "Not all wavelengths of light can support photosynthesis. The photosynthetic action spectrum depends on the type of accessory pigments present. For example, in green plants, the action spectrum resembles the absorption spectrum for chlorophylls and carotenoids with absorption peaks in violet-blue and red light. In red algae, the action spectrum is blue-green light, which allows these algae to use the blue end of the spectrum to grow in the deeper waters that filter out the longer wavelengths (red light) used by above-ground green plants. , green plants, red algae, purple bacteria) and is the least effective for photosynthesis in the respective organisms."
+  },
+  {
+   "id": "src:wiki-photosynthesis#c4",
+   "outlet": "src:wiki-photosynthesis",
+   "title": "Photosynthesis",
+   "text": "Linear electron transport through a photosystem will leave the reaction center of that photosystem oxidized. Elevating another electron will first require re-reduction of the reaction center. The excited electrons lost from the reaction center (P700) of photosystem I are replaced by transfer from plastocyanin, whose electrons come from electron transport through photosystem II. Photosystem II, as the first step of the Z-scheme, requires an external source of electrons to reduce its oxidized chlorophyll a reaction center. The source of electrons for photosynthesis in green plants and cyanobacteria is water. Two water molecules are oxidized by the energy of four successive charge-separation reactions of photosystem II to yield a molecule of diatomic oxygen and four hydrogen ions. The electrons yielded are transferred to a redox-active tyrosine residue that is oxidized by the energy of P680+. This resets the ability of P680 to absorb another photon and release another photo-dissociated electron."
+  },
+  {
+   "id": "src:wiki-calvin-cycle#c1",
+   "outlet": "src:wiki-calvin-cycle",
+   "title": "Calvin cycle",
+   "text": "The Calvin cycle, bio synthetic phase, dark reactions, or photosynthetic carbon reduction (PCR) cycle of photosynthesis is a series of chemical reactions that convert carbon dioxide and hydrogen-carrier compounds into glucose. The Calvin cycle is present in all photosynthetic eukaryotes and also many photosynthetic bacteria. In plants, these reactions occur in the stroma, the fluid-filled region of a chloroplast outside the thylakoid membranes. These reactions use the products (ATP and NADPH) of the light-dependent reactions and carry out further chemical processes on them. The Calvin cycle uses the chemical energy of ATP and the reducing power of NADPH from the light-dependent reactions to produce sugars for the plant to use. These substrates undergo a series of oxidoreduction (redox) reactions to produce sugars in a stepwise process; there is no direct reaction that converts several molecules of CO2 into a sugar. There are three phases to the light-independent reactions, collectively called the Calvin cycle: carboxylation, reduction reactions, and ribulose 1,5-bisphosphate (RuBP) regeneration. Though it is also called the \"dark reaction\", the Calvin cycle does not occur in the dark or during nighttime."
+  },
+  {
+   "id": "src:wiki-calvin-cycle#c2",
+   "outlet": "src:wiki-calvin-cycle",
+   "title": "Calvin cycle",
+   "text": "This is because the process requires NADPH, which is short-lived and comes from light-dependent reactions. In the dark, plants instead release sucrose into the phloem from their starch reserves to provide energy for the plant. The Calvin cycle thus happens when light is available independent of the kind of photosynthesis (C3 carbon fixation, C4 carbon fixation, and crassulacean acid metabolism (CAM)); CAM plants store malic acid in their vacuoles every night and release it by day to make this process work. The reactions of the Calvin cycle are closely coupled to the thylakoid electron transport chain, as the energy required to reduce the carbon dioxide is provided by NADPH produced during the light dependent reactions. The process of photorespiration, also known as the C2 cycle, is also coupled to the Calvin cycle because it results from an alternative reaction of the RuBisCO enzyme, and its final by-product is another glyceraldehyde-3-P molecule."
+  },
+  {
+   "id": "src:wiki-calvin-cycle#c3",
+   "outlet": "src:wiki-calvin-cycle",
+   "title": "Calvin cycle",
+   "text": "3 CO2 + 6 NADPH + 9 ATP + 6 H+ → glyceraldehyde-3-phosphate (G3P)  + 6 NADP+ + 9 ADP + 3 H2O + 8 Pi   (Pi = inorganic phosphate) Hexose (six-carbon) sugars are not products of the Calvin cycle. Although many texts list a product of photosynthesis as C6H12O6, this is mainly for convenience to match the equation of aerobic respiration, where six-carbon sugars are oxidized in mitochondria. The carbohydrate products of the Calvin cycle are three-carbon sugar phosphate molecules, or \"triose phosphates\", namely, glyceraldehyde-3-phosphate (G3P). In the first stage of the Calvin cycle, a CO2 molecule is incorporated into one of two three-carbon molecules (glyceraldehyde 3-phosphate or G3P), where it uses up two molecules of ATP and two molecules of NADPH, which had been produced in the light-dependent stage. The three steps involved are:"
+  },
+  {
+   "id": "src:wiki-calvin-cycle#c4",
+   "outlet": "src:wiki-calvin-cycle",
+   "title": "Calvin cycle",
+   "text": "The next stage in the Calvin cycle is to regenerate RuBP. Five G3P molecules produce three RuBP molecules, using up three molecules of ATP. Since each CO2 molecule produces two G3P molecules, three CO2 molecules produce six G3P molecules, of which five are used to regenerate RuBP, leaving a net gain of one G3P molecule per three CO2 molecules (as would be expected from the number of carbon atoms involved). RuBisCO also reacts competitively with O2 instead of CO2 in photorespiration. The rate of photorespiration is higher at high temperatures. Photorespiration turns RuBP into 3-PGA and 2-phosphoglycolate, a 2-carbon molecule that can be converted via glycolate and glyoxylate to glycine. Via the glycine cleavage system and tetrahydrofolate, two glycines are converted into serine plus CO2. Serine can be converted back to 3-phosphoglycerate. Thus, only 3 of 4 carbons from two phosphoglycolates can be converted back to 3-PGA. It can be seen that photorespiration has very negative consequences for the plant, because, rather than fixing CO2, this process leads to loss of CO2. C4 carbon fixation evolved to circumvent photorespiration, but can occur only in certain plants native to very warm or tropical climates—corn, for example."
+  },
+  {
+   "id": "src:wiki-photosystem#c1",
+   "outlet": "src:wiki-photosystem",
+   "title": "Photosystem",
+   "text": "Photosystems are functional and structural units of protein complexes involved in photosynthesis. Together they carry out the primary photochemistry of photosynthesis: the absorption of light and the transfer of energy and electrons. Photosystems are found in the thylakoid membranes of plants, algae, and cyanobacteria. These membranes are located inside the chloroplasts of plants and algae, and in the cytoplasmic membrane of photosynthetic bacteria. There are two kinds of photosystems: PSI and PSII. PSII will absorb red light, and PSI will absorb far-red light. Although photosynthetic activity will be detected when the photosystems are exposed to either red or far-red light, the photosynthetic activity will be the greatest when plants are exposed to both wavelengths of light. Each photosystem has two parts: a reaction center, where the photochemistry occurs, and an antenna complex, which surrounds the reaction center. The antenna complex contains hundreds of chlorophyll molecules which funnel the excitation energy to the center of the photosystem. At the reaction center, the energy will be trapped and transferred to produce a high energy molecule. The main function of PSII is to efficiently split water into oxygen molecules and protons."
+  },
+  {
+   "id": "src:wiki-photosystem#c2",
+   "outlet": "src:wiki-photosystem",
+   "title": "Photosystem",
+   "text": "PSII will provide a steady stream of electrons to PSI, which will boost these in energy and transfer them to NADP+ and H+ to make NADPH. The hydrogen from this NADPH can then be used in a number of different processes within the plant. Each photosystem has two main subunits: an antenna complex (a light harvesting complex or LHC) and a reaction center. The antenna complex is where light is captured, while the reaction center is where this light energy is transformed into chemical energy. At the reaction center, there are many polypeptides that are surrounded by pigment proteins. At the center of the reaction center is a special pair of chlorophyll molecules. A reaction center comprises several (about 25-30) protein subunits, which provide a scaffold for a series of cofactors. The cofactors can be pigments (like chlorophyll, pheophytin, carotenoids), quinones, or iron-sulfur clusters."
+  },
+  {
+   "id": "src:wiki-photosystem#c3",
+   "outlet": "src:wiki-photosystem",
+   "title": "Photosystem",
+   "text": "PSI accepts electrons from plastocyanin and transfers them either to NADPH (noncyclic electron transport) or back to cytochrome b6f (cyclic electron transport): PSI, like PSII, is a complex, highly organized transmembrane structure that contains antenna chlorophylls, a reaction center (P700), phylloquinone, and a number of iron-sulfur proteins that serve as intermediate redox carriers. PSII is a complex highly organized transmembrane structure that contains a water splitting complex, chlorophylls and carotenoid pigments, a reaction center (P680), pheophytin (a pigment similar to chlorophyll), and two quinones. It uses the energy of sunlight to oxidize water to a mobile electron carrier in the membrane called plastoquinone:"
+  },
+  {
+   "id": "src:wiki-photosystem#c4",
+   "outlet": "src:wiki-photosystem",
+   "title": "Photosystem",
+   "text": "In intense light, plants use various mechanisms to prevent damage to their photosystems. They are able to release some light energy as heat, but the excess light can also produce reactive oxygen species. While some of these can be detoxified by antioxidants, the remaining oxygen species will be detrimental to the photosystems of the plant. More specifically, the D1 subunit in the reaction center of PSII can be damaged. Studies have found that deg1 proteins are involved in the degradation of these damaged D1 subunits. New D1 subunits can then replace these damaged D1 subunits in order to allow PSII to function properly again."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-photosynthesis",
+   "title": "Photosynthesis",
+   "url": "https://en.wikipedia.org/wiki/Photosynthesis",
+   "revid": 1379238357,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-calvin-cycle",
+   "title": "Calvin cycle",
+   "url": "https://en.wikipedia.org/wiki/Calvin_cycle",
+   "revid": 1377304277,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-photosystem",
+   "title": "Photosystem",
+   "url": "https://en.wikipedia.org/wiki/Photosystem",
+   "revid": 1376828125,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

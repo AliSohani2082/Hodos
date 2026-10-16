@@ -1,0 +1,82 @@
+{
+ "id": "adv1",
+ "chunks": [
+  {
+   "id": "src:wiki-mustache-template-system#c1",
+   "outlet": "src:wiki-mustache-template-system",
+   "title": "Mustache (template system)",
+   "text": "Mustache is a web template system. It is described as a logic-less system because it lacks any explicit control flow statements, like if and else conditionals or for loops; however, both looping and conditional evaluation can be achieved using section tags processing lists and anonymous functions (lambdas). It is named \"Mustache\" because of heavy use of braces, { }, that resemble a sideways moustache. Mustache is used mainly for mobile and web applications. NET, Objective-C, OCaml, Perl, PHP, Pharo, Python, R, Racket, Raku, Ruby, Rust, Scala, Smalltalk, Swift, Tcl, CFEngine, and XQuery. Mustache-1 was inspired by ctemplate and et, and began as a GitHub distribution at the end of 2009. A first version of the template engine was implemented with Ruby, running YAML template texts. The (preserved) main principles were:"
+  },
+  {
+   "id": "src:wiki-mustache-template-system#c2",
+   "outlet": "src:wiki-mustache-template-system",
+   "title": "Mustache (template system)",
+   "text": "Mustache HTML escapes data by default. To turn off escaping, use a &. The below would render as 2 > 1. Below is a template with section tag. When x is a Boolean value, the section tag acts like an if conditional. When x is an array, it acts like a foreach loop. }} refers to the current item when looping through an array, or the item checked in a conditional. Syntax highlighting is available in Atom, Coda, Emacs, TextMate, Vim and Visual Studio Code. Mustache template support is built into many web application frameworks (ex. CakePHP). js and CommonJS. There are many Mustache Engine implementations available, and all of them meet a common formal specification (see external links), that for final users results in the common syntax. 3."
+  },
+  {
+   "id": "src:wiki-web-template-system#c1",
+   "outlet": "src:wiki-web-template-system",
+   "title": "Web template system",
+   "text": "A web template system in web publishing allows web designers and developers to work with web templates to automatically generate custom web pages, such as the results from a search. This reuses static web page elements while defining dynamic elements based on web request parameters. Web templates support static content, providing basic structure and appearance. Developers can implement templates from  content management systems, web application frameworks, and HTML editors. With the model typically held in a relational database, the remaining components of the MVC architecture are the control and view. In the simplest of systems these two are not separated. However, adapting the separation of concerns principle one can completely decouple the relationships. For example, the view template may look like this:"
+  },
+  {
+   "id": "src:wiki-web-template-system#c2",
+   "outlet": "src:wiki-web-template-system",
+   "title": "Web template system",
+   "text": "Then, the control template loads the view, and then uses XPath addressing  to insert components from a database, for instance: A web browser and web server are a client\u2013server architecture. Sites often also use a web cache to improve performance. In many implementations, template files contain variables or placeholders that are replaced with data supplied by an application when the page is generated. Programming languages such as Perl, Ruby, C, and Java support template processing either natively, or through add-on libraries and modules. JavaServer Pages (JSP), PHP, and Active Server Pages (ASP with VBScript, JScript or other languages) are examples, themselves, of web template engines. These technologies are typically used in server-side templating systems, but could be adapted for use on an \"edge-side\" proxy or for static page generation."
+  },
+  {
+   "id": "src:wiki-web-template-system#c3",
+   "outlet": "src:wiki-web-template-system",
+   "title": "Web template system",
+   "text": "Static site generators are engines that use flat text input files like markdown and asciidoc to generate a static web page. Examples of this include Jekyll (Liquid, Ruby), Hugo (Go templates), and Pelican (Jinja2, Python). Some hosted website builders, including Wix, Weebly, and Duda, provide template-based systems that allow users to create static and dynamic web pages through graphical user interfaces rather than traditional programming. People began to use server-side dynamic pages generated from templates with pre-existent software adapted for this task. This early software was the preprocessors and macro languages, adapted for the web use, running on CGI. Next, a simple but relevant technology was the direct execution made on extension modules, started with SSI. Many template systems are typically used as server-side template systems:"
+  },
+  {
+   "id": "src:wiki-web-template-system#c4",
+   "outlet": "src:wiki-web-template-system",
+   "title": "Web template system",
+   "text": "), used in many \"server-side included script languages\" are also templates. All of them are Embedded complex languages. As for edge-side template and inclusion systems, \"edge-side\" refers to web servers that reside in the space between the client (browser) and the originating server. They are often referred to as \"reverse-proxy\" servers. These servers are generally tasked with reducing the load and traffic on originating servers by caching content such as images and page fragments, and delivering this to the browser in an efficient manner. Basic Edge Side Includes (ESI)  is an SSI-like language. ESI has been implemented for content delivery networks. The ESI template language may also be implemented in web browsers using JavaScript and Ajax, or via a browser \"plug-in\"."
+  },
+  {
+   "id": "src:wiki-template-processor#c1",
+   "outlet": "src:wiki-template-processor",
+   "title": "Template processor",
+   "text": "A template processor (also known as a template engine or template parser) is software designed to combine templates with data (defined by a data model) to produce resulting documents or programs. The language that the templates are written in is known as a template language or templating language. For purposes of this article, a result document is any kind of formatted output, including documents, web pages, or source code (in source code generation), either in whole or in fragments. A template engine is ordinarily included as a part of a web template system or application framework, and may be used also as a preprocessor or filter."
+  },
+  {
+   "id": "src:wiki-template-processor#c2",
+   "outlet": "src:wiki-template-processor",
+   "title": "Template processor",
+   "text": "Template engines typically include features common to most high-level programming languages, with an emphasis on features for processing plain text. Such features include: This may be a relational database, a source file such as XML, an alternate format of flat file database, a spreadsheet or any of other various sources of preformatted data. Some template processing systems are limited in the types of data that can be used. Others are designed for maximum flexibility and allow many different types of data. Template processing is used in various contexts for different purposes. The specific purpose is ordinarily contingent upon the software application or template engine in use. However, the flexibility of template processing systems often enables unconventional uses for purposes not originally intended by the original designers."
+  },
+  {
+   "id": "src:wiki-template-processor#c3",
+   "outlet": "src:wiki-template-processor",
+   "title": "Template processor",
+   "text": "A template engine is a specific kind of template processing module that exhibits all of the major features of a modern programming language. The term template engine evolved as a generalized description of programming languages whose primary or exclusive purpose was to process templates and data to output text. The use of this term is most notably applied to web development using a web template system, and it is also applied to other contexts as well. , UML, relational data, domain-specific enterprise data stores) for particular application domains, particular organizations, or in simplifying the production process for computer programmers."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-mustache-template-system",
+   "title": "Mustache (template system)",
+   "url": "https://en.wikipedia.org/wiki/Mustache_(template_system)",
+   "revid": 1371227500,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-web-template-system",
+   "title": "Web template system",
+   "url": "https://en.wikipedia.org/wiki/Web_template_system",
+   "revid": 1364777789,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-template-processor",
+   "title": "Template processor",
+   "url": "https://en.wikipedia.org/wiki/Template_processor",
+   "revid": 1367497049,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

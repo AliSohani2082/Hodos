@@ -1,0 +1,88 @@
+{
+ "id": "language-s2",
+ "chunks": [
+  {
+   "id": "src:wiki-japanese-writing-system#c1",
+   "outlet": "src:wiki-japanese-writing-system",
+   "title": "Japanese writing system",
+   "text": "Kana (仮名) are a set of syllabic scripts used in the Japanese writing system. The term originally means 'provisional' or 'borrowed names'. In modern usage, kana are primarily divided into hiragana and katakana, though historically they also included other forms such as man'yōgana and sōgana. All types of kana ultimately derive from Chinese characters (kanji): they borrow the original phonetic values of kanji and were developed from simplified forms or components of those characters. Historically, there was no strict functional distinction between hiragana and katakana. Texts could be written in a mixture of Chinese characters and either form of kana entirely alone without a fixed division of roles. This situation changed following language reforms after World War II, which established a functional division between the two syllabaries comparable to the distinction between lowercase and uppercase letters in Western alphabetic scripts. In contemporary Japanese, the pronunciation and orthography of kana are regulated by the system known as modern kana usage (gendai kanazukai)."
+  },
+  {
+   "id": "src:wiki-japanese-writing-system#c2",
+   "outlet": "src:wiki-japanese-writing-system",
+   "title": "Japanese writing system",
+   "text": "Hiragana (平仮名) emerged as a manual simplification via cursive script of the most phonetically widespread kanji among those who could read and write during the Heian period (794–1185). The main creators of the current hiragana were ladies of the Japanese imperial court, who used the script in the writing of personal communications and literature, such as the Tale of Genji. Hiragana is used to write the following: Katakana (片仮名) emerged around the 9th century, in the Heian period, when Buddhist monks created a syllabary derived from Chinese characters to simplify their reading, using portions of the characters as a kind of shorthand. The origin of the system is attributed to the monk Kūkai. Katakana is used to write the following:"
+  },
+  {
+   "id": "src:wiki-japanese-writing-system#c3",
+   "outlet": "src:wiki-japanese-writing-system",
+   "title": "Japanese writing system",
+   "text": "The first contact of the Japanese with the Latin alphabet occurred in the 16th century, during the Muromachi period, when they had contact with Portuguese navigators, the first European people to visit the Japanese islands. The earliest Japanese romanization system was based on Portuguese orthography. It was developed around 1548 by a Japanese Catholic named Anjirō. The Latin alphabet is used to write the following: Arabic numerals (as opposed to traditional kanji numerals) are often used to write numbers in horizontal text, especially when numbering things rather than indicating a quantity, such as telephone numbers, serial numbers and addresses. Arabic numerals were introduced in Japan probably at the same time as the Latin alphabet, in the 16th century during the Muromachi period, the first contact being via Portuguese navigators. These numerals did not originate in Europe, as the Portuguese inherited them during the Arab occupation of the Iberian peninsula. In the modern period, Japanese keyboards, such as the IME (Input Method Editor), primarily default their usage to the fullwidth Unicode Arabic numerals １ as opposed to 1, though most actual usage uses the common halfwidth one 1, especially when used to represent a quantity."
+  },
+  {
+   "id": "src:wiki-japanese-writing-system#c4",
+   "outlet": "src:wiki-japanese-writing-system",
+   "title": "Japanese writing system",
+   "text": "The fullwidth character may be used for spacing purposes aesthetically. Hentaigana (変体仮名), a set of archaic kana made obsolete by the Meiji reformation, are sometimes used to impart an archaic flavor, like in items of food (esp. soba). Jukujikun is the writing of words using kanji that reflect the meaning of the word though the pronunciation of the word is entirely unrelated to the usual pronunciations of the constituent kanji. Conversely, ateji is the employment of kanji that appear solely to represent the sound of the compound word but are, conceptually, utterly unrelated to the signification of the word."
+  },
+  {
+   "id": "src:wiki-hiragana#c1",
+   "outlet": "src:wiki-hiragana",
+   "title": "Hiragana",
+   "text": "After the 1900 script reform, which deemed hundreds of characters hentaigana, the hiragana syllabary consists of 48 base characters, of which two ([ゐ and ゑ) are only used in some proper names: The following table shows the complete hiragana together with the modified Hepburn romanization and IPA transcription, arranged in four categories, each of them displayed in the gojūon order. Those whose romanization are in bold do not use the initial consonant for that row. For all syllables besides ん, the pronunciation indicated is for word-initial syllables; for mid-word pronunciations see below. It has not been demonstrated whether the mora /ji/ existed in old Japanese. Though ye did appear in some textbooks during the Meiji period along with another kana for yi in the form of cursive 以. Today it is considered a Hentaigana by scholars and is encoded in Unicode 10 (𛀆) This kana could have a colloquial use, to convert the combo yui (ゆい) into yii (𛀆い), due to other Japanese words having a similar change."
+  },
+  {
+   "id": "src:wiki-hiragana#c2",
+   "outlet": "src:wiki-hiragana",
+   "title": "Hiragana",
+   "text": "An early, now obsolete, hiragana-esque form of ye may have existed (𛀁 [je]) in pre-Classical Japanese (prior to the advent of kana), but is generally represented for purposes of reconstruction by the kanji 江, and its hiragana form is not present in any known orthography. In modern orthography, ye can also be written as いぇ (イェ in katakana). While hiragana and katakana letters for \"ye\" were used for a short period after the advent of kana, the distinction between /ye/ and /e/ disappeared before glyphs could become established. It has not been demonstrated whether the mora /wu/ existed in old Japanese. However, hiragana wu also appeared in different Meiji-era textbooks (). Although there are several possible source kanji, it is likely to have been derived from a cursive form of the man'yōgana 汙, although a related variant sometimes listed () is from a cursive form of 紆. However, it was never commonly used. This character is included in Unicode 14 as HIRAGANA LETTER ARCHAIC WU (𛄟)."
+  },
+  {
+   "id": "src:wiki-katakana#c1",
+   "outlet": "src:wiki-katakana",
+   "title": "Katakana",
+   "text": "Of the 48 katakana syllabograms described above, only 46 are used in modern Japanese, and one of these is preserved for only a single use: Small versions of the five vowel kana are sometimes used to represent trailing off sounds (ハァ haa, ネェ nee). More often, they are used in katakana as Yōon-like extended digraphs, for transcribing into Japanese a syllable (or mora) that cannot be written with standard katakana. This is especially common for transcribing loanwords such as チェ (che) in チェンジ chenji (\"change\"), ファ (fa) in ファミリー famirī (\"family\") and ウィ (wi) and ディ (di) in ウィキペディア Wikipedia; see below for the full list."
+  },
+  {
+   "id": "src:wiki-katakana#c2",
+   "outlet": "src:wiki-katakana",
+   "title": "Katakana",
+   "text": "\" Most students who have learned hiragana \"do not have great difficulty in memorizing\" katakana as well. Other instructors introduce katakana first, because these are used with loanwords. This gives students a chance to practice reading and writing kana with meaningful words. This was the approach taken by the influential American linguistics scholar Eleanor Harz Jorden in Japanese: The Written Language (parallel to Japanese: The Spoken Language). Katakana is commonly used by Japanese linguists to write the Ainu language. In Ainu katakana usage, the consonant that comes at the end of a syllable is represented by a small version of a katakana that corresponds to that final consonant followed by a vowel (for details of which vowel, please see the table at Ainu language § Special katakana for the Ainu language). For instance, the Ainu word up is represented by ウㇷ゚ (ウプ [u followed by small pu]). Ainu also uses three handakuten modified katakana: セ゚ ([tse]) and either ツ゚ or ト゚ ([tu̜]). In Unicode, the Katakana Phonetic Extensions block (U+31F0–U+31FF) exists for Ainu language support. These characters are used for the Ainu language only."
+  },
+  {
+   "id": "src:wiki-katakana#c3",
+   "outlet": "src:wiki-katakana",
+   "title": "Katakana",
+   "text": "Taiwanese kana (タイ ヲァヌ ギイ カア ビェン) is a katakana-based writing system once used to write Taiwanese Hokkien while Taiwan was under Japanese rule. It functioned as a phonetic guide for Chinese characters, much like furigana in Japanese or pinyin in Mandarin. There were similar systems for other languages in Taiwan as well, including Hakka and Formosan languages. Unlike Japanese or Ainu, Taiwanese kana uses a methodology similar to bopomofo, with kana serving as initials, vowel medials and consonant finals, marked with tonal marks. A dot below the initial kana represents aspirated consonants, and チ, ツ, サ, セ, ソ, ウ and オ with a superpositional bar represent sounds found only in Taiwanese."
+  },
+  {
+   "id": "src:wiki-katakana#c4",
+   "outlet": "src:wiki-katakana",
+   "title": "Katakana",
+   "text": "Katakana is used as a phonetic guide for the Okinawan language, unlike the various other systems to represent Okinawan, which use hiragana with extensions. The system was devised by the Okinawa Center of Language Study of the University of the Ryukyus. It uses many extensions and yōon to show the many non-Japanese sounds of Okinawan. This is a table of katakana together with their Hepburn romanization and rough IPA transcription for their use in Japanese. Katakana with dakuten or handakuten follow the gojūon kana without them. Characters shi シ, tsu ツ, so ソ, and n ン look very similar in print except for the slant and stroke shape. These differences in slant and shape are more prominent when written with an ink brush."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-japanese-writing-system",
+   "title": "Japanese writing system",
+   "url": "https://en.wikipedia.org/wiki/Japanese_writing_system",
+   "revid": 1376993775,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-hiragana",
+   "title": "Hiragana",
+   "url": "https://en.wikipedia.org/wiki/Hiragana",
+   "revid": 1379929980,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-katakana",
+   "title": "Katakana",
+   "url": "https://en.wikipedia.org/wiki/Katakana",
+   "revid": 1380096620,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

@@ -1,0 +1,94 @@
+{
+ "id": "science-s4",
+ "chunks": [
+  {
+   "id": "src:wiki-natural-selection#c1",
+   "outlet": "src:wiki-natural-selection",
+   "title": "Natural selection",
+   "text": "Several philosophers of the classical era, including Empedocles and his intellectual successor, the Roman poet Lucretius, expressed the idea that nature produces a huge variety of creatures, randomly, and that only those creatures that manage to provide for themselves and reproduce successfully persist. Empedocles' idea that organisms arose entirely by the incidental workings of causes such as heat and cold was criticised by Aristotle in Book II of Physics. He posited natural teleology in its place, and believed that form was achieved for a purpose, citing the regularity of heredity in species as proof. Nevertheless, he accepted in his biology that new types of animals, monstrosities (τερας), can occur in very rare instances (Generation of Animals, Book IV). , of teeth) might have appeared accidentally, but only the useful forms survived:"
+  },
+  {
+   "id": "src:wiki-natural-selection#c2",
+   "outlet": "src:wiki-natural-selection",
+   "title": "Natural selection",
+   "text": "So what hinders the different parts [of the body] from having this merely accidental relation in nature? as the teeth, for example, grow by necessity, the front ones sharp, adapted for dividing, and the grinders flat, and serviceable for masticating the food; since they were not made for the sake of this, but it was the result of accident. And in like manner as to the other parts in which there appears to exist an adaptation to an end. Wheresoever, therefore, all things together (that is all the parts of one whole) happened like as if they were made for the sake of something, these were preserved, having been appropriately constituted by an internal spontaneity, and whatsoever things were not thus constituted, perished, and still perish. But Aristotle rejected this possibility in the next paragraph, making clear that he is talking about  the development of animals as embryos with the phrase \"either invariably or normally come about\", not the origin of species:"
+  },
+  {
+   "id": "src:wiki-natural-selection#c3",
+   "outlet": "src:wiki-natural-selection",
+   "title": "Natural selection",
+   "text": "In 1859, Charles Darwin set out his theory of evolution by natural selection as an explanation for adaptation and speciation. He defined natural selection as the \"principle by which each slight variation [of a trait], if useful, is preserved\". The concept was simple but powerful: individuals best adapted to their environments are more likely to survive and reproduce. As long as there is some variation between them and that variation is heritable, there will be an inevitable selection of individuals with the most advantageous variations. If the variations are heritable, then differential reproductive success leads to the evolution of particular populations of a species, and populations that evolve to be sufficiently different eventually become different species."
+  },
+  {
+   "id": "src:wiki-natural-selection#c4",
+   "outlet": "src:wiki-natural-selection",
+   "title": "Natural selection",
+   "text": "Darwin's ideas were inspired by the observations that he had made on the second voyage of HMS Beagle (1831–1836), and by the work of a political economist, Thomas Robert Malthus, who, in An Essay on the Principle of Population (1798), noted that population (if unchecked) increases exponentially, whereas the food supply grows only arithmetically; thus, inevitable limitations of resources would have demographic implications, leading to a \"struggle for existence\". When Darwin read Malthus in 1838 he was already primed by his work as a naturalist to appreciate the \"struggle for existence\" in nature. It struck him that as population outgrew resources, \"favourable variations would tend to be preserved, and unfavourable ones to be destroyed. \" Darwin wrote:"
+  },
+  {
+   "id": "src:wiki-modern-synthesis-20th-century#c1",
+   "outlet": "src:wiki-modern-synthesis-20th-century",
+   "title": "Modern synthesis (20th century)",
+   "text": "Charles Darwin's 1859 book, On the Origin of Species, convinced most biologists that evolution had occurred, but not that natural selection was its primary mechanism. In the 19th and early 20th centuries, variations of Lamarckism (inheritance of acquired characteristics), orthogenesis (progressive evolution), saltationism (evolution by jumps) and mutationism (evolution driven by mutations) were discussed as alternatives. Darwin himself had sympathy for Lamarckism, but Alfred Russel Wallace advocated natural selection and totally rejected Lamarckism. In 1880, Samuel Butler labelled Wallace's view neo-Darwinism."
+  },
+  {
+   "id": "src:wiki-modern-synthesis-20th-century#c2",
+   "outlet": "src:wiki-modern-synthesis-20th-century",
+   "title": "Modern synthesis (20th century)",
+   "text": "From the 1880s onwards, biologists grew skeptical of Darwinian evolution. This eclipse of Darwinism (in Julian Huxley's words) grew out of the weaknesses in Darwin's account, with respect to his view of inheritance. Darwin believed in blending inheritance, which implied that any new variation, even if beneficial, would be weakened by 50% at each generation, as the engineer Fleeming Jenkin noted in 1868. This in turn meant that small variations would not survive long enough to be selected. Blending would therefore directly oppose natural selection. In addition, Darwin and others considered Lamarckian inheritance of acquired characteristics entirely possible, and Darwin's 1868 theory of pangenesis, with contributions to the next generation (gemmules) flowing from all parts of the body, actually implied Lamarckism as well as blending."
+  },
+  {
+   "id": "src:wiki-modern-synthesis-20th-century#c3",
+   "outlet": "src:wiki-modern-synthesis-20th-century",
+   "title": "Modern synthesis (20th century)",
+   "text": "August Weismann's idea, set out in his 1892 book Das Keimplasma: eine Theorie der Vererbung (\"The Germ Plasm: a Theory of Inheritance\"), was that the hereditary material, which he called the germ plasm, and the rest of the body (the soma) had a one-way relationship: the germ-plasm formed the body, but the body did not influence the germ-plasm, except indirectly in its participation in a population subject to natural selection. If correct, this made Darwin's pangenesis wrong, and Lamarckian inheritance impossible. His experiment on mice, cutting off their tails and showing that their offspring had normal tails, demonstrated that inheritance was 'hard'. He argued strongly and dogmatically for Darwinism and against Lamarckism, polarising opinions among other scientists. This increased anti-Darwinian feeling, contributing to its eclipse."
+  },
+  {
+   "id": "src:wiki-modern-synthesis-20th-century#c4",
+   "outlet": "src:wiki-modern-synthesis-20th-century",
+   "title": "Modern synthesis (20th century)",
+   "text": "While carrying out breeding experiments to clarify the mechanism of inheritance in 1900, Hugo de Vries and Carl Correns independently rediscovered Gregor Mendel's work. News of this reached William Bateson in England, who reported on the paper during a presentation to the Royal Horticultural Society in May 1900. In Mendelian inheritance, the contributions of each parent retain their integrity, rather than blending with the contribution of the other parent. In the case of a cross between two true-breeding varieties such as Mendel's round and wrinkled peas, the first-generation offspring are all alike, in this case, all round. Allowing these to cross, the original characteristics reappear (segregation): about 3/4 of their offspring are round, 1/4 wrinkled. There is a discontinuity between the appearance of the offspring; de Vries coined the term allele for a variant form of an inherited characteristic. This reinforced a major division of thought, already present in the 1890s, between gradualists who followed Darwin, and saltationists such as Bateson."
+  },
+  {
+   "id": "src:wiki-fitness-biology#c1",
+   "outlet": "src:wiki-fitness-biology",
+   "title": "Fitness (biology)",
+   "text": "Fitness is often defined as a propensity or probability, rather than the actual number of offspring. For example, according to Maynard Smith: \"Fitness is a property, not of an individual, but of a class of individuals—for example homozygous for allele A at a particular locus. Thus the phrase 'expected number of offspring' means the average number, not the number produced by some one individual. \" \" Susan Blackmore summarises the idea and importance of fitness in broad terms: \"As Darwin realized, if more copies are made than can survive, then the survivors will pass on to the next generation of copying whatever helped them get through. \""
+  },
+  {
+   "id": "src:wiki-fitness-biology#c2",
+   "outlet": "src:wiki-fitness-biology",
+   "title": "Fitness (biology)",
+   "text": "In order to avoid the complications of sex and recombination, the concept of fitness is presented below in the restricted setting of an asexual population without genetic recombination. Thus, fitnesses can be assigned directly to genotypes. There are two commonly used operationalizations of fitness – absolute fitness and relative fitness. Inclusive fitness includes the ability of an allele in one individual to promote or impede the survival and/or reproduction of other individuals that share that allele, in a differential manner to individuals with a different allele. To avoid double counting, inclusive fitness excludes the contribution of other individuals to the survival and reproduction of the focal individual. One mechanism of inclusive fitness is kin selection. Inclusive fitness is equivalent to the average fitness of individuals that share a genetic lineage."
+  },
+  {
+   "id": "src:wiki-fitness-biology#c3",
+   "outlet": "src:wiki-fitness-biology",
+   "title": "Fitness (biology)",
+   "text": "The British sociologist Herbert Spencer coined the phrase \"survival of the fittest\"  in his 1864 work Principles of Biology to characterise what Charles Darwin had called natural selection. S. Haldane was the first to quantify fitness, in terms of the modern evolutionary synthesis of Darwinism and Mendelian genetics starting with his 1924 paper A Mathematical Theory of Natural and Artificial Selection. D. Hamilton in 1964 in his paper on The Genetical Evolution of Social Behaviour. Genetic load may increase when deleterious mutations, migration, inbreeding, or outcrossing lower mean fitness. Genetic load may also increase when beneficial mutations increase the maximum fitness against which other mutations are compared; this is known as the substitutional load or cost of selection."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-natural-selection",
+   "title": "Natural selection",
+   "url": "https://en.wikipedia.org/wiki/Natural_selection",
+   "revid": 1373147121,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-modern-synthesis-20th-century",
+   "title": "Modern synthesis (20th century)",
+   "url": "https://en.wikipedia.org/wiki/Modern_synthesis_(20th_century)",
+   "revid": 1374379287,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-fitness-biology",
+   "title": "Fitness (biology)",
+   "url": "https://en.wikipedia.org/wiki/Fitness_(biology)",
+   "revid": 1379137207,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

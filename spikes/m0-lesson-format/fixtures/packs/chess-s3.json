@@ -1,0 +1,69 @@
+{
+ "id": "chess-s3",
+ "chunks": [
+  {
+   "id": "src:wiki-chess-opening#c1",
+   "outlet": "src:wiki-chess-opening",
+   "title": "Chess opening",
+   "text": "The opening is the initial stage of a chess game. The other phases are the middlegame and the endgame. A large amount of established opening theory exists, with some theory dating back centuries. e4 c5, which is named the \"Sicilian Defense\"; these can be broken down further into variations. The Oxford Companion to Chess lists 1,327 named openings and variations, and there are many others with varying degrees of common usage. Opening moves that are considered standard are referred to as \"book moves\", or simply \"book\". When a game begins to deviate from known theory, the players are said to be \"out of book\". In some openings, book lines have been worked out for over 30 moves. Standard openings have a variety of aims, including developing rapidly, harmoniously, and actively, controlling the center, and king safety. There are also psychological goals and other gameplay-related goals. Professional chess players spend years studying openings, and they continue doing so throughout their careers as opening theory continues to evolve. Players at the club level also study openings, but the importance of the opening phase is less there since games are rarely decided in the opening."
+  },
+  {
+   "id": "src:wiki-chess-opening#c2",
+   "outlet": "src:wiki-chess-opening",
+   "title": "Chess opening",
+   "text": "The study of openings can become unbalanced if it is to the exclusion of tactical training and middlegame and endgame strategy. Whether they are trying to gain the upper hand as White, or to equalize as Black or to create dynamic imbalances, players generally devote a lot of attention in the opening stages to the following strategies: Most players realize after a while that they play certain types of positions better than others, and that the amount of theory they can learn is limited. Therefore, most players specialize in certain openings where they know the theory and that lead to positions they favor. The set of openings a player has specialized in is called an opening repertoire. The main elements a player needs to consider in a repertoire are:"
+  },
+  {
+   "id": "src:wiki-chess-opening#c3",
+   "outlet": "src:wiki-chess-opening",
+   "title": "Chess opening",
+   "text": "Chess players' names are the most common sources of opening names. The name given to an opening is not always that of the first player to adopt it; often an opening is named for the player who was the first to popularize it or to publish analysis of it. Eponymic openings include the Ruy Lopez, Alekhine's Defense, Morphy Defense, and the R\u00e9ti Opening. Some opening names honor two people, such as the Caro\u2013Kann and the Smith\u2013Morra. e4 e5. They include many of the oldest and most extensively analyzed openings in chess. Nf3, attacking Black's undefended e-pawn, preparing to castle kingside, and supporting a future d2\u2013d4. Nc3 Nf6). Nf6, the Petrov Defense. d6, the Philidor Defense, which, though solid, often leads to cramped positions for Black. d4, the Center Game."
+  },
+  {
+   "id": "src:wiki-chess-opening#c4",
+   "outlet": "src:wiki-chess-opening",
+   "title": "Chess opening",
+   "text": "d4 d5. c4, the Queen's Gambit. dxc4, yielding the center to White in exchange for freer development. e6, the Queen's Gambit Declined. Both moves lead to an immense forest of variations. e5, the Albin Countergambit. c4, White can also play a number of other moves. Avoiding c4 often indicates an intention to play an opening system, which are characterized by avoiding pawn tension and instead simply developing, aiming for a particular formation without great concern over how Black chooses to defend. Such opening systems played by White include the London System, Colle System, and Stonewall Attack. e4, often leading to the Blackmar\u2013Diemer Gambit."
+  },
+  {
+   "id": "src:wiki-chess-strategy#c1",
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "text": "Under a system like this, giving up a knight or bishop to win a rook (\"winning the exchange\") is advantageous and is worth about two pawns. This ignores complications such as the current position and freedom of the pieces involved, but it is a good starting point. In an open position, bishops are more valuable than knights (a bishop pair can easily be worth seven points or more in some situations); conversely, in a closed position, bishops are less valuable than knights. A knight in the center of the board that cannot be taken, however, is known as a knight outpost and threatens several fork instances. In such a case, a knight is worth far more than a bishop. Also, many pieces have a partner. By doubling up two knights, two rooks, rook and queen, or bishop and queen, the pieces can get stronger than the sum of the individual pieces alone. When a piece loses its partner, its value slightly decreases. The king is priceless since its capture results in the defeat of that player and ends that game. However, especially in the endgame, the king can also be a fighting piece, and is sometimes given a fighting value of three-and-a-half points."
+  },
+  {
+   "id": "src:wiki-chess-strategy#c2",
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "text": "The initiative belongs to the player who can make threats that cannot be ignored, such as checking the opponent's king. They thus put their opponent in the position of having to use their turns responding to threats rather than making their own, hindering the development of their pieces. The player with the initiative is generally attacking and the other player is generally defending. It is important to defend one's pieces even if they are not directly threatened. This helps stop possible future campaigns from the opponent. If a defender must be added at a later time, this may cost a tempo or even be impossible due to a fork or discovered attack. \" Similarly, if one spots undefended enemy pieces, one should immediately take advantage of those pieces' weakness. Even a defended piece can be vulnerable. If the defending piece is also defending something else, it is called an overworked piece, and may not be able to fulfill its task. When there is more than one attacking piece, the number of defenders must also be increased, and their values taken into account. In addition to defending pieces, it is also often necessary to defend key squares, open files, and the back rank. These situations can easily occur if the pawn structure is weak."
+  },
+  {
+   "id": "src:wiki-chess-strategy#c3",
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "text": "In the endgame, passed pawns, unhindered by enemy pawns from promotion, are strong, especially if advanced or protected by another pawn. A passed pawn on the sixth rank is roughly as strong as a knight or bishop and often decides the game. ) Since knights can easily be chased away by pawn moves, it is often advantageous for knights to be placed in holes in the enemy position as outposts\u2014squares where they cannot be attacked by pawns. Such a knight on the fifth rank is a strong asset. The ideal position for a knight is the opponent's third rank, when it is supported by one or two pawns. \" A king and one knight are not sufficient material to checkmate an opposing lone king (see Two knights endgame). A king and two knights can checkmate a lone king but cannot force it."
+  },
+  {
+   "id": "src:wiki-chess-strategy#c4",
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "text": "Queens are the most powerful pieces. They have great mobility and can make many threats at once. They can act as a rook and as a bishop at the same time. For these reasons, checkmate attacks involving a queen are easier to achieve than those without one. Although powerful, the queen is also easily harassed. Thus, it is generally wise to wait to develop the queen until after the knights and bishops have been developed to prevent the queen from being attacked by minor pieces and losing tempo. When a pawn is promoted, most of the time it is promoted to a queen. Chess strategy consists of setting and achieving long-term goals during the game\u2014for example, where to place different pieces\u2014while tactics concentrate on immediate maneuver. These two parts of chess thinking cannot be completely separated, because strategic goals are mostly achieved by the means of tactics, while the tactical opportunities are based on the previous strategy of play."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-chess-opening",
+   "title": "Chess opening",
+   "url": "https://en.wikipedia.org/wiki/Chess_opening",
+   "revid": 1369406669,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "url": "https://en.wikipedia.org/wiki/Chess_strategy",
+   "revid": 1369421492,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

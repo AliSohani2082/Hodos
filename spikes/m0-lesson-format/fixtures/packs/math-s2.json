@@ -1,0 +1,76 @@
+{
+ "id": "math-s2",
+ "chunks": [
+  {
+   "id": "src:wiki-derivative#c1",
+   "outlet": "src:wiki-derivative",
+   "title": "Derivative",
+   "text": "In principle, the derivative of a function can be computed from the definition by considering the difference quotient and computing its limit. Once the derivatives of a few simple functions are known, the derivatives of functions obtained from these simple functions by applying elementary operations, such as products, sums, quotients, or function composition, to them can be determined by applying rules for differentiation. This process of finding a derivative is called differentiation. The concept of a derivative can be extended to many other settings. The common thread is that the derivative of a function at a point serves as a linear approximation of the function at that point."
+  },
+  {
+   "id": "src:wiki-slope#c1",
+   "outlet": "src:wiki-slope",
+   "title": "Slope",
+   "text": "Thus, a 45° rising line has slope m = +1, and a 45° falling line has slope m = −1. Generalizing this, differential calculus defines the slope of a plane curve at a point as the slope of its tangent line at that point. When the curve is approximated by a series of points, the slope of the curve may be approximated by the slope of the secant line between two nearby points. When the curve is given as the graph of an algebraic expression, calculus gives formulas for the slope at each point. Slope is thus one of the central ideas of calculus and its applications to design. There seems to be no clear answer as to why the letter m is used for slope, but it first appears in English in O'Brien (1844) who introduced the equation of a line as \"y = mx + b\", and it can also be found in Todhunter (1888) who wrote \"y = mx + c\"."
+  },
+  {
+   "id": "src:wiki-slope#c2",
+   "outlet": "src:wiki-slope",
+   "title": "Slope",
+   "text": "The slope of a line in the plane containing the x and y axes is generally represented by the letter m, and is defined as the change in the y coordinate divided by the corresponding change in the x coordinate, between two distinct points on the line. This is described by the following equation: Since the slope is positive, the direction of the line is increasing. Since |m| < 1, the incline is not very steep (incline < 45°). As another example, consider a line which runs through the points (4, 15) and (3, 21). Then, the slope of the line is Since the slope is negative, the direction of the line is decreasing. Since |m| > 1, this decline is fairly steep (decline > 45°)."
+  },
+  {
+   "id": "src:wiki-slope#c3",
+   "outlet": "src:wiki-slope",
+   "title": "Slope",
+   "text": "Consider the two lines: y = −3x + 1 and y = −3x − 2. Both lines have slope m = −3. They are not the same line. So they are parallel lines. Consider the two lines  y = −3x + 1 and y = ⁠x/3⁠ − 2. The slope of the first line is m1 = −3. The slope of the second line is m2 = ⁠1/3⁠. The product of these two slopes is −1. So these two lines are perpendicular. In statistics, the gradient of the least-squares regression best-fitting line for a given sample of data may be written as: The concept of a slope is central to differential calculus. For non-linear functions, the rate of change varies along the curve. The derivative of the function at a point is the slope of the line tangent to the curve at the point and is thus equal to the rate of change of the function at that point. If we let Δx and Δy be the distances (along the x and y axes, respectively) between two points on a curve, then the slope given by the above definition,"
+  },
+  {
+   "id": "src:wiki-slope#c4",
+   "outlet": "src:wiki-slope",
+   "title": "Slope",
+   "text": "The value of the derivative at a specific point on the function provides us with the slope of the tangent at that precise location. For example, let y = x2. A point on this function is (−2,4). The derivative of this function is dy⁄dx = 2x. So the slope of the line tangent to y at (−2,4) is 2 ⋅ (−2) = −4. The equation of this tangent line is: y − 4 = (−4)(x − (−2)) or y = −4x − 4. The slope of a roof, traditionally and commonly called the roof pitch, in carpentry and architecture in the US is commonly described in terms of integer fractions of one foot (geometric tangent, rise over run), a legacy of British imperial measure. Other units are in use in other locales, with similar conventions. For details, see roof pitch."
+  },
+  {
+   "id": "src:wiki-leibniz-newton-calculus-controversy#c1",
+   "outlet": "src:wiki-leibniz-newton-calculus-controversy",
+   "title": "Leibniz–Newton calculus controversy",
+   "text": "It was certainly Isaac Newton who first devised a new infinitesimal calculus and elaborated it into a widely extensible algorithm, whose potentialities he fully understood; of equal certainty, differential and integral calculus, the fount of great developments flowing continuously from 1684 to the present day, was created independently by Gottfried Leibniz. One author has identified the dispute as being about \"profoundly different\" methods: Despite ... points of resemblance, the methods [of Newton and Leibniz] are profoundly different, so making the priority row a nonsense. On the other hand, other authors have emphasized the equivalences and mutual translatability of the methods; here Niccolò Guicciardini (2003) appears to confirm L'Hôpital (1696) (already cited):"
+  },
+  {
+   "id": "src:wiki-leibniz-newton-calculus-controversy#c2",
+   "outlet": "src:wiki-leibniz-newton-calculus-controversy",
+   "title": "Leibniz–Newton calculus controversy",
+   "text": "the Newtonian and Leibnizian schools shared a common mathematical method. They adopted two algorithms, the analytical method of fluxions, and the differential and integral calculus, which were translatable one into the other. In order to respond point by point to all the work published against me, I would have to go into much minutiae that occurred thirty, forty years ago, of which I remember little: I would have to search my old letters, of which many are lost. Moreover, in most cases, I did not keep a copy, and when I did, the copy is buried in a great heap of papers, which I could sort through only with time and patience. I have enjoyed little leisure, being so weighted down of late with occupations of a totally different nature. In any event, a bias favoring Newton tainted the whole affair from the outset. The Royal Society, of which Isaac Newton was president at the time, set up a committee to pronounce on the priority dispute in response to a letter it had received from Leibniz. That committee never asked Leibniz to give his version of events. The report of the committee, finding in favor of Newton, was written and published early in 1713 as the \"Commercium Epistolicum\" (mentioned above) by Newton himself. Leibniz, however, did not see it until the autumn of 1714."
+  },
+  {
+   "id": "src:wiki-leibniz-newton-calculus-controversy#c3",
+   "outlet": "src:wiki-leibniz-newton-calculus-controversy",
+   "title": "Leibniz–Newton calculus controversy",
+   "text": "Leibniz never agreed to acknowledge Newton's priority in inventing calculus. He attempted to write his own version of the history of differential calculus, but, as with his history of the rulers of Braunschweig, he never completed it. At the end of 1715, Leibniz accepted Johann Bernoulli's offer to organize another mathematical competition, in which different approaches would have to prove their worth. This time the problem was taken from the area later called the calculus of variations—it required constructing a tangent line to a family of curves. A letter was written on 25 November and transmitted in London to Newton through Abate Conti. The problem was formulated in unclear terms, and only later did it become evident that it required a general solution, rather than the particular one Newton had understood. After the British side published their decision, Leibniz published his own, more general solution, and thus formally won the competition. For his part, Newton stubbornly sought to destroy his opponent. Not having achieved this with the \"Report\", he continued his research, spending hundreds of hours on it."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-derivative",
+   "title": "Derivative",
+   "url": "https://en.wikipedia.org/wiki/Derivative",
+   "revid": 1379862247,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-slope",
+   "title": "Slope",
+   "url": "https://en.wikipedia.org/wiki/Slope",
+   "revid": 1371955019,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-leibniz-newton-calculus-controversy",
+   "title": "Leibniz–Newton calculus controversy",
+   "url": "https://en.wikipedia.org/wiki/Leibniz%E2%80%93Newton_calculus_controversy",
+   "revid": 1374022718,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

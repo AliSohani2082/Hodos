@@ -1,0 +1,100 @@
+{
+ "id": "adv6",
+ "chunks": [
+  {
+   "id": "src:wiki-cell-cycle#c1",
+   "outlet": "src:wiki-cell-cycle",
+   "title": "Cell cycle",
+   "text": "The eukaryotic cell cycle consists of four distinct phases: G1 phase, S phase (synthesis), G2 phase (collectively known as interphase) and M phase (mitosis and cytokinesis). M phase is itself composed of two tightly coupled processes: mitosis, in which the cell's nucleus divides, and cytokinesis, in which the cell's cytoplasm and cell membrane divides forming two daughter cells. Activation of each phase is dependent on the proper progression and completion of the previous one. Cells that have temporarily or reversibly stopped dividing are said to have entered a state of quiescence known as G0 phase or resting phase."
+  },
+  {
+   "id": "src:wiki-cell-cycle#c2",
+   "outlet": "src:wiki-cell-cycle",
+   "title": "Cell cycle",
+   "text": "G0 is a resting phase where the cell has left the cycle and has stopped dividing. The cell cycle starts with this phase. Non-proliferative (non-dividing) cells in multicellular eukaryotes generally enter the quiescent G0 state from G1 and may remain quiescent for long periods of time, possibly indefinitely (as is often the case for neurons). This is very common for cells that are fully differentiated. , some liver, kidney, and stomach cells. , epithelial cells. The word \"post-mitotic\" is sometimes used to refer to both quiescent and senescent cells. Cellular senescence occurs in response to DNA damage and external stress and usually constitutes an arrest in G1. Cellular senescence may make a cell's progeny nonviable; it is often a biochemical alternative to the self-destruction of such a damaged cell by apoptosis."
+  },
+  {
+   "id": "src:wiki-cell-cycle#c3",
+   "outlet": "src:wiki-cell-cycle",
+   "title": "Cell cycle",
+   "text": "Interphase represents the phase between two successive M phases. Interphase is a series of changes that takes place in a newly formed cell and its nucleus before it becomes capable of division again. It is also called preparatory phase or intermitosis. Typically interphase lasts for at least 91% of the total time required for the cell cycle. Interphase proceeds in three stages, G1, S, and G2, followed by the cycle of mitosis and cytokinesis. The cell's nuclear DNA contents are duplicated during S phase. The first phase within interphase, from the end of the previous M phase until the beginning of DNA synthesis, is called G1 (G indicating gap). It is also called the growth phase. During this phase, the biosynthetic activities of the cell, which are considerably slowed down during M phase, resume at a high rate. The duration of G1 is highly variable, even among different cells of the same species. In this phase, the cell increases its supply of proteins, increases the number of organelles (such as mitochondria, ribosomes), and grows in size. In G1 phase, a cell has three options."
+  },
+  {
+   "id": "src:wiki-cell-cycle#c4",
+   "outlet": "src:wiki-cell-cycle",
+   "title": "Cell cycle",
+   "text": ", each chromosome consists of two sister chromatids. Thus, during this phase, the amount of DNA in the cell has doubled, though the ploidy and number of chromosomes are unchanged. Rates of RNA transcription and protein synthesis are very low during this phase. An exception to this is histone production, most of which occurs during the S phase. G2 phase occurs after DNA replication and is a period of protein synthesis and rapid cell growth to prepare the cell for mitosis. During this phase microtubules begin to reorganize to form a spindle (preprophase). Before proceeding to mitotic phase, cells must be checked at the G2 checkpoint for any DNA damage within the chromosomes. The G2 checkpoint is mainly regulated by the tumor protein p53. If the DNA is damaged, p53 will either repair the DNA or trigger the apoptosis of the cell. If p53 is dysfunctional or mutated, cells with damaged DNA may continue through the cell cycle, leading to the development of cancer."
+  },
+  {
+   "id": "src:wiki-mitosis#c1",
+   "outlet": "src:wiki-mitosis",
+   "title": "Mitosis",
+   "text": "In plant cells only, prophase is preceded by a preprophase stage. In highly vacuolated plant cells, the nucleus has to migrate into the center of the cell before mitosis can begin. This is achieved through the formation of a phragmosome, a transverse sheet of cytoplasm that bisects the cell along the future plane of cell division. In addition to phragmosome formation, preprophase is characterized by the formation of a ring of microtubules and actin filaments (called preprophase band) underneath the plasma membrane around the equatorial plane of the future mitotic spindle. This band marks the position where the cell will eventually divide. The cells of higher plants (such as the flowering plants) lack centrioles; instead, microtubules form a spindle on the surface of the nucleus and are then organized into a spindle by the chromosomes themselves, after the nuclear envelope breaks down. The preprophase band disappears during nuclear envelope breakdown and spindle formation in prometaphase."
+  },
+  {
+   "id": "src:wiki-mitosis#c2",
+   "outlet": "src:wiki-mitosis",
+   "title": "Mitosis",
+   "text": "At the beginning of prometaphase in animal cells, phosphorylation of nuclear lamins causes the nuclear envelope to disintegrate into small membrane vesicles. As this happens, microtubules invade the nuclear space. This is called open mitosis, and it occurs in some multicellular organisms. Fungi and some protists, such as algae or trichomonads, undergo a variation called closed mitosis where the spindle forms inside the nucleus, or the microtubules penetrate the intact nuclear envelope. In late prometaphase, kinetochore microtubules begin to search for and attach to chromosomal kinetochores. A kinetochore is a proteinaceous microtubule-binding structure that forms on the chromosomal centromere during late prophase. A number of polar microtubules find and interact with corresponding polar microtubules from the opposite centrosome to form the mitotic spindle. Although the kinetochore structure and function are not fully understood, it is known that it contains some form of molecular motor. When a microtubule connects with the kinetochore, the motor activates, using energy from ATP to \"crawl\" up the tube toward the originating centrosome."
+  },
+  {
+   "id": "src:wiki-mitosis#c3",
+   "outlet": "src:wiki-mitosis",
+   "title": "Mitosis",
+   "text": "This motor activity, coupled with polymerisation and depolymerisation of microtubules, provides the pulling force necessary to later separate the chromosome's two chromatids. After the microtubules have located and attached to the kinetochores in prometaphase, the two centrosomes begin pulling the chromosomes towards opposite ends of the cell. The resulting tension causes the chromosomes to align along the metaphase plate at the equatorial plane, an imaginary line that is centrally located between the two centrosomes (at approximately the midline of the cell). To ensure equitable distribution of chromosomes at the end of mitosis, the metaphase checkpoint guarantees that kinetochores are properly attached to the mitotic spindle and that the chromosomes are aligned along the metaphase plate. If the cell successfully passes through the metaphase checkpoint, it proceeds to anaphase."
+  },
+  {
+   "id": "src:wiki-mitosis#c4",
+   "outlet": "src:wiki-mitosis",
+   "title": "Mitosis",
+   "text": "During anaphase A, the cohesins that bind sister chromatids together are cleaved, forming two identical daughter chromosomes. Shortening of the kinetochore microtubules pulls the newly formed daughter chromosomes to opposite ends of the cell. During anaphase B, polar microtubules push against each other, causing the cell to elongate. In late anaphase, chromosomes also reach their overall maximal condensation level, to help chromosome segregation and the re-formation of the nucleus. In most animal cells, anaphase A precedes anaphase B, but some vertebrate egg cells demonstrate the opposite order of events."
+  },
+  {
+   "id": "src:wiki-cell-cycle-checkpoint#c1",
+   "outlet": "src:wiki-cell-cycle-checkpoint",
+   "title": "Cell cycle checkpoint",
+   "text": "Cell cycle checkpoints are control mechanisms in the eukaryotic cell cycle which ensure its proper progression. Each checkpoint serves as a potential termination point along the cell cycle, during which the conditions of the cell are assessed, with progression through the various phases of the cell cycle occurring only when favorable conditions are met. There are many checkpoints in the cell cycle, but the three major ones are: the G1 checkpoint, also known as the Start or restriction checkpoint or Major Checkpoint; the G2/M checkpoint; and the metaphase-to-anaphase transition, also known as the spindle checkpoint. Progression through these checkpoints is largely determined by the activation of cyclin-dependent kinases by regulatory protein subunits called cyclins, different forms of which are produced at each stage of the cell cycle to control the specific events that occur therein."
+  },
+  {
+   "id": "src:wiki-cell-cycle-checkpoint#c2",
+   "outlet": "src:wiki-cell-cycle-checkpoint",
+   "title": "Cell cycle checkpoint",
+   "text": "All living organisms are the products of repeated rounds of cell growth and division. During this process, known as the cell cycle, a cell duplicates its contents and then divides in two. The purpose of the cell cycle is to accurately duplicate each organism's DNA and then divide the cell and its contents evenly between the two resulting cells. In eukaryotes, the cell cycle consists of four main stages: G1, during which a cell is metabolically active and continuously grows; S phase, during which DNA replication takes place; G2, during which cell growth continues and the cell synthesizes various proteins in preparation for division; and the M (mitosis) phase, during which the duplicated chromosomes (known as the sister chromatids) separate into two daughter nuclei, and the cell divides into two daughter cells, each with a full copy of DNA. Compared to the eukaryotic cell cycle, the prokaryotic cell cycle (known as binary fission) is relatively simple and quick: the chromosome replicates from the origin of replication, a new membrane is assembled, and the cell wall forms a septum which divides the cell into two."
+  },
+  {
+   "id": "src:wiki-cell-cycle-checkpoint#c3",
+   "outlet": "src:wiki-cell-cycle-checkpoint",
+   "title": "Cell cycle checkpoint",
+   "text": "As the eukaryotic cell cycle is a complex process, eukaryotes have evolved a network of regulatory proteins, known as the cell cycle control system, which monitors and dictates the progression of the cell through the cell cycle. This system acts like a timer, or a clock, which sets a fixed amount of time for the cell to spend in each phase of the cell cycle, while at the same time it also responds to information received from the processes it controls. The cell cycle checkpoints play an important role in the control system by sensing defects that occur during essential processes such as DNA replication or chromosome segregation, and inducing a cell cycle arrest in response until the defects are repaired. The main mechanism of action of the cell cycle checkpoints is through the regulation of the activities of a family of protein kinases known as the cyclin-dependent kinases (CDKs), which bind to different classes of regulator proteins known as cyclins, with specific cyclin-CDK complexes being formed and activated at different phases of the cell cycle. Those complexes, in turn, activate different downstream targets to promote or prevent cell cycle progression."
+  },
+  {
+   "id": "src:wiki-cell-cycle-checkpoint#c4",
+   "outlet": "src:wiki-cell-cycle-checkpoint",
+   "title": "Cell cycle checkpoint",
+   "text": "At the end of G2, the cell transitions into mitosis, where the nucleus divides. The G2 to M transition is dramatic; there is an all-or-nothing effect, and the transition is irreversible. This is advantageous to the cell because entering mitosis is a critical step in the life cycle of a cell. If it does not fully commit, the cell would run into many issues with partially dividing, ultimately likely leading to the cell's death. In frog oocytes, the signal cascade is induced when progesterone binds to a membrane bound receptor. Downstream, Mos is activated. Mos then phosphorylates MEK1, which phosphorylates MAPK. MAPK serves two roles: activating the Cyclin B-Cdk1 complex to initiate entrance into mitosis and activating Mos . The activation of Mos leads to a positive feedback loop and therefore acts as \"toggle switch\" to create the all-or-nothing entrance into mitosis."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-cell-cycle",
+   "title": "Cell cycle",
+   "url": "https://en.wikipedia.org/wiki/Cell_cycle",
+   "revid": 1371110776,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-mitosis",
+   "title": "Mitosis",
+   "url": "https://en.wikipedia.org/wiki/Mitosis",
+   "revid": 1371936568,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-cell-cycle-checkpoint",
+   "title": "Cell cycle checkpoint",
+   "url": "https://en.wikipedia.org/wiki/Cell_cycle_checkpoint",
+   "revid": 1365079416,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

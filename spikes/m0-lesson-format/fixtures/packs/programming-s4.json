@@ -1,0 +1,89 @@
+{
+ "id": "programming-s4",
+ "chunks": [
+  {
+   "id": "src:wiki-big-o-notation#c1",
+   "outlet": "src:wiki-big-o-notation",
+   "title": "Big O notation",
+   "text": "Big O notation is a mathematical notation that describes the approximate size of a function on a domain. Big O is a member of a family of notations invented by the German mathematicians Paul Bachmann and Edmund Landau and expanded by others, collectively called Bachmann–Landau notation. The letter O stands for Ordnung, that is, the order of approximation. Often, big O notation characterizes functions according to their growth rates as the variable becomes large: different functions with the same asymptotic growth rate may be represented using the same O notation. The letter O is used because the growth rate of a function is also referred to as the order of the function. A description of a function in terms of big O notation only provides an upper bound on the growth rate of the function."
+  },
+  {
+   "id": "src:wiki-big-o-notation#c2",
+   "outlet": "src:wiki-big-o-notation",
+   "title": "Big O notation",
+   "text": "Bachmann proposed the notation in 1894 and Landau extended it in 1909. An earlier notation was proposed by Paul du Bois-Reymond in 1870. Some general rules about growth toward infinity; the 2nd and 3rd property below can be proved rigorously using L'Hôpital's rule: Here is a list of classes of functions that are commonly encountered when analyzing the running time of an algorithm. In each case, c is a positive constant and n increases without bound. The slower-growing functions are generally listed first. The big-O originally stands for \"order of\" (\"Ordnung\", Bachmann 1894), and is thus a Latin letter. Neither Bachmann nor Landau ever call it \"Omicron\". The symbol was much later on (1976) viewed by Knuth as a capital omicron, probably in reference to his definition of the symbol Omega. The digit zero should not be used."
+  },
+  {
+   "id": "src:wiki-time-complexity#c1",
+   "outlet": "src:wiki-time-complexity",
+   "title": "Time complexity",
+   "text": "The concept of polynomial time leads to several complexity classes in computational complexity theory. Some important classes defined using polynomial time are the following. In complexity theory, the unsolved P versus NP problem asks if all problems in NP have polynomial-time algorithms. All the best-known algorithms for NP-complete problems like 3SAT etc. take exponential time. Indeed, it is conjectured for many natural NP-complete problems that they do not have sub-exponential time algorithms. Here \"sub-exponential time\" is taken to mean the second definition presented below. ) This conjecture (for the k-SAT problem) is known as the exponential time hypothesis. Since it is conjectured that NP-complete problems do not have quasi-polynomial time algorithms, some inapproximability results in the field of approximation algorithms make the assumption that NP-complete problems do not have quasi-polynomial time algorithms. For example, see the known inapproximability results for the set cover problem."
+  },
+  {
+   "id": "src:wiki-analysis-of-algorithms#c1",
+   "outlet": "src:wiki-analysis-of-algorithms",
+   "title": "Analysis of algorithms",
+   "text": "Time efficiency estimates depend on what we define to be a step. For the analysis to correspond usefully to the actual run-time, the time required to perform a step must be guaranteed to be bounded above by a constant. One must be careful here; for instance, some analyses count an addition of two numbers as one step. This assumption may not be warranted in certain contexts. For example, if the numbers involved in a computation may be arbitrarily large, the time required by a single addition can no longer be assumed to be constant. Two cost models are generally used: Run-time analysis is a theoretical classification that estimates and anticipates the increase in running time (or run-time or execution time) of an algorithm as its input size (usually denoted as n) increases. Run-time efficiency is a topic of great interest in computer science:  A program can take seconds, hours, or even years to finish executing, depending on which algorithm it implements. While software profiling techniques can be used to measure an algorithm's run-time in practice, they cannot provide timing data for all infinitely many possible inputs; the latter can only be achieved by the theoretical methods of run-time analysis."
+  },
+  {
+   "id": "src:wiki-analysis-of-algorithms#c2",
+   "outlet": "src:wiki-analysis-of-algorithms",
+   "title": "Analysis of algorithms",
+   "text": "e. a given algorithm can be implemented in an arbitrary programming language on an arbitrary computer running an arbitrary operating system), there are additional significant drawbacks to using an empirical approach to gauge the comparative performance of a given set of algorithms. Take as an example a program that looks up a specific entry in a sorted list of size n. Suppose this program were implemented on Computer A, a state-of-the-art machine, using a linear search algorithm, and on Computer B, a much slower machine, using a binary search algorithm. Benchmark testing on the two computers running their respective programs might look something like the following:"
+  },
+  {
+   "id": "src:wiki-analysis-of-algorithms#c3",
+   "outlet": "src:wiki-analysis-of-algorithms",
+   "title": "Analysis of algorithms",
+   "text": "Based on these metrics, it would be easy to jump to the conclusion that Computer A is running an algorithm that is far superior in efficiency to that of Computer B. However, if the size of the input-list is increased to a sufficient number, that conclusion is dramatically demonstrated to be in error: Computer A, running the linear search program, exhibits a linear growth rate. The program's run-time is directly proportional to its input size. Doubling the input size doubles the run-time, quadrupling the input size quadruples the run-time, and so forth. On the other hand, Computer B, running the binary search program, exhibits a logarithmic growth rate. Quadrupling the input size only increases the run-time by a constant amount (in this example, 50,000 ns). Even though Computer A is ostensibly a faster machine, Computer B will inevitably surpass Computer A in run-time because it is running an algorithm with a much slower growth rate."
+  },
+  {
+   "id": "src:wiki-analysis-of-algorithms#c4",
+   "outlet": "src:wiki-analysis-of-algorithms",
+   "title": "Analysis of algorithms",
+   "text": "Informally, an algorithm can be said to exhibit a growth rate on the order of a mathematical function if beyond a certain input size n, the function f(n) times a positive constant provides an upper bound or limit for the run-time of that algorithm. In other words, for a given input size n greater than some n0 and a constant c, the run-time of that algorithm will never be larger than c × f(n). This concept is frequently expressed using Big O notation. For example, since the run-time of insertion sort grows quadratically as its input size increases, insertion sort can be said to be of order O(n2). Big O notation is a convenient way to express the worst-case scenario for a given algorithm, although it can also be used to express the average-case — for example, the worst-case scenario for quicksort is O(n2), but the average-case run-time is O(n log n)."
+  },
+  {
+   "id": "src:wiki-best-worst-and-average-case#c1",
+   "outlet": "src:wiki-best-worst-and-average-case",
+   "title": "Best, worst and average case",
+   "text": "The term best-case performance is used in computer science to describe an algorithm's behavior under optimal conditions. For example, the best case for a simple linear search on a list occurs when the desired element is the first element of the list. Development and choice of algorithms is rarely based on best-case performance: most academic and commercial enterprises are more interested in improving average-case complexity and  worst-case performance. Algorithms may also be trivially modified to have good best-case running time by hard-coding solutions to a finite set of inputs, making the measure almost meaningless."
+  },
+  {
+   "id": "src:wiki-best-worst-and-average-case#c2",
+   "outlet": "src:wiki-best-worst-and-average-case",
+   "title": "Best, worst and average case",
+   "text": "Many algorithms with bad worst-case performance have good average-case performance. For problems we want to solve, this is a good thing: we can hope that the particular instances we care about are average. For cryptography, this is very bad: we want typical instances of a cryptographic problem to be hard. Here methods like random self-reducibility can be used for some specific problems to show that the worst case is no harder than the average case, or, equivalently, that the average case is no easier than the worst case. On the other hand, some data structures like hash tables have very poor worst-case behaviors, but a well written hash table of sufficient size will statistically never give the worst case; the average number of operations performed follows an exponential decay curve, and so the run time of an operation is statistically bounded."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-big-o-notation",
+   "title": "Big O notation",
+   "url": "https://en.wikipedia.org/wiki/Big_O_notation",
+   "revid": 1375605201,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-time-complexity",
+   "title": "Time complexity",
+   "url": "https://en.wikipedia.org/wiki/Time_complexity",
+   "revid": 1375818064,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-analysis-of-algorithms",
+   "title": "Analysis of algorithms",
+   "url": "https://en.wikipedia.org/wiki/Analysis_of_algorithms",
+   "revid": 1365706079,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-best-worst-and-average-case",
+   "title": "Best, worst and average case",
+   "url": "https://en.wikipedia.org/wiki/Best%2C_worst_and_average_case",
+   "revid": 1379978565,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

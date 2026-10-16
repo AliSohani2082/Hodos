@@ -1,0 +1,94 @@
+{
+ "id": "language-s3",
+ "chunks": [
+  {
+   "id": "src:wiki-grammatical-case#c1",
+   "outlet": "src:wiki-grammatical-case",
+   "title": "Grammatical case",
+   "text": "It is widely accepted that the Ancient Greeks had a certain idea of the forms of a name in their own language. A fragment of Anacreon seems to prove this. Grammatical cases were first recognized by the Stoics and from some philosophers of the Peripatetic school. The advancements of those philosophers were later employed by the philologists of the Library of Alexandria. Aristotle recognized the gender of nouns and their related endings, but it was with the Stoics and, subsequently, with the grammarians of the Hellenistic period that a systematic and complete grouping of the morphology of nouns and their declensions in Ancient Greek was achieved. Of particular importance is the work of Dionysius Thrax The Art of Grammar (2nd century BCE), which represents the first true grammar in the modern sense ever written about an Indo-European language and its structure. In addition to the definition of case and its structure, this work contains most of today's grammatical elements and structures."
+  },
+  {
+   "id": "src:wiki-grammatical-case#c2",
+   "outlet": "src:wiki-grammatical-case",
+   "title": "Grammatical case",
+   "text": "Although not very prominent in modern English, cases featured much more saliently in Old English and other ancient Indo-European languages, such as Latin, Old Persian, Ancient Greek, and Sanskrit. Historically, the Indo-European languages had eight morphological cases, although modern languages typically have fewer, using prepositions and word order to convey information that had previously been conveyed using distinct noun forms. Among modern languages, cases still feature prominently in most of the Balto-Slavic languages (except Bulgarian and Macedonian ), with most having six to eight cases, as well as Icelandic, German, Irish and Modern Greek, which have four. In German, cases are mostly marked on articles and adjectives, and less so on nouns. In Icelandic, articles, adjectives, personal names and nouns are all marked for case, making it the most conservative Germanic language. The eight historical Indo-European cases are as follows, with examples either of the English case or of the English syntactic alternative to case:"
+  },
+  {
+   "id": "src:wiki-grammatical-case#c3",
+   "outlet": "src:wiki-grammatical-case",
+   "title": "Grammatical case",
+   "text": "All of the above are just rough descriptions; the precise distinctions vary significantly from language to language, and as such they are often more complex. Case is based fundamentally on changes to the noun to indicate the noun's role in the sentence \u2013 one of the defining features of fusional languages. Old English was a fusional language, but Modern English does not work this way. Modern English has largely abandoned the inflectional case system of Proto-Indo-European in favor of analytic constructions. The personal pronouns of Modern English retain morphological case more strongly than any other word class (a remnant of the more extensive case system of Old English). For other pronouns, and all nouns, adjectives, and articles, grammatical function is indicated only by word order, by prepositions, and by the \"Saxon genitive\" (-'s). Taken as a whole, English personal pronouns are typically said to have three morphological cases:"
+  },
+  {
+   "id": "src:wiki-grammatical-case#c4",
+   "outlet": "src:wiki-grammatical-case",
+   "title": "Grammatical case",
+   "text": "Cases can be ranked in the following hierarchy, where a language that does not have a given case will tend not to have any cases to the right of the missing case: nominative or  absolutive \u2192 accusative or ergative \u2192 genitive \u2192 dative \u2192 locative or prepositional \u2192 ablative and/or instrumental \u2192 others. This is, however, only a general tendency. Many forms of Central German, such as Colognian and Luxembourgish, have a dative case but lack a genitive. In Irish nouns, the nominative and accusative have fallen together, whereas the dative-locative, genitive, and vocative have remained separate. In many modern Indo-Aryan languages, the accusative, genitive, and dative have merged to an oblique case, but many of these languages still retain vocative, locative, and ablative cases. Old English had an instrumental case, but not a locative case."
+  },
+  {
+   "id": "src:wiki-german-declension#c1",
+   "outlet": "src:wiki-german-declension",
+   "title": "German declension",
+   "text": ") correspond to English \"a\", \"an\". e. 1). \"). Instead, the declension of the pronoun kein (no, not any, not one) is given, which follows the plural paradigm. Certain adjectival pronouns also decline like der: all-, dies-, jed-, jen-, manch-, solch-, welch-. These are called der-words (Der-Wort). The general declension pattern is as shown in the following table: Adjectival possessive pronouns (or possessive determiners) and kein decline similarly to the article ein. The general declension pattern is as shown in the following table: g. dative masculine eurem (also euerem). The genitive case for personal pronouns is currently considered archaic and is used only in certain archaic expressions like \"ich bedarf seiner\" (I need him). This is not to be confused with possessive adjectives."
+  },
+  {
+   "id": "src:wiki-german-declension#c2",
+   "outlet": "src:wiki-german-declension",
+   "title": "German declension",
+   "text": "\" Generally, prepositions that need to be followed by either case merge with \"was\" to form new words such as \"wovon\" (\"whereof\"), \"woher\"  (\"whence\", \"from where\") or \"weswegen\" (\"for what reason\"). These may be used in place of personal pronouns to provide emphasis, as in the sentence \"Den sehe ich\" (\"I see that\"). Also note the word ordering: den corresponds to \"that\", and ich corresponds to \"I\". Placing the object at the beginning of the sentence places emphasis on it. English, as a generally non-declined language, does not normally show similar behavior, although it is sometimes possible to place the object at the front of a sentence for similar emphasis, as in: \"Him I see, but I don't see John\". The table is the same as for relative pronouns."
+  },
+  {
+   "id": "src:wiki-german-declension#c3",
+   "outlet": "src:wiki-german-declension",
+   "title": "German declension",
+   "text": "The pronoun man refers to a generic person, and is usually translated as one (or generic you). It is equivalent to the French pronoun on. there is no preceding article; or the preceding article does not fully indicate the case, gender, and number of the noun. Note that the ending for genitive masculine and neuter is -en. This is a source of confusion for learners, who typically assume it is -es, and also native speakers, who interpret the pronouns called der-words (Der-Wort), for example jed-, as adjectives with no article, to be declined strongly. g. ). It is like the weak inflection, but in forms where the weak inflection has the ending -e, the mixed inflection replaces these with the forms of the strong inflection (shown in grey)."
+  },
+  {
+   "id": "src:wiki-declension#c1",
+   "outlet": "src:wiki-declension",
+   "title": "Declension",
+   "text": "Unlike English, many languages use suffixes to specify subjects and objects or word relationships in general. These inflections identify the specific grammatical function of a word within a sentence, known as its case. Different endings mark words as the thing performing an action (subject), things directly receiving the action (direct object), things indirectly receiving the action and objects of prepositions (indirect object), objects of prepositions, and things possessed by other things (genitive). Inflected languages have a freer word order than modern English, an analytic language in which word order identifies the subject and object. As an example, even though both of the following sentences consist of the same words, the meaning is different:"
+  },
+  {
+   "id": "src:wiki-declension#c2",
+   "outlet": "src:wiki-declension",
+   "title": "Declension",
+   "text": "-no (for nominative singular), -ge (genitive), -da (dative), -ac (accusative), -lo (locative), -in (instrumental), -vo (vocative), -ab (ablative) The first sentence above could be formed with any of the following word orders and would have the same meaning: Mum, this little boy's dog was chasing a cat down our street! becomes nonsensical in English if the words are rearranged (because there are no cases): Mumvo, thisge littlege boyge dogno was chasing a catac down ourlo streetlo! And like other inflected languages, the sentence rearranged in the following ways would mean virtually the same thing, but with different expressiveness:"
+  },
+  {
+   "id": "src:wiki-declension#c3",
+   "outlet": "src:wiki-declension",
+   "title": "Declension",
+   "text": "It is agreed that Ancient Greeks had a \"vague\" idea of the forms of a noun in their language. A fragment of Anacreon seems to confirm this idea. Nevertheless, it cannot be concluded that the Ancient Greeks actually knew what the cases were. The Stoics developed many basic notions that today are the rudiments of linguistics. The idea of grammatical cases is also traced back to the Stoics, but it is still not completely clear what the Stoics exactly meant with their notion of cases. In Modern English, the system of declensions is so simple compared to some other languages that the term declension is rarely used."
+  },
+  {
+   "id": "src:wiki-declension#c4",
+   "outlet": "src:wiki-declension",
+   "title": "Declension",
+   "text": "Most nouns in English have distinct singular and plural forms. Nouns and most noun phrases can form a possessive construction. Plurality is most commonly shown by the ending -s (or -es), whereas possession is always shown by the enclitic -'s or, for plural forms ending in s, by just an apostrophe. Consider, for example, the forms of the noun girl. Most speakers pronounce all forms other than the singular plain form (girl) exactly the same. By contrast, a few irregular nouns (like man/men) are slightly more complex in their forms. In this example, all four forms are pronounced distinctly. For nouns, in general, gender is not declined in Modern English. There are isolated situations where certain nouns may be modified to reflect gender, though not in a systematic fashion. g. alumnus (masculine singular) and alumna (feminine singular). Similarly, names borrowed from other languages show comparable distinctions: Andrew and Andrea, Paul and Paula, etc. Additionally, suffixes such as -ess, -ette, and -er are sometimes applied to create overtly gendered versions of nouns, with marking for feminine being much more common than marking for masculine."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-grammatical-case",
+   "title": "Grammatical case",
+   "url": "https://en.wikipedia.org/wiki/Grammatical_case",
+   "revid": 1375645102,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-german-declension",
+   "title": "German declension",
+   "url": "https://en.wikipedia.org/wiki/German_declension",
+   "revid": 1363206134,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-declension",
+   "title": "Declension",
+   "url": "https://en.wikipedia.org/wiki/Declension",
+   "revid": 1373038142,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

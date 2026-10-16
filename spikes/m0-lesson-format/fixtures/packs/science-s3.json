@@ -1,0 +1,88 @@
+{
+ "id": "science-s3",
+ "chunks": [
+  {
+   "id": "src:wiki-plate-tectonics#c1",
+   "outlet": "src:wiki-plate-tectonics",
+   "title": "Plate tectonics",
+   "text": "Three types of plate boundaries exist, characterized by the way the plates move relative to each other. They are associated with different types of surface phenomena. The different types of plate boundaries are: Divergent boundaries (constructive boundaries or extensional boundaries). These are where two plates slide apart from each other. g. the Mid-Atlantic Ridge and East Pacific Rise. As the ocean plate splits, the ridge forms at the spreading center, the ocean basin expands, and finally, the plate area increases causing many small volcanoes and/or shallow earthquakes. , the East African Rift, the Baikal Rift, the West Antarctic Rift, the Rio Grande Rift."
+  },
+  {
+   "id": "src:wiki-plate-tectonics#c2",
+   "outlet": "src:wiki-plate-tectonics",
+   "title": "Plate tectonics",
+   "text": "Transform boundaries (conservative boundaries or strike-slip boundaries) occur where plates are neither created nor destroyed. Instead, two plates slide, or perhaps more accurately grind past each other, along transform faults. The relative motion of the two plates is either sinistral (left side toward the observer) or dextral (right side toward the observer). Transform faults occur across a spreading center. Strong earthquakes can occur along a fault. The San Andreas Fault in California is an example of a transform boundary exhibiting dextral motion. Other plate boundary zones occur where the effects of the interactions are unclear, and the boundaries, usually occurring along a broad belt, are not well defined and may show various types of movements in different episodes."
+  },
+  {
+   "id": "src:wiki-plate-tectonics#c3",
+   "outlet": "src:wiki-plate-tectonics",
+   "title": "Plate tectonics",
+   "text": "Tectonic plates are able to move because of the relative density of oceanic lithosphere and the relative weakness of the asthenosphere. Dissipation of heat from the mantle is the original source of the energy required to drive plate tectonics through convection or large scale upwelling and doming. As a consequence, a powerful source generating plate motion is the excess density of the oceanic lithosphere sinking in subduction zones. When the new crust forms at mid-ocean ridges, this oceanic lithosphere is initially less dense than the underlying asthenosphere, but it becomes denser with age as it conductively cools and thickens. The greater density of old lithosphere relative to the underlying asthenosphere allows it to sink into the deep mantle at subduction zones, providing most of the driving force for plate movement. The weakness of the asthenosphere allows the tectonic plates to move easily towards a subduction zone."
+  },
+  {
+   "id": "src:wiki-plate-tectonics#c4",
+   "outlet": "src:wiki-plate-tectonics",
+   "title": "Plate tectonics",
+   "text": "Another theory is that the mantle flows neither in cells nor large plumes but rather as a series of channels just below Earth's crust, which then provide basal friction to the lithosphere. This theory, called \"surge tectonics\", was popularized during the 1980s and 1990s. Recent research, based on three-dimensional computer modelling, suggests that plate geometry is governed by a feedback between mantle convection patterns and the strength of the lithosphere. Alfred Wegener, being a meteorologist, had proposed tidal forces and centrifugal forces as the main driving mechanisms behind continental drift; however, these forces were considered far too small to cause continental motion as the concept was of continents plowing through oceanic crust. Therefore, Wegener later changed his position and asserted that convection currents are the main driving force of plate tectonics in the last edition of his book in 1929. However, in the plate tectonics context (accepted since the seafloor spreading proposals of Heezen, Hess, Dietz, Morley, Vine, and Matthews (see below) during the early 1960s), the oceanic crust is suggested to be in motion with the continents, which caused the proposals related to Earth rotation to be reconsidered. In more recent literature, these driving forces are:"
+  },
+  {
+   "id": "src:wiki-continental-drift#c1",
+   "outlet": "src:wiki-continental-drift",
+   "title": "Continental drift",
+   "text": "Continental drift is the movement of Earth's continents relative to each other over geologic time. When initially proposed as a scientific theory in the early 20th century, the idea that continents could move was widely rejected. However, continental drift has subsequently been extensively validated and is incorporated into the science of plate tectonics, which studies the movement of the continents as they ride on plates of the Earth's lithosphere. The speculation that continents might have \"drifted\" was first put forward by Abraham Ortelius in 1596. A pioneer of the modern view of mobilism was Austrian geologist Otto Ampferer. The concept was independently and more fully developed by Alfred Wegener in 1912, and expanded into book form with his 1915 publication, Die Entstehung der Kontinente und Ozeane (The Origin of Continents and Oceans). However, at that time his hypothesis was rejected by many, largely because there was no known geological mechanism which could propel such massive movements. In 1931, English geologist Arthur Holmes proposed mantle convection for that mechanism, which is now known to be powered by radioactive decay and primordial heat and a much smaller amount of heat from tidal heating."
+  },
+  {
+   "id": "src:wiki-continental-drift#c2",
+   "outlet": "src:wiki-continental-drift",
+   "title": "Continental drift",
+   "text": "Abraham Ortelius (Ortelius 1596), Theodor Christoph Lilienthal (1756), Alexander von Humboldt (1801 and 1845), Antonio Snider-Pellegrini (Snider-Pellegrini 1858), and others had noted earlier that the shapes of continents on opposite sides of the Atlantic Ocean (most notably, Africa and South America) seem to fit together. W. J. Kious described Ortelius's thoughts in this way: Abraham Ortelius in his work Thesaurus Geographicus ... suggested that the Americas were \"torn away from Europe and Africa ... \" and claims that the first to throw doubt on this was James Dwight Dana in 1849. The geophysicists Jack Oliver, Bryan Isacks and Lynn Sykes provided seismologic evidence for plate tectonics with the 1968 article \"Seismology and the New Global Tectonics\", using data from seismologic stations including those he set up in the South Pacific. The modern theory of plate tectonics, refining Wegener, explains that there are two kinds of crust of different composition, continental and oceanic, both floating on a much deeper \"plastic\" mantle. Continental crust is inherently lighter. Oceanic crust is created at spreading centers and descends back into the mantle at subduction zones, driving the system of plates chaotically, with continuous orogeny and areas of isostatic imbalance."
+  },
+  {
+   "id": "src:wiki-alfred-wegener#c1",
+   "outlet": "src:wiki-alfred-wegener",
+   "title": "Alfred Wegener",
+   "text": "Alfred Wegener was born in Berlin on 1 November 1880, the youngest of five children, to Richard Wegener and his wife Anna. His father was a theologian and teacher of classical languages at the Joachimsthalschen Gymnasium and Berlinisches Gymnasium zum Grauen Kloster. In 1886 his family purchased a former manor house near Rheinsberg, which they used as a vacation home. In 1906, Wegener participated in the first of his four Greenland expeditions, later regarding this experience as a decisive turning point in his life. The Denmark expedition was led by the Dane Ludvig Mylius-Erichsen and charged with studying the last unknown portion of the northeastern coast of Greenland. During the expedition, Wegener constructed the first meteorological station in Greenland near Danmarkshavn, where he launched kites and tethered balloons to make meteorological measurements in an Arctic climatic zone. Here Wegener also made his first acquaintance with death in a wilderness of ice when the expedition leader and two of his colleagues died on an exploratory trip undertaken with sled dogs. After his return in 1908 and until World War I, Wegener was a lecturer in meteorology, applied astronomy and cosmic physics at the University of Marburg."
+  },
+  {
+   "id": "src:wiki-alfred-wegener#c2",
+   "outlet": "src:wiki-alfred-wegener",
+   "title": "Alfred Wegener",
+   "text": "His students and colleagues in Marburg particularly valued his ability to clearly and understandably explain even complex topics and current research findings without sacrificing precision. His lectures formed the basis of what was to become a standard textbook in meteorology, first written In 1909/1910: Thermodynamik der Atmosphäre (Thermodynamics of the Atmosphere), in which he incorporated many of the results of the Greenland expedition. On 6 January 1912, he presented his first proposal of continental drift in a lecture to the Geologische Vereinigung (Geological Association) at the Senckenberg Museum, Frankfurt am Main. Later, in 1912, he made a case for the theory in a long, three-part article and a shorter summary."
+  },
+  {
+   "id": "src:wiki-alfred-wegener#c3",
+   "outlet": "src:wiki-alfred-wegener",
+   "title": "Alfred Wegener",
+   "text": "Plans for a new Greenland expedition grew out of Wegener and Johan Peter Koch's frustration with the disorganisation and meager scientific results of the Danmark expedition. The new Danish Expedition to Queen Louise Land would involve only four men, take place in 1912–1913, and have Koch for leader. After a stopover in Iceland to purchase and test ponies as pack animals, the expedition arrived in Danmarkshavn. Even before the trip to the inland ice began the expedition was almost annihilated by a calving glacier. Koch broke his leg when he fell into a glacier crevasse and spent months recovering in a sickbed. Wegener and Koch were the first to winter on the inland ice in northeast Greenland. Inside their hut they drilled to a depth of 25 m with an auger. In summer 1913 the team crossed the inland ice, the four expedition participants covering a distance twice as long as Fridtjof Nansen's southern Greenland crossing in 1888. Only a few kilometres from the western Greenland settlement of Kangersuatsiaq the small team ran out of food while struggling to find their way through difficult glacial break-up terrain."
+  },
+  {
+   "id": "src:wiki-alfred-wegener#c4",
+   "outlet": "src:wiki-alfred-wegener",
+   "title": "Alfred Wegener",
+   "text": "But at the last moment, after the last pony and dog had been eaten, they were picked up at a fjord by the clergyman of Upernavik, who just happened to be visiting a remote congregation at the time. Later in 1913, after his return Wegener married Else Köppen, the daughter of his former teacher and mentor, the meteorologist Wladimir Köppen. The young pair lived in Marburg, where Wegener resumed his university lectureship. There his two older daughters were born, Hilde (1914–1936) and Sophie (\"Käte\", 1918–2012). Their third daughter Hanna Charlotte (\"Lotte\", 1920–1989) was born in Hamburg. Lotte would in 1938 marry the famous Austrian mountaineer and adventurer Heinrich Harrer, while in 1939, Käte married Siegfried Uiberreither, Austrian Nazi Gauleiter of Styria."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-plate-tectonics",
+   "title": "Plate tectonics",
+   "url": "https://en.wikipedia.org/wiki/Plate_tectonics",
+   "revid": 1376119468,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-continental-drift",
+   "title": "Continental drift",
+   "url": "https://en.wikipedia.org/wiki/Continental_drift",
+   "revid": 1376987312,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-alfred-wegener",
+   "title": "Alfred Wegener",
+   "url": "https://en.wikipedia.org/wiki/Alfred_Wegener",
+   "revid": 1375100178,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

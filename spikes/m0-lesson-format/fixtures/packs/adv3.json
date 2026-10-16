@@ -1,0 +1,88 @@
+{
+ "id": "adv3",
+ "chunks": [
+  {
+   "id": "src:wiki-hiragana#c1",
+   "outlet": "src:wiki-hiragana",
+   "title": "Hiragana",
+   "text": "After the 1900 script reform, which deemed hundreds of characters hentaigana, the hiragana syllabary consists of 48 base characters, of which two ([ゐ and ゑ) are only used in some proper names: The following table shows the complete hiragana together with the modified Hepburn romanization and IPA transcription, arranged in four categories, each of them displayed in the gojūon order. Those whose romanization are in bold do not use the initial consonant for that row. For all syllables besides ん, the pronunciation indicated is for word-initial syllables; for mid-word pronunciations see below. It has not been demonstrated whether the mora /ji/ existed in old Japanese. Though ye did appear in some textbooks during the Meiji period along with another kana for yi in the form of cursive 以. Today it is considered a Hentaigana by scholars and is encoded in Unicode 10 (𛀆) This kana could have a colloquial use, to convert the combo yui (ゆい) into yii (𛀆い), due to other Japanese words having a similar change."
+  },
+  {
+   "id": "src:wiki-hiragana#c2",
+   "outlet": "src:wiki-hiragana",
+   "title": "Hiragana",
+   "text": "An early, now obsolete, hiragana-esque form of ye may have existed (𛀁 [je]) in pre-Classical Japanese (prior to the advent of kana), but is generally represented for purposes of reconstruction by the kanji 江, and its hiragana form is not present in any known orthography. In modern orthography, ye can also be written as いぇ (イェ in katakana). While hiragana and katakana letters for \"ye\" were used for a short period after the advent of kana, the distinction between /ye/ and /e/ disappeared before glyphs could become established. It has not been demonstrated whether the mora /wu/ existed in old Japanese. However, hiragana wu also appeared in different Meiji-era textbooks (). Although there are several possible source kanji, it is likely to have been derived from a cursive form of the man'yōgana 汙, although a related variant sometimes listed () is from a cursive form of 紆. However, it was never commonly used. This character is included in Unicode 14 as HIRAGANA LETTER ARCHAIC WU (𛄟)."
+  },
+  {
+   "id": "src:wiki-kanji#c1",
+   "outlet": "src:wiki-kanji",
+   "title": "Kanji",
+   "text": "The kyōiku kanji (教育漢字; lit. \"education kanji\") are the 1,026 first kanji characters that Japanese children learn in elementary school, from first grade to sixth grade. The grade-level breakdown is known as the gakunen-betsu kanji haitōhyō (学年別漢字配当表), or the gakushū kanji (学習漢字). This list of kanji is maintained by the Japanese Ministry of Education and prescribes which kanji characters and which kanji readings students should learn for each grade. The jōyō kanji (常用漢字; regular-use kanji) are 2,136 characters consisting of all the kyōiku kanji, plus 1,110 additional kanji taught in junior high and high school. In publishing, characters outside this category are often given furigana. The jōyō kanji were introduced in 1981, replacing an older list of 1,850 characters known as the tōyō kanji (当用漢字; general-use kanji), introduced in 1946. Originally numbering 1,945 characters, the jōyō kanji list was expanded to 2,136 in 2010. Some of the new characters were previously jinmeiyō kanji; some are used to write prefecture names: 阪, 熊, 奈, 岡, 鹿, 梨, 阜, 埼, 茨, 栃 and 媛."
+  },
+  {
+   "id": "src:wiki-kanji#c2",
+   "outlet": "src:wiki-kanji",
+   "title": "Kanji",
+   "text": "As of September 25, 2017, the jinmeiyō kanji (人名用漢字; kanji for use in personal names) consists of 863 characters. Kanji on this list are mostly used in people's names and some are traditional variants of jōyō kanji. There were only 92 kanji in the original list published in 1952, but new additions have been made frequently. Sometimes the term jinmeiyō kanji refers to all 2,999 kanji from both the jōyō and jinmeiyō lists combined. Hyōgai kanji (表外漢字; \"unlisted characters\") are any kanji not contained in the jōyō kanji and jinmeiyō kanji lists. These are generally written using traditional characters, but extended shinjitai forms exist."
+  },
+  {
+   "id": "src:wiki-kanji#c3",
+   "outlet": "src:wiki-kanji",
+   "title": "Kanji",
+   "text": "The Japanese Industrial Standards for kanji and kana define character code-points for each kanji and kana, as well as other forms of writing such as the Latin alphabet, Cyrillic script, Greek alphabet, Arabic numerals, etc. for use in information processing. They have had numerous revisions. The current standards are: There is no definitive count of kanji characters, just as there is none of Chinese characters generally. The Dai Kan-Wa Jiten, which is considered to be comprehensive in Japan, contains about 50,000 characters. The Zhonghua Zihai, published in 1994 in China, contains about 85,000 characters, but the majority of them are not in common use in any country, and many are obscure variants or archaic forms. A list of 2,136 jōyō kanji is regarded as necessary for functional literacy in Japanese. Approximately a thousand more characters are commonly used and readily understood by the majority in Japan and a few thousand more find occasional use, particularly in specialized fields of study but those may be obscure to most out of context. A total of 13,108 characters can be encoded in various Japanese Industrial Standards for kanji."
+  },
+  {
+   "id": "src:wiki-kanji#c4",
+   "outlet": "src:wiki-kanji",
+   "title": "Kanji",
+   "text": "The on'yomi (音読み; [oɰ̃jomi], lit. \"sound(-based) reading\"), the Sino-Japanese reading, is the modern descendant of the Japanese approximation of the base Chinese pronunciation of the character at the time it was introduced. It was often previously referred to as translation reading, as it was recreated readings of the Chinese pronunciation but was not the Chinese pronunciation or reading itself, similar to the English pronunciation of Latin loanwords. There also exist kanji created by the Japanese and given an on'yomi reading despite not being a Chinese-derived or a Chinese-originating character. Some kanji were introduced from different parts of China at different times, and so have multiple on'yomi, and often multiple meanings. Kanji invented in Japan (kokuji) would not normally be expected to have on'yomi, but there are exceptions, such as the character 働 \"to work\", which has the kun'yomi \"hatara(ku)\" and the on'yomi \"dō\", and 腺 \"gland\", which has only the on'yomi \"sen\"—in both cases these come from the on'yomi of the phonetic component, respectively 動 \"dō\" and 泉 \"sen\"."
+  },
+  {
+   "id": "src:wiki-japanese-language#c1",
+   "outlet": "src:wiki-japanese-language",
+   "title": "Japanese language",
+   "text": "Proto-Japonic, the common ancestor of the Japanese and Ryukyuan languages, is thought to have been brought to Japan by settlers coming from the Korean peninsula sometime in the early- to mid-4th century BC (the Yayoi period), replacing the languages of the original Jōmon inhabitants, including the ancestor of the modern Ainu language. Because writing had yet to be introduced from China, there is no direct evidence, and anything that can be discerned about this period must be based on internal reconstruction from Old Japanese, or comparison with the Ryukyuan languages and Japanese dialects. Early Middle Japanese is the Japanese of the Heian period, from 794 to 1185. It formed the basis for the literary standard of Classical Japanese, which remained in common use until the early 20th century. During this time, Japanese underwent numerous phonological developments, in many cases instigated by an influx of Chinese loanwords. g. g. kwa), and closed syllables. This changed Japanese into a mora-timed language."
+  },
+  {
+   "id": "src:wiki-japanese-language#c2",
+   "outlet": "src:wiki-japanese-language",
+   "title": "Japanese language",
+   "text": "Late Middle Japanese covers the years from 1185 to 1600, and is normally divided into two sections, roughly equivalent to the Kamakura period and the Muromachi period, respectively. The later forms of Late Middle Japanese are the first to be described by non-native sources, in this case the Jesuit and Franciscan missionaries; and thus there is better documentation of Late Middle Japanese phonology than for previous forms (for instance, the Arte da Lingoa de Iapam). Among other sound changes, the sequence /au/ merges to /ɔː/, in contrast with /oː/; /p/ is reintroduced from Chinese; and /we/ merges with /je/. g. g. hayaku > hayau > hayɔɔ, where modern Japanese just has hayaku, though the alternative form is preserved in the standard greeting o-hayō gozaimasu \"good morning\"; this ending is also seen in o-medetō \"congratulations\", from medetaku). Late Middle Japanese has the first loanwords from European languages – now-common words borrowed into Japanese in this period include pan (\"bread\") and tabako (\"tobacco\", now \"cigarette\"), both from Portuguese."
+  },
+  {
+   "id": "src:wiki-japanese-language#c3",
+   "outlet": "src:wiki-japanese-language",
+   "title": "Japanese language",
+   "text": "Modern Japanese is considered to begin with the Edo period (which spanned from 1603 to 1867). Although the capital moved to Edo (now Tokyo) during the Edo period, standard Japanese continued from that of the elites of Kyoto, with only minor influence from the Edo dialect. Since the end of Japan's self-imposed isolation in 1853, the flow of loanwords from European languages has increased significantly. g. arubaito 'temporary job', wakuchin 'vaccine'), Portuguese (kasutera 'sponge cake') and English. Many English loan words especially relate to technology—for example, pasokon 'personal computer', intānetto 'internet', and kamera 'camera'. g. paati for party or dizunii for Disney."
+  },
+  {
+   "id": "src:wiki-japanese-language#c4",
+   "outlet": "src:wiki-japanese-language",
+   "title": "Japanese language",
+   "text": "Although Japanese is spoken almost exclusively in Japan, it has also been spoken outside of the country. Before and during World War II, through Japanese annexation of Taiwan and Korea, as well as partial occupation of China, the Philippines, and various Pacific islands, locals in those countries learned Japanese as the language of the empire. As a result, many elderly people in these countries can still speak Japanese. 2 million of the United States) sometimes employ Japanese as their primary language. 6% of the population of Japanese ancestry in 2008. 7% of the population has Japanese ancestry, and California), and the Philippines (particularly in Davao Region and the Province of Laguna)."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-hiragana",
+   "title": "Hiragana",
+   "url": "https://en.wikipedia.org/wiki/Hiragana",
+   "revid": 1379929980,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-kanji",
+   "title": "Kanji",
+   "url": "https://en.wikipedia.org/wiki/Kanji",
+   "revid": 1379184891,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-japanese-language",
+   "title": "Japanese language",
+   "url": "https://en.wikipedia.org/wiki/Japanese_language",
+   "revid": 1378268196,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}
