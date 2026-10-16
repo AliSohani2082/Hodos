@@ -25,7 +25,7 @@ const common = (n: Net): Record<string, string> => ({
   NO_BROWSER: "1",
 });
 
-export function plan(h: Harness, n: Net, opts: { model?: string; maxTurns?: number } = {}): Plan {
+export function plan(h: Harness, n: Net, opts: { model?: string; maxTurns?: number; allowProjectConfig?: boolean } = {}): Plan {
   if (h === "claude") {
     return {
       command: "claude-agent-acp",
@@ -46,8 +46,8 @@ export function plan(h: Harness, n: Net, opts: { model?: string; maxTurns?: numb
       sessionMeta: {
         claudeCode: {
           options: {
-            settingSources: [], // no user / project / local settings, no CLAUDE.md, no .claude/ trees
-            strictMcpConfig: true, // only the MCP servers we pass in session/new
+            settingSources: opts.allowProjectConfig ? ["project", "local"] : [],
+            strictMcpConfig: !opts.allowProjectConfig,
             ...(opts.model ? { model: opts.model } : {}),
             ...(opts.maxTurns ? { maxTurns: opts.maxTurns } : {}),
             persistSession: false,
@@ -57,12 +57,14 @@ export function plan(h: Harness, n: Net, opts: { model?: string; maxTurns?: numb
     };
   }
   // codex
+  const projectTrust = opts.allowProjectConfig ? "trusted" : "untrusted";
   return {
     command: "sh",
-    args: ["-c", "mkdir -p /home/agent/.codex && exec codex-acp"],
+    args: ["-c", `mkdir -p /home/agent/.codex && printf '[projects.\"/workspace\"]\\ntrust_level = \"${projectTrust}\"\\n' > /home/agent/.codex/config.toml && exec codex-acp`],
     env: {
       ...common(n),
       CODEX_HOME: "/home/agent/.codex",
+      ...(opts.allowProjectConfig ? {} : { CODEX_CONFIG: JSON.stringify({ project_doc_max_bytes: 0 }) }),
       INITIAL_AGENT_MODE: "agent-full-access", // codex's own sandbox needs userns/landlock; the container is the boundary
     },
     // advertise gateway auth so the adapter offers the "gateway" method; the OpenAI key is never in the sandbox

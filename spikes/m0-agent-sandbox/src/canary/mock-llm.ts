@@ -15,21 +15,27 @@ createServer(async (req, res) => {
     url: req.url,
     "x-api-key": key ? key.slice(0, 4) + "…" + key.slice(-4) : null,
     authorization: auth ? auth.slice(0, 11) + "…" + auth.slice(-4) : null,
+    injectedAnthropicKey: key === "mock-anthropic-provider-key",
+    injectedOpenaiKey: auth === "Bearer mock-openai-provider-key",
     bytes: Buffer.concat(chunks).length,
   });
   const body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
-  log("request_shape", { url: req.url, keys: Object.keys(body), toolNames: (body.tools ?? []).map((t: any) => t.name ?? t.function?.name), messageTypes: (body.messages ?? []).map((m: any) => m.role), stream: body.stream });
+  log("request_shape", { url: req.url, keys: Object.keys(body), toolNames: (body.tools ?? []).map((t: any) => t.name ?? t.function?.name), messageTypes: (body.messages ?? []).map((m: any) => m.role), plantedClaudeSeen: JSON.stringify(body).includes("ALI39_PLANTED_CLAUDE_CANARY"), plantedCodexSeen: JSON.stringify(body).includes("ALI39_PLANTED_CODEX_CANARY"), stream: body.stream });
   const stamp = { seenXApiKey: key, seenAuthorization: auth, url: req.url };
   if (new URL(req.url ?? "/", "http://mock.local").pathname === "/v1/messages") {
-    const shellCall = JSON.stringify(body).includes("ALI39_RUN_SHELL") && !(body.messages ?? []).some((m: any) => JSON.stringify(m).includes("tool_result"));
+    const hasToolResult = (body.messages ?? []).some((m: any) => JSON.stringify(m).includes("tool_result"));
+    const shellCall = JSON.stringify(body).includes("ALI39_RUN_SHELL") && !hasToolResult;
+    const mcpCall = JSON.stringify(body).includes("ALI39_CALL_MCP") && !hasToolResult;
     const msg = { id: "msg_ali39_mock", type: "message", role: "assistant", model: body.model ?? "claude-sonnet-4-5", content: [{ type: "text", text: "ALI39_MOCK_OK" }], stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 10, output_tokens: 4 } };
     if (body.stream) {
       res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" });
       const event = (name: string, data: unknown) => res.write(`event: ${name}\ndata: ${JSON.stringify(data)}\n\n`);
       event("message_start", { type: "message_start", message: { ...msg, content: [], stop_reason: null, usage: { input_tokens: 10, output_tokens: 0 } } });
-      if (shellCall) {
-        event("content_block_start", { type: "content_block_start", index: 0, content_block: { type: "tool_use", id: "toolu_ali39_shell", name: "Bash", input: {} } });
-        event("content_block_delta", { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: JSON.stringify({ command: "touch /workspace/ali39-permission-marker" }) } });
+      if (shellCall || mcpCall) {
+        const name = mcpCall ? "mcp__hodos__lesson_validate" : "Bash";
+        const input = mcpCall ? { draftId: "d1", path: "lessons/01.md", markdown: "---\ntitle: Test\n---\nBody" } : { command: "touch /workspace/ali39-permission-marker" };
+        event("content_block_start", { type: "content_block_start", index: 0, content_block: { type: "tool_use", id: "toolu_ali39", name, input: {} } });
+        event("content_block_delta", { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: JSON.stringify(input) } });
         event("content_block_stop", { type: "content_block_stop", index: 0 });
         event("message_delta", { type: "message_delta", delta: { stop_reason: "tool_use", stop_sequence: null }, usage: { output_tokens: 4 } });
         event("message_stop", { type: "message_stop" });

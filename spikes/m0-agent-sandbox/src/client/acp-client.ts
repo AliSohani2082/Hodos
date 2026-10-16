@@ -22,6 +22,7 @@ const { values: a } = parseArgs({
     out: { type: "string", default: "work/runs" }, where: { type: "string", default: "sandbox" }, cmd: { type: "string" },
     proxy: { type: "string", default: "http://ali39-proxy:8080" }, "max-turns": { type: "string" },
     "timeout-s": { type: "string", default: "300" }, "no-mcp": { type: "boolean", default: false },
+    "allow-project-config": { type: "boolean", default: false },
   },
 });
 const harness = a.harness as Harness;
@@ -38,14 +39,14 @@ const policy = loadPolicy(a.policy!);
 const decisions: Decision[] = [];
 
 const net = { proxy: a.proxy!, mcpUrl: `${a.proxy}/mcp`, mcpToken: a["mcp-token"] ?? "" };
-const p = plan(harness, net, { model: a.model, maxTurns: a["max-turns"] ? Number(a["max-turns"]) : undefined });
+const p = plan(harness, net, { model: a.model, maxTurns: a["max-turns"] ? Number(a["max-turns"]) : undefined, allowProjectConfig: a["allow-project-config"] });
 
 let child;
 if (a.where === "host") {
   const [c, ...rest] = a.cmd!.split(" ");
   child = spawn(c, rest, { stdio: ["pipe", "pipe", "pipe"], env: { ...process.env, ...p.env } });
 } else {
-  const envFlags = Object.entries(p.env).flatMap(([k, v]) => ["-e", `${k}=${v}`]);
+  const envFlags = Object.entries({ ...p.env, ...(a["allow-project-config"] ? { ALI39_CONFIG_TEST: "1" } : {}) }).flatMap(([k, v]) => ["-e", `${k}=${v}`]);
   child = spawn(resolve("scripts/sandbox-exec.sh"), [a.job!, checkout, ...envFlags, "--", p.command, ...p.args], { stdio: ["pipe", "pipe", "pipe"] });
 }
 child.stderr.on("data", (d: Buffer) => { appendFileSync(`${outDir}/agent-stderr.log`, d); });
