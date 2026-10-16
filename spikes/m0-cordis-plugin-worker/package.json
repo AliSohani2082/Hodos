@@ -1,0 +1,17 @@
+{
+  "name": "ali38-m0-cordis-plugin-worker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Throwaway M0 spike (b): cordis on Bun and plugin-worker isolation. Not imported by the app.",
+  "engines": { "bun": ">=1.4.0", "node": ">=24" },
+  "scripts": {
+    "cordis:bun": "bun run src/cordis/lifecycle.ts",
+    "cordis:node": "node --expose-gc src/cordis/lifecycle.ts",
+    "cordis:diff": "bun run scripts/diff-cordis.ts",
+    "cordis:decorators": "bun run src/cordis/decorators-bun.ts"
+  },
+  "dependencies": {
+    "cordis": "4.0.0-rc.11"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@ali38/toy-quiz",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Toy plugin for spike (b): one block, one exercise kind, one preset, one layout. Pre-bundled single-file server entry, no runtime deps.",
+  "hodos": {
+    "server": "server.mjs",
+    "trust": "untrusted-manifest-ignored",
+    "capabilities": ["asset:read", "event:answer"]
+  }
+}

@@ -1,0 +1,7 @@
+node_modules/
+.env
+dist/
+tmp/
+*.log
+# raw per-run output; the curated results/*.json files ARE committed
+results/raw/
