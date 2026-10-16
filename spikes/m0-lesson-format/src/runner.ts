@@ -18,6 +18,7 @@ export interface RunConfig {
   arms: Arm[]
   samples: number
   capUSD: number
+  initialSpentUSD?: number // spend in other run directories, including judging
   concurrency: number
   maxTokens: number
   client: LlmClient
@@ -96,7 +97,7 @@ export async function runEval(cfg: RunConfig) {
   const prior = readRecords(cfg.dir)
   const done = new Set(prior.filter((r) => r.status === 'ok').map((r) => r.key))
   const budget = new Budget(cfg.capUSD)
-  budget.spent = prior.reduce((n, r) => n + r.costUSD, 0) // the cap is cumulative for the run directory
+  budget.spent = (cfg.initialSpentUSD ?? 0) + prior.reduce((n, r) => n + r.costUSD, 0)
   if (!existsSync(`${cfg.dir}/run.json`))
     writeFileSync(`${cfg.dir}/run.json`, JSON.stringify({ run: cfg.run, startedAt: new Date().toISOString(), models: cfg.models, arms: cfg.arms, tasks: cfg.tasks.map((t) => t.id), samples: cfg.samples, capUSD: cfg.capUSD, maxTokens: cfg.maxTokens, effort: 'medium', thinking: 'adaptive', prices: PRICES, promptFingerprint: promptFingerprint() }, null, 2))
 

@@ -19,12 +19,13 @@ Everything is TypeScript on Bun. It is throwaway code: nothing in `spikes/` is i
 | `src/score.ts`, `src/stats.ts`, `src/report.ts` | M1–M7 and extras, cluster bootstrap, rules K1–K6 and 1–5, the report. |
 | `src/judge.ts`, `src/q2.ts` | Q1 LLM judge on a format-normalised rendering; Q2 blind human check. |
 | `src/print.ts`, `src/synth.ts`, `src/stub.ts` | Printers for both syntaxes, gold lessons, and an offline stub model. |
-| `results/<run>/` | `run.json` and `report.md` are committed. Raw `generations.jsonl` is not (see `.gitignore`). |
+| `results/<run>/` | `run.json`, `report.md`, and `results.csv` are report artifacts. Raw `generations.jsonl` is ignored (see `.gitignore`). |
 
 ## Free commands (no API calls)
 
 ```
 bun install
+bun run offline                   # one command: tests, typecheck, gold parity, stub run, stub report + CSV
 bun test                          # 170+ tests: validators, parity, prompts, runner, budget guard, decision rules
 bun run typecheck
 bun run src/cli.ts check          # gold lesson of all 36 tasks is valid in both arms, with identical trees
@@ -35,7 +36,7 @@ bun run src/cli.ts report --run _stub
 
 ## Spending money
 
-Put the key in `.env` (untracked; see `.env.example`). Bun loads it automatically. Nothing below runs without an explicit `--cap-usd`, and the full run needs `--confirm-full` on top. The cap is cumulative for a run directory, so restarting never resets it.
+Put the key in `.env` (untracked; see `.env.example`). Bun loads it automatically. Nothing below runs without an explicit `--cap-usd`, and the full run needs `--confirm-full` on top. The CLI refuses a cap above $150 and counts recorded spend across pilot, full, judge, and smoke runs. Pass the approved **cumulative** cap to each paid command. Run paid commands one at a time; the local spend ledger does not coordinate separate processes.
 
 1. **Smoke test** (well under $0.01): `bun run src/cli.ts smoke --cap-usd 0.05`. Confirms credentials and that the exact request shape (adaptive thinking, `effort: medium`, cache breakpoints, streaming) is accepted.
 2. **Pilot** (about $7 per the ticket): `bun run src/cli.ts run --tasks pilot --cap-usd 7`. 12 tasks × 2 arms × 3 models × 1 sample = 72 generations, no judge. Then `bun run src/cli.ts count` (free, rate-limited) and `bun run src/cli.ts report`.

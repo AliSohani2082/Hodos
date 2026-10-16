@@ -4,10 +4,11 @@
   "type": "module",
   "description": "Spike (a): Markdoc vs remark-directive reliability eval (throwaway)",
   "scripts": {
-    "test": "bun test",
+    "test": "bun test --timeout 30000",
     "typecheck": "bunx tsc --noEmit",
     "check": "bun run src/cli.ts check",
     "stub": "bun run src/cli.ts stub",
+    "offline": "bun run test && bun run typecheck && bun run check && bun run stub && bun run src/cli.ts report --run _stub",
     "quote": "bun run src/cli.ts quote",
     "build-packs": "bun run scripts/build-packs.ts && bun run scripts/attribution.ts"
   },

@@ -61,13 +61,13 @@ export function judgePrompt(rec: GenRecord): string {
   ].join('\n\n')
 }
 
-export async function runJudge(opts: { dir: string; records: GenRecord[]; client: LlmClient; capUSD: number; concurrency: number; maxTokens?: number; log?: (l: string) => void }) {
+export async function runJudge(opts: { dir: string; records: GenRecord[]; client: LlmClient; capUSD: number; initialSpentUSD?: number; concurrency: number; maxTokens?: number; log?: (l: string) => void }) {
   const log = opts.log ?? console.log
   const file = `${opts.dir}/judgments.jsonl`
   const prior = readJudgments(opts.dir)
   const done = new Set(prior.map((j) => j.key))
   const budget = new Budget(opts.capUSD)
-  budget.spent = prior.reduce((n, j) => n + j.costUSD, 0)
+  budget.spent = (opts.initialSpentUSD ?? 0) + prior.reduce((n, j) => n + j.costUSD, 0)
   const maxTokens = opts.maxTokens ?? 6000
   const queue = opts.records.filter((r) => r.status === 'ok' && r.rounds.length && !done.has(r.key))
   let next = 0
@@ -78,17 +78,20 @@ export async function runJudge(opts: { dir: string; records: GenRecord[]; client
       const user = judgePrompt(rec)
       const worst = worstCase(JUDGE_MODEL, Math.ceil((SYSTEM.length + user.length) / 2.8), maxTokens)
       if (!budget.tryReserve(worst)) { stopped = true; return }
+      let charged = 0
       try {
         const res = await opts.client.complete({ model: JUDGE_MODEL, system: SYSTEM, turns: [{ role: 'user', content: user }], maxTokens, schema: SCHEMA })
         const cost = costOf(JUDGE_MODEL, res.usage)
         budget.settle(worst, cost)
+        charged = cost
         const parsed = JSON.parse(res.text) as Record<string, unknown>
         const scores = Object.fromEntries(RUBRIC.map((k) => [k, Number(parsed[k])])) as Judgment['scores']
         const q1 = RUBRIC.reduce((n, k) => n + scores[k], 0) / RUBRIC.length
         appendFileSync(file, JSON.stringify({ key: rec.key, scores, q1, notes: String(parsed.notes ?? ''), costUSD: cost } satisfies Judgment) + '\n')
         log(`judged ${rec.key} q1=${q1.toFixed(2)} total=$${budget.spent.toFixed(2)}/${opts.capUSD}`)
       } catch (err) {
-        budget.settle(worst, 0)
+        if (charged) appendFileSync(`${opts.dir}/judge-spend.jsonl`, JSON.stringify({ key: rec.key, costUSD: charged }) + '\n')
+        else budget.settle(worst, 0)
         log(`  judge ERROR ${rec.key}: ${err instanceof Error ? err.message : err}`)
       }
     }

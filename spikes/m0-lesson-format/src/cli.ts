@@ -5,10 +5,11 @@
 //   bun run src/cli.ts stub [--tasks all]             full pipeline against the offline stub (free)
 //   bun run src/cli.ts smoke --cap-usd 0.05           one tiny Haiku call: checks credentials and the request shape
 //   bun run src/cli.ts count|judge|report|q2 ...
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { AnthropicLlm, type LlmClient } from './llm.ts'
-import { costOf, PRICES } from './cost.ts'
+import { costOf, PRICES, worstCase } from './cost.ts'
+import { writeResultsCsv } from './csv.ts'
 import { runJudge } from './judge.ts'
 import { print } from './print.ts'
 import { systemPrompt, taskPrompt } from './prompts.ts'
@@ -16,6 +17,7 @@ import { exportPairs, scorePairs } from './q2.ts'
 import { buildReport } from './report.ts'
 import { readRecords, runEval } from './runner.ts'
 import { StubLlm } from './stub.ts'
+import { approvedCap, recordedSpend } from './spend.ts'
 import { goldDoc } from './synth.ts'
 import { contextFor, loadPack, PILOT_TASK_IDS, TASKS, taskById } from './tasks.ts'
 import { validateLesson } from './validate.ts'
@@ -44,6 +46,11 @@ const pickArms = (): Arm[] => (flag('arms') ? (flag('arms')!.split(',') as Arm[]
 function die(msg: string): never {
   console.error(msg)
   process.exit(2)
+}
+
+function liveCap(): number {
+  try { return approvedCap(flag('cap-usd')) }
+  catch (err) { die(`${err instanceof Error ? err.message : err}. Nothing was sent.`) }
 }
 
 function requireCredentials() {
@@ -109,8 +116,7 @@ async function main() {
       let client: LlmClient
       if (stub) client = new StubLlm()
       else {
-        const cap = flag('cap-usd')
-        if (!cap || !(Number(cap) > 0)) die('run needs an explicit --cap-usd <dollars>. Nothing was sent.')
+        liveCap()
         const tasksFlag = flag('tasks') ?? 'pilot'
         const samples = Number(flag('samples') ?? (tasksFlag === 'all' ? 3 : 1))
         if ((tasksFlag === 'all' || samples > 1) && !has('confirm-full'))
@@ -121,25 +127,35 @@ async function main() {
       const tasks = pickTasks()
       const samples = Number(flag('samples') ?? (flag('tasks') === 'all' ? 3 : 1))
       const dir = runDir(stub ? '_stub' : flag('tasks') === 'all' ? 'full' : 'pilot')
-      const cap = stub ? 1e9 : Number(flag('cap-usd'))
+      const cap = stub ? 1e9 : liveCap()
+      const spent = stub ? 0 : recordedSpend(RESULTS)
+      const priorHere = stub ? 0 : readRecords(dir).reduce((n, r) => n + r.costUSD, 0)
+      if (!stub && spent >= cap) die(`Recorded spend $${spent.toFixed(2)} has reached the approved cap $${cap.toFixed(2)}. Nothing was sent.`)
       console.log(`run dir: ${dir}  cap: $${cap}  tasks: ${tasks.length}  samples: ${samples}`)
-      const res = await runEval({ run: dir.split('/').pop()!, dir, tasks, models: pickModels(), arms: pickArms(), samples, capUSD: cap, concurrency: Number(flag('concurrency') ?? 3), maxTokens: Number(flag('max-tokens') ?? 20000), client })
+      const res = await runEval({ run: dir.split('/').pop()!, dir, tasks, models: pickModels(), arms: pickArms(), samples, capUSD: cap, initialSpentUSD: spent - priorHere, concurrency: Number(flag('concurrency') ?? 3), maxTokens: Number(flag('max-tokens') ?? 20000), client })
+      writeResultsCsv(dir, readRecords(dir))
       console.log(`\ndone: ${JSON.stringify(res)}`)
       return
     }
 
     case 'smoke': {
-      const cap = Number(flag('cap-usd'))
-      if (!(cap > 0)) die('smoke needs an explicit --cap-usd <dollars> (a call costs well under $0.01). Nothing was sent.')
+      const cap = liveCap()
       requireCredentials()
       const model: Model = 'claude-haiku-5-5'
+      const system = 'You are a connectivity check. Reply with the single word OK.'
+      const user = 'Reply with the single word OK.'
+      const worst = worstCase(model, system.length + user.length, 2000)
+      if (recordedSpend(RESULTS) + worst > cap) die('Smoke reservation exceeds the approved cumulative cap. Nothing was sent.')
       const res = await new AnthropicLlm().complete({
         model,
-        system: 'You are a connectivity check. Reply with the single word OK.',
-        turns: [{ role: 'user', content: 'Reply with the single word OK.', cache: true }],
+        system,
+        turns: [{ role: 'user', content: user, cache: true }],
         maxTokens: 2000,
       })
       const cost = costOf(model, res.usage)
+      const smokeDir = `${RESULTS}smoke`
+      mkdirSync(smokeDir, { recursive: true })
+      appendFileSync(`${smokeDir}/smoke-spend.jsonl`, JSON.stringify({ costUSD: cost }) + '\n')
       console.log(`reply: ${JSON.stringify(res.text.trim())}  stop: ${res.stopReason}  usage: ${JSON.stringify(res.usage)}  cost: $${cost.toFixed(5)}  ${res.ms}ms`)
       if (cost > cap) die(`cost $${cost} exceeded the cap`)
       console.log('request shape accepted (adaptive thinking, effort medium, cache_control on system and user turn, streaming).')
@@ -162,11 +178,13 @@ async function main() {
     }
 
     case 'judge': {
-      const cap = Number(flag('cap-usd'))
-      if (!(cap > 0)) die('judge needs an explicit --cap-usd <dollars>. Nothing was sent.')
+      const cap = liveCap()
       requireCredentials()
       const dir = runDir('full')
-      const out = await runJudge({ dir, records: readRecords(dir), client: new AnthropicLlm(), capUSD: cap, concurrency: Number(flag('concurrency') ?? 3) })
+      const spent = recordedSpend(RESULTS)
+      if (spent >= cap) die(`Recorded spend $${spent.toFixed(2)} has reached the approved cap $${cap.toFixed(2)}. Nothing was sent.`)
+      const judgedHere = existsSync(`${dir}/judgments.jsonl`) ? readFileSync(`${dir}/judgments.jsonl`, 'utf8').split('\n').filter(Boolean).reduce((n, l) => n + Number(JSON.parse(l).costUSD), 0) : 0
+      const out = await runJudge({ dir, records: readRecords(dir), client: new AnthropicLlm(), capUSD: cap, initialSpentUSD: spent - judgedHere, concurrency: Number(flag('concurrency') ?? 3) })
       console.log(JSON.stringify(out))
       return
     }
@@ -179,6 +197,7 @@ async function main() {
       const md = buildReport({ run: dir.split('/').pop()!, records, dir, q2prefM: q2, iterationUsed: has('iteration-used') })
       mkdirSync(dir, { recursive: true })
       writeFileSync(`${dir}/report.md`, md)
+      writeResultsCsv(dir, records)
       console.log(md)
       return
     }
