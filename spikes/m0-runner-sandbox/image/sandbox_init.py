@@ -18,6 +18,7 @@ import os
 import resource
 import select
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -230,6 +231,118 @@ def run_case(source_path, stdin_bytes, limits):
     }
 
 
+def run_call(job):
+    """Keep hidden source in the grader's stdin and its verdict on a private pipe."""
+    limits = job["limits"]
+    variant = job.get("variant", "secure")
+    src = os.path.join(WORK, "submission.py")
+    with open(src, "w") as fh:
+        fh.write(job["submission"])
+    os.chmod(src, 0o444)
+    spec = job["grader"]
+    if variant == "colocated":
+        with open(os.path.join(WORK, "hidden_tests.py"), "w") as fh:
+            fh.write(spec["tests_source"])
+        with open(os.path.join(WORK, "spec.json"), "w") as fh:
+            json.dump({"seed": spec["seed"]}, fh)
+        p = spawn([PY, "-I", "-B", "/opt/ali40/colocated_harness.py"], UID_LEARNER,
+                  GID_LEARNER, subprocess.DEVNULL, int(limits["wall_s"]) + 1,
+                  env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LANG": "C.UTF-8", "ALI40_NONCE": job["nonce"]})
+        # This control deliberately uses the same stdout channel. Copy only its frame.
+        stdout, stderr = p.communicate(timeout=limits["wall_s"])
+        TRACKED.discard(p.pid)
+        kill_uid(UID_LEARNER)
+        if p.returncode == 0:
+            os.write(OUT_FD, stdout)
+        else:
+            sys.stderr.write(stderr.decode("utf-8", "replace")[:4096])
+        return None
+
+    sg, sl = socket.socketpair()
+    rr, rw = os.pipe()
+    grader_uid = UID_LEARNER if variant == "same-uid" else UID_GRADER
+    grader_env = {"PATH": "/usr/local/bin:/usr/bin:/bin", "LANG": "C.UTF-8"}
+    if variant == "same-uid":
+        grader_env["ALI40_NONCE"] = job["nonce"]
+    g = spawn([PY, "-I", "-B", "/opt/ali40/grader_harness.py", str(sg.fileno()), str(rw)],
+              grader_uid, grader_uid, subprocess.PIPE, int(limits["wall_s"]) + 1,
+              env=grader_env, pass_fds=(sg.fileno(), rw))
+    l = spawn([PY, "-I", "-B", "/opt/ali40/learner_harness.py", str(sl.fileno()), src],
+              UID_LEARNER, GID_LEARNER, subprocess.DEVNULL, int(limits["wall_s"]) + 1,
+              pass_fds=(sl.fileno(),))
+    sg.close(); sl.close(); os.close(rw)
+    os.set_blocking(g.stdin.fileno(), False)
+    os.set_blocking(rr, False)
+    captures = [Capture(l.stdout.fileno(), limits["out_bytes"], limits["out_bytes"] * 8),
+                Capture(l.stderr.fileno(), limits["out_bytes"], limits["out_bytes"] * 8),
+                Capture(g.stdout.fileno(), 4096, 32768), Capture(g.stderr.fileno(), 4096, 32768)]
+    pending = memoryview(json.dumps({**spec, "nonce": job["nonce"], "call_s": limits["case_s"]}).encode())
+    result = bytearray()
+    result_eof = False
+    reason = None
+    deadline = time.monotonic() + limits["wall_s"]
+    grace = None
+    while time.monotonic() < deadline:
+        if captures[0].flood or captures[1].flood:
+            reason = "output_flood"
+            kill_uid(UID_LEARNER)
+        if g.poll() is not None:
+            grace = grace or time.monotonic() + 0.2
+            if result_eof or time.monotonic() >= grace:
+                break
+        reads = [c.fd for c in captures if not c.eof]
+        if not result_eof:
+            reads.append(rr)
+        writes = [g.stdin.fileno()] if not g.stdin.closed and pending else []
+        ready, writable, _ = select.select(reads, writes, [], 0.05)
+        for c in captures:
+            if c.fd in ready:
+                c.pump()
+        if rr in ready:
+            chunk = os.read(rr, 65536)
+            if chunk:
+                result += chunk
+                if len(result) > 256 * 1024:
+                    reason = "result_flood"
+                    break
+            else:
+                result_eof = True
+        if writable:
+            try:
+                pending = pending[os.write(g.stdin.fileno(), pending[:65536]):]
+            except (BlockingIOError, BrokenPipeError):
+                pending = memoryview(b"")
+        if not pending and not g.stdin.closed:
+            g.stdin.close()
+        reap()
+    else:
+        reason = "timeout"
+    if not g.stdin.closed:
+        g.stdin.close()
+    kill_uid(UID_LEARNER)
+    if grader_uid != UID_LEARNER:
+        kill_uid(UID_GRADER)
+    for c in captures:
+        for _ in range(8):
+            if c.eof:
+                break
+            c.pump()
+    lstatus, gstatus = l.wait(), g.wait()
+    TRACKED.difference_update((l.pid, g.pid))
+    os.close(rr)
+    try:
+        parsed = json.loads(result) if len(result.splitlines()) == 1 else None
+    except ValueError:
+        parsed = None
+    return {"grader": {"exit": gstatus, "result": parsed, "result_bytes": len(result),
+                       "stderr_tail": captures[3].text()},
+            "learner": {"exit": lstatus, "reason": reason, "stdout": captures[0].text(),
+                        "stderr": captures[1].text(), "stdout_bytes": captures[0].total,
+                        "stderr_bytes": captures[1].total,
+                        "truncated": any(c.total > limits["out_bytes"] for c in captures[:2])},
+            "reason": reason}
+
+
 def cgroup_stats():
     """Evidence that the kernel (not our code) enforced the caps: counters from the container's own cgroup."""
     out = {}
@@ -268,6 +381,11 @@ def main():
             fh.write(job["submission"])
         os.chmod(src, 0o444)
         frame["cases"] = [run_case(src, c["stdin"].encode(), limits) for c in job["cases"]]
+    elif kind == "call":
+        result = run_call(job)
+        if result is None:  # insecure colocated control emitted its own frame
+            return 0
+        frame.update(result)
     else:
         frame["error"] = f"unsupported kind {kind!r}"
     frame["supervisor_ms"] = int((time.monotonic() - t0) * 1000)
