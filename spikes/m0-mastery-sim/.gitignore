@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+node_modules/
+# scratch output; the committed tables live in results/
+out/
+*.log
+.env
