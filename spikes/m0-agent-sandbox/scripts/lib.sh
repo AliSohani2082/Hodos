@@ -37,7 +37,7 @@ net_up() {
 # Run a node script from src/ in a throwaway app-side container. Source and deps are read-only.
 app_run() { # app_run <name> <network args...> -- <env/other podman args...> -- <script> 
   local name=$1; shift
-  podman run -d --name "${P}-${name}" --pull=never --cap-drop=ALL --security-opt=no-new-privileges \
+  podman run -d --name "${P}-${name}" --pull=never --http-proxy=false --cap-drop=ALL --security-opt=no-new-privileges \
     -v "$S/src:/app/src:ro" -v "$S/node_modules:/app/node_modules:ro" -v "$LOGS:/logs:rw" \
     -w /app --user 0:0 "$@"
 }
@@ -66,6 +66,9 @@ appside_up() {
   mkdirs; net_up; load_env; canary_init
   app_run mock-llm --network $NET_APP --network-alias ${P}-mock-llm \
     -e LOG_FILE=/logs/mock-llm.jsonl $IMG_NODE node src/canary/mock-llm.ts >/dev/null
+  app_run upstream --network $NET_APP --network-alias ${P}-upstream \
+    -e LOG_FILE=/logs/upstream-proxy.jsonl -e PROXY_USER=ali39-test-user -e PROXY_PASS=ali39-test-pass \
+    $IMG_NODE node src/canary/mock-upstream-proxy.ts >/dev/null
   # app-side services: these (and only these) carry app secrets in their environment
   app_run mcp --network $NET_APP --network-alias ${P}-mcp \
     -e ADMIN_SECRET -e LOG_FILE=/logs/mcp.jsonl -e CANARY_APP_SECRET -e CANARY_SECRETS_KEY \
@@ -75,7 +78,7 @@ appside_up() {
     $IMG_NODE node src/canary/dummies.ts >/dev/null
   # the proxy straddles both networks; it is the only holder of the provider keys
   local up=()
-  [[ -n "${UPSTREAM_PROXY:-}" ]] && up=(-e UPSTREAM_PROXY -e NODE_USE_ENV_PROXY=1 -e "HTTPS_PROXY=$UPSTREAM_PROXY" -e NO_PROXY=${P}-mcp)
+  [[ -n "${UPSTREAM_PROXY:-}" ]] && up=(-e UPSTREAM_PROXY -e NODE_USE_ENV_PROXY=1 -e "HTTP_PROXY=$UPSTREAM_PROXY" -e "HTTPS_PROXY=$UPSTREAM_PROXY" -e "http_proxy=$UPSTREAM_PROXY" -e "https_proxy=$UPSTREAM_PROXY" -e NO_PROXY=${P}-mcp,${P}-mock-llm -e no_proxy=${P}-mcp,${P}-mock-llm)
   app_run proxy --network $NET_AGENT:alias=${P}-proxy --network $NET_APP \
     -e LOG_FILE=/logs/proxy.jsonl -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-mock-anthropic-provider-key}" -e OPENAI_API_KEY="${OPENAI_API_KEY:-mock-openai-provider-key}" \
     -e ANTHROPIC_UPSTREAM="${ANTHROPIC_UPSTREAM:-http://${P}-mock-llm:9000}" -e OPENAI_UPSTREAM="${OPENAI_UPSTREAM:-http://${P}-mock-llm:9000}" -e MCP_UPSTREAM=http://${P}-mcp:7000 \
@@ -95,6 +98,8 @@ lan_dummy_down() { [[ -f "$WORK/lan-dummy.pid" ]] && { kill "$(cat "$WORK/lan-du
 #   sandbox_args <job-id> <abs checkout dir>
 sandbox_args() {
   local job=$1 checkout=$2
+  local codex_mask=(--tmpfs /workspace/.codex:ro,nosuid,nodev,notmpcopyup,size=16m,mode=0555)
+  [[ "${ALI39_CONFIG_TEST:-0}" == 1 ]] && codex_mask=()
   SANDBOX_ARGS=(
     run --rm -i --name "${P}-job-${job}" --pull=never --env-host=false --http-proxy=false "${RUNTIME_ARGS[@]}"
     --network $NET_AGENT --hostname ${P}-sandbox
@@ -104,7 +109,7 @@ sandbox_args() {
     --tmpfs /tmp:rw,nosuid,nodev,size=128m
     --tmpfs /home/agent:rw,nosuid,nodev,size=512m,mode=1777
     -v "$checkout:/workspace:rw"
-    --tmpfs /workspace/.codex:ro,nosuid,nodev,notmpcopyup,size=16m,mode=0555
+    "${codex_mask[@]}"
     --cpus 1 --memory 1g --memory-swap 1g --pids-limit 256 --ulimit nofile=2048:2048
     --timeout "${JOB_TIMEOUT_S:-900}"
     -w /workspace

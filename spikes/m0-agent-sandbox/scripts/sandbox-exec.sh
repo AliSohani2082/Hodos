@@ -7,5 +7,8 @@ job=$1; checkout=$2; shift 2
 envs=()
 while [[ $# -gt 0 && $1 != -- ]]; do envs+=("$1"); shift; done
 shift  # --
+for e in "${envs[@]}"; do
+  [[ "$e" == ALI39_CONFIG_TEST=1 ]] && export ALI39_CONFIG_TEST=1
+done
 sandbox_args "$job" "$checkout"
 exec podman "${SANDBOX_ARGS[@]}" "${envs[@]}" "$IMG_AGENT" "$@"

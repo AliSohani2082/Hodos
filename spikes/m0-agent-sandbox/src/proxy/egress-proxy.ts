@@ -28,6 +28,7 @@ import { pipeline } from "node:stream/promises";
 import { makeLogger } from "../lib/log.ts";
 
 const PORT = Number(process.env.LISTEN_PORT ?? 8080);
+const HOST = process.env.LISTEN_HOST ?? "0.0.0.0";
 const log = makeLogger("proxy", process.env.LOG_FILE);
 const MAX_LLM_REQUESTS = Number(process.env.MAX_LLM_REQUESTS ?? 300); // blunt spend guard per proxy lifetime
 const ALLOW_CONNECT = new Set((process.env.ALLOW_CONNECT ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean));
@@ -216,6 +217,6 @@ server.on("connect", async (req, client, head) => {
   }
 });
 
-server.listen(PORT, "0.0.0.0", () =>
+server.listen(PORT, HOST, () =>
   log("listening", { port: PORT, routes: routes.map((r) => r.prefix), allowConnect: [...ALLOW_CONNECT], upstreamProxy: UPSTREAM_PROXY ? `${UPSTREAM_PROXY.hostname}:${UPSTREAM_PROXY.port}` : null }),
 );
