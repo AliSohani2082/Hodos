@@ -234,6 +234,13 @@ def test_clause_switches_for_the_ablation():
     assert gate_open(0.99, [att("i1"), att("i2"), att("i3")], require_unassisted_checkpoint=False)
 
 
+def test_gate_can_require_more_than_one_unassisted_checkpoint_answer():
+    one = [att("i1"), att("i2"), att("i3", "checkpoint")]
+    two = one + [att("i4", "checkpoint")]
+    assert gate_open(0.99, one) and not gate_open(0.99, one, min_unassisted_checkpoints=2)
+    assert gate_open(0.99, two, min_unassisted_checkpoints=2)
+
+
 def test_logit_sigmoid_roundtrip():
     for p in (0.01, 0.3, 0.5, 0.97):
         assert sigmoid(logit(p)) == pytest.approx(p) and not math.isnan(logit(p))

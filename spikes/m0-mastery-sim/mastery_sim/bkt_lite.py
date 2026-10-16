@@ -177,17 +177,19 @@ def gate_open(
     require_distinct_items: bool = True,
     min_distinct_items: int = 3,
     min_checkpoint_e: float = 0.8,
+    min_unassisted_checkpoints: int = 1,
 ) -> bool:
     """MS-2. `window` holds the attempts in the current gate window (the caller decides where it starts).
 
     The two `require_*` switches exist so the simulation can show what each clause buys; production
-    has both on.
+    has both on. `min_unassisted_checkpoints` is 1 in the PRD; the simulation tries 2 and 3.
     """
     attempts = list(window)
     if p < theta:
         return False
-    if require_unassisted_checkpoint and not any(
-        a.mode == "checkpoint" and a.e >= min_checkpoint_e and a.h == 0.0 for a in attempts
+    if require_unassisted_checkpoint and (
+        sum(1 for a in attempts if a.mode == "checkpoint" and a.e >= min_checkpoint_e and a.h == 0.0)
+        < min_unassisted_checkpoints
     ):
         return False
     if require_distinct_items and len({a.item_id for a in attempts}) < min_distinct_items:
