@@ -1,11 +1,12 @@
 // Adapter conformance suite (ALI-51): the same checks run against every PluginHost implementation.
 //   bun run src/host/conformance.ts      -> results/adapter-conformance.json
+import { execFileSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import * as toy from '../../fixtures/toy-plugin/server.mjs'
 import { CASES } from '../../fixtures/cases.mjs'
 import type { PluginModule } from '../sdk/types.ts'
-import { SPIKE_DIR, ProcessSandbox, InProcessSandbox } from './sandboxes.ts'
+import { SPIKE_DIR, ProcessSandbox, InProcessSandbox, CANDIDATES } from './sandboxes.ts'
 import type { HostEvent, PluginHost } from './plugin-host.ts'
 import { CordisPluginHost } from './cordis-adapter.ts'
 import { MapPluginHost } from './map-adapter.ts'
@@ -110,6 +111,18 @@ async function suite(label: string, make: (scope?: string) => Promise<PluginHost
     let rejected = false
     try { await host.registry.exerciseKinds().get('f')!.grade({} as any, {}, {} as any) } catch (e: any) { rejected = /score/.test(e.message) }
     must(rejected, 'score 99 must be rejected')
+  })
+  if (label === 'cordis-adapter') await t('A11', 'disposing a cordis fiber stops its confined QuickJS worker and removes its container', async (host) => {
+    const containers = () => execFileSync('podman', ['ps', '-a', '--format', '{{.Names}}']).toString().split('\n').filter((n) => n.startsWith('ali38-pw-'))
+    const before = new Set(containers())
+    const sb = CANDIDATES.find((c) => c.id === 'quickjs-bun-podman')!.make(PLUGIN)
+    const h = host.loadSandboxed('toy-confined', sb)
+    must((await h.settled()) === 'active', 'active: ' + h.error?.message)
+    must((await sb.call('block:position#validate', [{ id: 'n', type: 'position', attrs: { fen: 'bad' } }, { courseId: 'c', locale: 'en' }])).ok, 'worker answers')
+    await h.dispose()
+    must(names(host).every((n) => n === 0), 'registries empty')
+    must(!sb.alive(), 'worker stopped')
+    must(containers().every((n) => before.has(n)), 'container remained after disposal')
   })
   return out
 }

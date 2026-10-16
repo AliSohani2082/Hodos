@@ -1,0 +1,46 @@
+{
+  "spike": "ALI-53",
+  "bun": "1.4.2",
+  "rows": [
+    {
+      "id": "proc-bun",
+      "idleRssMB": 27.4,
+      "after1200CallsRssMB": 43.3
+    },
+    {
+      "id": "proc-node",
+      "idleRssMB": 49.4,
+      "after1200CallsRssMB": 61.1
+    },
+    {
+      "id": "quickjs-bun",
+      "idleRssMB": 54.1,
+      "after1200CallsRssMB": 74.3
+    },
+    {
+      "id": "ivm-node",
+      "idleRssMB": 55.4,
+      "after1200CallsRssMB": 64.1
+    },
+    {
+      "id": "workerd",
+      "idleRssMB": 47.9,
+      "after1200CallsRssMB": 68.3
+    },
+    {
+      "id": "proc-bun-podman",
+      "idleRssMB": 26.7,
+      "after1200CallsRssMB": 41.6
+    },
+    {
+      "id": "quickjs-bun-podman",
+      "idleRssMB": 47.6,
+      "after1200CallsRssMB": 59.2
+    }
+  ],
+  "quickjsExtraContexts": {
+    "count": 20,
+    "totalMB": 37.1,
+    "perContextMB": 1.85
+  }
+}

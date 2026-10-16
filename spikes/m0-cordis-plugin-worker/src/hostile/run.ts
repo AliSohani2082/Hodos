@@ -196,4 +196,6 @@ try {
 } finally {
   clearInterval(ticker); tcp.close(); unix.close(); rmSync(UNIX_SOCK, { force: true }); rmSync(CANARY_DIR, { recursive: true, force: true })
 }
-process.exit(0)
+// Capability escapes are observations, but a broken harness or failed recovery
+// invalidates the matrix and must make the command fail.
+process.exit(all.some((r) => r.verdict === 'HARNESS ERROR' || r.verdict === 'NO RECOVERY') ? 1 : 0)

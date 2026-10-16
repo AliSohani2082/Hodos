@@ -184,7 +184,9 @@ export class ProcessSandbox implements Sandbox {
     proc.stderr!.on('data', (d: Buffer) => { this.stderrTail = (this.stderrTail + d.toString()).slice(-2000) })
     // Only the CURRENT process may clear `child`: a late exit event from a killed predecessor must not null its replacement.
     this.exited = new Promise<void>((res) => proc.on('exit', (code, signal) => { if (this.child === proc) { this.exit = { code, signal }; this.child = null; this.waiter?.(null, 'crash') } res() }))
-    const ready = await this.nextLine(10_000)
+    // Rootless Podman can queue behind another spike on this shared workstation.
+    // Startup is not part of the per-hook wall budget; leave room for store contention.
+    const ready = await this.nextLine(60_000)
     if (!ready.line) throw new Error(`${this.label}: child did not become ready (${ready.why}) ${this.stderrTail.slice(-300)}`)
     const info = JSON.parse(ready.line)
     if (this.o.wrap === 'podman') this.cpid = await containerPid(this.containerName)
@@ -445,7 +447,13 @@ const denyWorker :Workerd.Worker = (
           try { const j = JSON.parse(Buffer.concat(chunks).toString()); finish(j.ok ? { ok: true, result: j.result, ms: ms2 } : { ok: false, kind: 'error', message: `${j.error?.name}: ${j.error?.message}`, ms: ms2 }) } catch { finish({ ok: false, kind: 'protocol', message: 'bad json', ms: ms2 }) }
         })
       })
-      req.on('error', (e) => finish({ ok: false, kind: 'crash', message: `${e.message} (exit ${JSON.stringify(this.exit)})`, ms: performance.now() - t0 }))
+      req.on('error', (e) => {
+        // A container may have died while the podman client is still alive.
+        // Retire that client so the next call starts a fresh container/socket.
+        this.pendingKill = true
+        this.killNow()
+        finish({ ok: false, kind: 'crash', message: `${e.message} (exit ${JSON.stringify(this.exit)})`, ms: performance.now() - t0 })
+      })
       req.end(body)
     })
   }

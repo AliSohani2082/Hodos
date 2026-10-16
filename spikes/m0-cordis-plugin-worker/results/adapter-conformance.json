@@ -61,6 +61,11 @@
         "id": "A10",
         "title": "a sandboxed plugin whose worker returns a forged GradeResult is rejected by the host, not believed",
         "ok": true
+      },
+      {
+        "id": "A11",
+        "title": "disposing a cordis fiber stops its confined QuickJS worker and removes its container",
+        "ok": true
       }
     ],
     "map-adapter": [

@@ -15,6 +15,10 @@
     "cordis:decorators": "bun run src/cordis/decorators-bun.ts",
     "bench:latency": "bun run src/bench/latency.ts",
     "bench:render": "bun run scripts/render-latency.ts",
+    "bench:compute": "bun run src/bench/compute.ts",
+    "bench:footprint": "bun run src/bench/footprint.ts",
+    "hostile": "bun run src/hostile/run.ts",
+    "hostile:render": "bun run scripts/render-hostile.ts",
     "compat:bun": "bun run scripts/compat-bun.ts",
     "adapter:test": "bun run src/host/conformance.ts",
     "adapter:noleak": "bun run scripts/check-no-leak.ts"

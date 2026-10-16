@@ -9,9 +9,9 @@
 
 **Exit.** A written go/no-go on cordis-on-Bun and on the plugin-worker design.
 
-**Status.** In progress. ALI-50 (cordis on Bun), ALI-52 (isolate vs process) and ALI-51 (adapter) are done. ALI-53 (isolation tests, ADR) follows.
+**Status.** ALI-50/51/52 evidence is committed; ALI-53 hostile, limit and recovery tests are complete.
 
-**Verdict.** ADR pending, see [`docs/adr/`](../../docs/adr/).
+**Verdict.** [ADR-0002](../../docs/adr/0002-cordis-on-bun-and-plugin-worker-isolation.md) proposes **Go with changes** for cordis on Bun and **Go with changes** for a QuickJS-wasm context inside an OS-confined Bun worker.
 
 ---
 
@@ -25,6 +25,8 @@
 | `src/worker/` | ALI-52: `glue.mjs` (the JSON-RPC surface and the `apply()` recorder, identical in every runtime), `engines.mjs` (native / QuickJS / isolated-vm engines), `child.mjs` (the worker child process). |
 | `src/host/sandboxes.ts` | ALI-52/53: one `Sandbox` interface over plain process, cgroup, bubblewrap, rootless podman, in-process QuickJS and workerd. |
 | `src/bench/latency.ts` | ALI-52: startup and per-call latency, plus a differential check against an in-process reference. |
+| `src/bench/compute.ts`, `src/bench/footprint.ts` | ALI-53: interpreter compute cost and worker memory footprint. |
+| `src/hostile/run.ts`, `fixtures/hostile-plugin/` | ALI-53: host-grounded capability, resource-limit, recovery and forged-result probes. |
 | `fixtures/toy-plugin/` | The toy plugin: one block (`position`, FEN `validate` + `fallback.text`), one layout, one exercise kind (`toy-quiz`: `validateItem` + async `grade`), one preset. |
 | `fixtures/cases.mjs` | 16 `validate` / `validateItem` / `grade` / `fallback.text` cases with hand-written expectations. |
 | `scripts/` | Diff, compat and report-rendering scripts. |
@@ -152,4 +154,128 @@ bun run adapter:test      # one conformance suite, two PluginHost implementation
 bun run adapter:noleak    # import scan + isolated `tsc --strict` proving the platform-facing files need no cordis types -> results/no-leak.json
 ```
 
-Result: 20/20 checks pass (10 per adapter), including a sandboxed plugin whose worker is a QuickJS isolate and one whose worker is a plain Bun process (hooks proxied over RPC, results equal to the first-party run, dispose kills the worker), and a worker that forges a `GradeResult` (rejected host-side). Full design notes, the SDK-exposed vs internal table and the cordis mapping are in [`ADAPTER.md`](ADAPTER.md).
+Result: 21/21 checks pass (11 cordis, 10 plain Maps), including a sandboxed plugin whose worker is a QuickJS isolate and one whose worker is a plain Bun process (hooks proxied over RPC, results equal to the first-party run, dispose kills the worker), and a worker that forges a `GradeResult` (rejected host-side). A11 loads QuickJS in rootless Podman through cordis and checks that disposing the fiber removes registrations and the container. Full design notes, the SDK-exposed vs internal table and the cordis mapping are in [`ADAPTER.md`](ADAPTER.md).
+
+## ALI-53: hostile plugin, hard limits and the decision
+
+```sh
+bun run hostile                   # all 14 candidates, about 8 minutes -> results/hostile.json
+bun run hostile --only workerd-podman
+bun run hostile --attacks env,net-loopback,cpu-loop
+bun run hostile:render            # renders capability, resource and recovery tables from the JSON result
+bun run bench:compute             # fib(27) inside validate() -> results/compute.json
+bun run bench:footprint           # worker RSS and 20 extra QuickJS contexts -> results/footprint.json
+```
+
+Partial hostile runs write `results/hostile-*.json`, leaving the full result intact. The harness creates only random dummy canaries and local dummy TCP/unix listeners. It measures connection/file effects on the host, so a plugin cannot claim its attempt failed after actually reaching the dummy service. A canary file sits outside the package mounts; an env canary exists in the harness at process exec time, making the `/proc/<ppid>/environ` attempt meaningful. It also checks that a benign call succeeds after each resource attack. Every container, socket and canary directory is removed on exit.
+
+The per-call limits are 1,000 ms host-accounted CPU, 1,500 ms wall, 256 KB response, and a 600 MB emergency host RSS watchdog. QuickJS and isolated-vm use a 48 MB engine cap; Node uses `--max-old-space-size=64`. Confined process tiers use a 256 MB cgroup/container memory cap and 32 pids. The container uses `--network none`, a read-only root and plugin mount, dropped capabilities, no new privileges and no host credentials. Bubblewrap unshares namespaces and runs in a user cgroup. The worker is killed on a limit breach, and the next call restarts it; a pure hook may be retried once after a crash. The test is a probe of API-level attacks, not an exploit-resistance certification.
+
+The capability test covers env and `/proc` reads; file reads and writes outside the package; loopback, LAN, unix-socket and fetch connections; workerd's socket API; subprocesses; process-object access; and privileged imports. Bare Bun/Node and Bun+cgroup escaped 10 of 11; Node `--permission` escaped 6 of 11 including all four network attempts. The OS-confined candidates and the JS isolates escaped 0 of 11. Bare processes spawned all 48 requested subprocesses; cgroup/container tiers capped them. In-process QuickJS blocked the host event loop for the duration of synchronous attacks and took over 5 seconds on an allocation test with a 1.5-second deadline. Out-of-process kills kept the host responsive and made recovery possible.
+
+Host-side parsing rejected NaN, negative/out-of-range scores and oversized feedback. A shape-valid `score: 1` was accepted, demonstrating why `grade()` remains evidence and why estimators and gates stay in the platform. A `revealsAnswer: true` result also parses, so checkpoint disclosure policy must be enforced by the platform. The prototype-pollution case did not modify `Object.prototype`.
+
+### Capability, resource and recovery results
+
+The following tables are rendered from `results/hostile.json` by `bun run hostile:render`.
+**Capability attacks** (can the plugin obtain something TM-003 says it must not have?)
+
+| Mechanism | env | fs-outside | fs-write | net-loopback | net-lan | net-unix | fetch | cf-connect | spawn | escape | imports | Escaped |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `proc-bun` | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | blocked | **ESCAPED** | **ESCAPED** | **ESCAPED** | 10 of 11 |
+| `proc-node` | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | blocked | **ESCAPED** | **ESCAPED** | **ESCAPED** | 10 of 11 |
+| `proc-node-perm` | blocked | blocked | blocked | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | blocked | blocked | **ESCAPED** | **ESCAPED** | 6 of 11 |
+| `proc-bun-cgroup` | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | **ESCAPED** | blocked | **ESCAPED** | **ESCAPED** | **ESCAPED** | 10 of 11 |
+| `proc-bun-bwrap` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | in sandbox | in sandbox | in sandbox | 0 of 11 |
+| `proc-bun-podman` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | in sandbox | in sandbox | in sandbox | 0 of 11 |
+| `quickjs-inproc` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | 0 of 11 |
+| `quickjs-bun` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | 0 of 11 |
+| `quickjs-bun-podman` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | 0 of 11 |
+| `ivm-node` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | 0 of 11 |
+| `ivm-node-podman` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | 0 of 11 |
+| `workerd` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | 0 of 11 |
+| `workerd-cgroup` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | 0 of 11 |
+| `workerd-podman` | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | blocked | 0 of 11 |
+
+**Resource attacks** (is the limit enforced, by what, how fast, and did the worker recover?)
+
+| Mechanism | cpu-loop | async-spin | redos | hang-promise | sleep-wall | mem-array | mem-string | mem-buffer | stack | flood | fork |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `proc-bun` | ok: host cpu, 1.0s | ok: host cpu, 1.0s | ok: finished, 0.9s | ok: host wall, 1.5s | ok: host wall, 1.5s | ok: host RSS wd, 0.4s | ok: in-guest err, 0.0s | ok: host RSS wd, 0.4s | ok: in-guest err, 0.0s | ok: host size cap, 0.1s | **UNCONTAINED**: pids cap, 0.1s |
+| `proc-node` | ok: host cpu, 1.1s | ok: host cpu, 1.0s | ok: host cpu, 1.0s | ok: host wall, 1.5s | ok: host wall, 1.5s | ok: heap limit, 1.5s | ok: in-guest err, 0.0s | ok: host RSS wd, 0.7s | ok: in-guest err, 0.0s | ok: host size cap, 0.6s | **UNCONTAINED**: pids cap, 0.1s |
+| `proc-node-perm` | ok: host cpu, 1.1s | ok: host cpu, 1.0s | ok: host cpu, 1.0s | ok: host wall, 1.5s | ok: host wall, 1.5s | ok: heap limit, 1.5s | ok: in-guest err, 0.0s | ok: host RSS wd, 0.5s | ok: in-guest err, 0.0s | ok: host size cap, 0.7s | n/a: API absent, 0.0s |
+| `proc-bun-cgroup` | ok: host cpu, 1.1s | ok: host cpu, 1.2s | ok: host cpu, 1.2s | ok: host wall, 1.5s | ok: host wall, 1.5s | ok: kernel OOM, 0.4s | ok: in-guest err, 0.0s | ok: kernel OOM, 0.3s | ok: in-guest err, 0.1s | ok: host size cap, 0.3s | ok: pids cap, 0.0s |
+| `proc-bun-bwrap` | ok: host cpu, 1.1s | ok: host cpu, 1.0s | ok: host cpu, 1.0s | ok: host wall, 1.5s | ok: host wall, 1.5s | ok: kernel OOM, 0.2s | ok: in-guest err, 0.0s | ok: kernel OOM, 0.5s | ok: in-guest err, 0.0s | ok: host size cap, 0.3s | ok: pids cap, 0.0s |
+| `proc-bun-podman` | ok: host cpu, 1.3s | ok: host cpu, 1.1s | ok: host cpu, 1.2s | ok: host wall, 1.5s | ok: host wall, 1.5s | ok: kernel OOM, 0.4s | ok: in-guest err, 0.0s | ok: kernel OOM, 0.4s | ok: in-guest err, 0.0s | ok: host size cap, 0.2s | ok: pids cap, 0.0s |
+| `quickjs-inproc` | ok: engine, 1.5s **(host loop blocked)** | ok: in-guest err, 1.5s **(host loop blocked)** | ok: engine, 1.5s **(host loop blocked)** | ok: engine, 0.0s | ok: in-guest err, 0.0s | **SLOW**: engine, 8.7s **(host loop blocked)** | ok: in-guest err, 0.0s | ok: in-guest err, 0.3s | ok: in-guest err, 0.0s | ok: host size cap, 1.6s **(host loop blocked)** | n/a: API absent, 0.0s |
+| `quickjs-bun` | ok: engine, 2.3s | ok: in-guest err, 1.9s | ok: host wall, 1.9s | ok: engine, 0.0s | ok: in-guest err, 0.0s | ok: host cpu, 1.1s | ok: in-guest err, 0.0s | ok: host RSS wd, 0.7s | ok: in-guest err, 0.0s | ok: host wall, 1.9s | n/a: API absent, 0.0s |
+| `quickjs-bun-podman` | ok: host cpu, 1.3s | ok: host cpu, 1.2s | ok: host cpu, 1.2s | ok: engine, 0.0s | ok: in-guest err, 0.0s | ok: kernel OOM, 0.8s | ok: in-guest err, 0.0s | ok: kernel OOM, 0.6s | ok: in-guest err, 0.0s | ok: host cpu, 1.6s | n/a: API absent, 0.0s |
+| `ivm-node` | ok: host cpu, 1.1s | ok: host cpu, 1.1s | ok: host cpu, 1.0s | ok: engine, 1.8s | ok: in-guest err, 0.0s | ok: engine, 0.6s | ok: in-guest err, 0.0s | ok: in-guest err, 0.1s | ok: in-guest err, 0.0s | ok: host size cap, 0.3s | n/a: API absent, 0.0s |
+| `ivm-node-podman` | ok: host cpu, 1.1s | ok: host cpu, 1.0s | ok: host cpu, 1.0s | ok: engine, 1.8s | ok: in-guest err, 0.0s | ok: engine, 0.6s | ok: in-guest err, 0.0s | ok: in-guest err, 0.1s | ok: in-guest err, 0.0s | ok: host size cap, 0.6s | n/a: API absent, 0.0s |
+| `workerd` | **SLOW**: host wall, 3.7s | **SLOW**: host wall, 4.0s | ok: host wall, 1.5s | ok: in-guest err, 0.3s | ok: host wall, 2.5s | ok: host wall, 1.8s | ok: in-guest err, 1.2s | ok: host wall, 1.6s | ok: in-guest err, 0.1s | **SLOW**: host wall, 3.7s | n/a: API absent, 1.7s |
+| `workerd-cgroup` | ok: host wall, 1.9s | ok: host cpu, 1.3s | ok: host cpu, 1.0s | ok: in-guest err, 0.0s | ok: host wall, 1.5s | ok: crash, 0.3s | ok: in-guest err, 0.0s | ok: crash, 0.3s | ok: in-guest err, 0.0s | ok: host size cap, 0.1s | n/a: API absent, 0.0s |
+| `workerd-podman` | ok: host cpu, 1.1s | ok: host cpu, 1.0s | ok: host cpu, 1.1s | ok: in-guest err, 0.0s | ok: host wall, 1.5s | ok: crash, 0.3s | ok: in-guest err, 0.0s | ok: crash, 0.2s | ok: in-guest err, 0.0s | ok: host size cap, 0.1s | n/a: API absent, 0.0s |
+
+**Host impact and recovery** (worst case over the resource attacks)
+
+| Mechanism | Max host event-loop stall (ms) | Max time to next good answer after a kill (ms) | Peak memory seen by kernel cgroup (MB) |
+|---|---|---|---|
+| `proc-bun` | 13 | 55 | n/a |
+| `proc-node` | 336 | 132 | n/a |
+| `proc-node-perm` | 422 | 149 | n/a |
+| `proc-bun-cgroup` | 75 | 210 | 256 |
+| `proc-bun-bwrap` | 28 | 647 | 256 |
+| `proc-bun-podman` | 89 | 101363 | 256 |
+| `quickjs-inproc` | 8745 | 15 | n/a |
+| `quickjs-bun` | 1349 | 9939 | n/a |
+| `quickjs-bun-podman` | 44 | 632 | 256 |
+| `ivm-node` | 50 | 86 | n/a |
+| `ivm-node-podman` | 499 | 1218 | 149.4 |
+| `workerd` | 3392 | 15635 | n/a |
+| `workerd-cgroup` | 513 | 2759 | 256 |
+| `workerd-podman` | 19 | 2831 | 256 |
+
+**Forged results** (host-side validator on what a worker returns)
+
+| Variant | Host verdict |
+|---|---|
+| `always-correct` | ACCEPTED score=1 revealsAnswer=false |
+| `out-of-range` | REJECTED by host validator: grade.score: expected a finite number in [0, 1], got 99 |
+| `nan` | REJECTED by host validator: grade.score: expected a finite number in [0, 1], got null |
+| `negative` | REJECTED by host validator: grade.score: expected a finite number in [0, 1], got -5 |
+| `huge-feedback` | REJECTED by host validator: grade.feedback.text: expected string up to 2000 chars |
+| `proto` | ACCEPTED score=1 revealsAnswer=false |
+| `reveal` | ACCEPTED score=0 revealsAnswer=true |
+
+### Compute and memory cost
+
+The recursive `fib(27)` hook (~630,000 calls) exposes the QuickJS interpreter cost. Five measured calls after one warmup gave these medians; see `results/compute.json`.
+
+| Mechanism | fib(27) p50 | Relative to Bun child |
+|---|---:|---:|
+| Bun child | 3.5 ms | 1× |
+| Node child | 4.6 ms | 1.3× |
+| QuickJS in app | 57.7 ms | 16.5× |
+| QuickJS in Bun child | 64.8 ms | 18.5× |
+| isolated-vm in Node child | 5.8 ms | 1.7× |
+| workerd | 4.9 ms | 1.4× |
+
+Worker RSS (`results/footprint.json`) is measured after startup and after 1,200 small RPCs; it is a point measurement, not a long soak test.
+
+| Mechanism | Idle RSS | RSS after 1,200 calls |
+|---|---:|---:|
+| Bun child | 27.4 MB | 43.3 MB |
+| Node child | 49.4 MB | 61.1 MB |
+| QuickJS in Bun child | 54.1 MB | 74.3 MB |
+| isolated-vm in Node child | 55.4 MB | 64.1 MB |
+| workerd | 47.9 MB | 68.3 MB |
+| Bun in Podman | 26.7 MB | 41.6 MB |
+| QuickJS/Bun in Podman | 47.6 MB | 59.2 MB |
+
+Twenty additional QuickJS runtime/context pairs in one Bun process added 37.1 MB, about **1.85 MB each** with the toy plugin loaded. This suggests a shared confined process could be economical, but sharing workers between mutually untrusted plugins needs a separate fault and resource-isolation test.
+
+### Limits of the spike
+
+The 322-row hostile matrix combines the full run with a focused rerun of `quickjs-bun-podman`, `ivm-node` and `ivm-node-podman`. Those candidates missed the original 10-second *startup readiness* window while another spike saturated the workstation; their complete rows were rerun with a 60-second startup allowance and substituted. Per-call limits were unchanged. The full run also saw host scheduling delays: bare workerd missed the nominal 1.5-second wall target by as much as about 2.5 seconds while the machine load average exceeded 20. A production limit supervisor must be independently schedulable and tested under load. This is a reason to enforce kernel limits and kill the whole worker, and not to treat a JS timer in the app as a hard deadline.
+
+The toy plugin is a single self-contained ES module. It mirrors the PRD's registries, block `validate`/`fallback.text`, exercise `validateItem`/`grade` and `apply` manifest, but does not exercise real npm dependency bundles, schemas against persistence, UI iframes, materializers, real Postgres or install scripts. The suite probes API access and resource exhaustion, not runtime, kernel or side-channel exploits. It did not test gVisor, other operating systems, throughput under concurrency, or a 100,000+ call soak.
