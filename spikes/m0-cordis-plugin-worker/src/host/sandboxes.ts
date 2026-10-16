@@ -1,10 +1,11 @@
 // Host side of the plugin worker: one `Sandbox` interface, several mechanisms behind it (ALI-52, ALI-53).
 // Runs under Bun (the app runtime). Everything the plugin sees or returns is a JSON string; the host enforces wall time, size and (where possible) memory.
 // Every container, socket and temp dir created here is prefixed `ali38-` and removed by stop().
-import { spawn, spawnSync, execFileSync, type ChildProcess } from 'node:child_process'
+import { spawn, execFileSync, type ChildProcess } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, copyFileSync } from 'node:fs'
 import http from 'node:http'
-import { dirname, join, resolve } from 'node:path'
+import net from 'node:net'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Json } from '../sdk/types.ts'
 
@@ -14,11 +15,14 @@ export const RUN_DIR = process.env.XDG_RUNTIME_DIR || '/tmp' // short path for u
 
 export interface Limits {
   wallMs: number          // per-call wall clock; the host kills or interrupts when exceeded
-  memoryMB: number        // engine/cgroup/container memory cap
+  cpuMs: number           // per-call CPU budget, accounted by the host from /proc (processes) or cpu.stat (cgroups); independent of wall time
+  memoryMB: number        // guest budget: QuickJS/isolated-vm engine limit and Node heap cap
+  cgroupMB?: number       // kernel (cgroup / container) cap for the whole worker incl. runtime baseline; default 256
   maxResultBytes: number  // largest accepted response line
   safetyRssMB: number     // host-side watchdog that protects the workstation even where no other cap exists
+  meter?: boolean         // per-call /proc + cgroup accounting (default on). The latency bench turns it off so it does not pollute the numbers
 }
-export const DEFAULT_LIMITS: Limits = { wallMs: 1500, memoryMB: 64, maxResultBytes: 256 * 1024, safetyRssMB: 900 }
+export const DEFAULT_LIMITS: Limits = { wallMs: 1500, cpuMs: 1000, memoryMB: 64, maxResultBytes: 256 * 1024, safetyRssMB: 600 }
 
 export type FailKind = 'error' | 'timeout' | 'memory' | 'crash' | 'too-large' | 'protocol'
 export type Outcome =
@@ -59,15 +63,53 @@ function descendants(pid: number): number[] {
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 // ---------------------------------------------------------------------------------------------------------------------
+/** Host-side measurement of a worker, independent of anything the plugin says: RSS, CPU time, and the kernel's own cgroup counters. */
+function cpuTicks(pid: number): number {
+  try { const f = readFileSync(`/proc/${pid}/stat`, 'utf8'); const rest = f.slice(f.lastIndexOf(')') + 2).split(' '); return Number(rest[11]) + Number(rest[12]) } catch { return 0 }
+}
+export interface CallMetrics { peakRssMB: number; cpuMs: number; peakCgroupMB: number | null; oomKills: number | null; cgroup: string | null }
+export class Meter {
+  peakRssMB = 0; private cpu0 = 0; private cpuNow = 0; peakCgroupMB: number | null = null; oomKills: number | null = null
+  constructor(private pidOf: () => number | undefined, private ownCgroup: () => boolean) {}
+  /** The worker's own cgroup, or null when it shares its parent's (a bare process): then the cgroup counters would describe the whole login scope, not the worker. */
+  cgroupDir(): string | null {
+    const pid = this.pidOf(); if (!pid || !this.ownCgroup()) return null
+    try { const line = readFileSync(`/proc/${pid}/cgroup`, 'utf8').trim().split('\n').pop()!; const path = line.split('::')[1]; return path && path !== '/' ? '/sys/fs/cgroup' + path : null } catch { return null }
+  }
+  private pids(): number[] { const pid = this.pidOf(); return pid ? [pid, ...descendants(pid)] : [] }
+  begin() { this.peakRssMB = 0; this.peakCgroupMB = null; this.oomKills = null; this.cpu0 = this.pids().reduce((n, p) => n + cpuTicks(p), 0); this.cpuNow = this.cpu0; this.cg = this.cgroupDir() }
+  private cg: string | null = null
+  /** One sample. Returns total RSS (MB) and CPU used since begin() (ms). Cheap: a few /proc reads. */
+  tick(): { rssMB: number; cpuMs: number } {
+    const pids = this.pids()
+    const rssMB = pids.reduce((n, p) => n + (vmRssMB(p) ?? 0), 0)
+    this.cpuNow = Math.max(this.cpuNow, pids.reduce((n, p) => n + cpuTicks(p), 0))
+    this.peakRssMB = Math.max(this.peakRssMB, rssMB)
+    if (this.cg) {
+      try { this.peakCgroupMB = Math.max(this.peakCgroupMB ?? 0, Number(readFileSync(this.cg + '/memory.peak', 'utf8')) / 1048576) } catch {}
+      try { const m = /oom_kill (\d+)/.exec(readFileSync(this.cg + '/memory.events', 'utf8')); if (m) this.oomKills = Number(m[1]) } catch {}
+    }
+    return { rssMB, cpuMs: (this.cpuNow - this.cpu0) * 10 }
+  }
+  snapshot(): CallMetrics { return { peakRssMB: +this.peakRssMB.toFixed(1), cpuMs: (this.cpuNow - this.cpu0) * 10, peakCgroupMB: this.peakCgroupMB === null ? null : +this.peakCgroupMB.toFixed(1), oomKills: this.oomKills, cgroup: this.cg ? this.cg.replace(/^\/sys\/fs\/cgroup/, '').replace(/\d{3,}/g, 'N') : null } }
+}
+/** Async on purpose: the app's event loop must never block on a container-runtime CLI call. */
+function run(cmd: string, args: string[]): Promise<string> {
+  return new Promise((res) => { const p = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'ignore'] }); let out = ''; p.stdout.on('data', (d: Buffer) => { out += d }); p.on('error', () => res('')); p.on('exit', () => res(out)) })
+}
+async function containerPid(name: string): Promise<number | undefined> { const n = Number((await run('podman', ['inspect', '-f', '{{.State.Pid}}', name])).trim()); return n > 0 ? n : undefined }
+const podmanKill = (name: string) => { try { spawn('podman', ['kill', '--signal', 'KILL', name], { stdio: 'ignore' }).unref() } catch {} }
+
+// ---------------------------------------------------------------------------------------------------------------------
 export type Wrap = 'none' | 'cgroup' | 'bwrap' | 'podman'
 export interface ProcessOptions {
   label: string
   engine: 'native' | 'quickjs' | 'ivm'
   runtime: 'bun' | 'node'
   wrap: Wrap
-  pluginPath: string                 // absolute path on the host; must live under SPIKE_DIR
+  pluginPath: string                 // absolute host path of the plugin's server entry
   limits?: Partial<Limits>
-  nodePermission?: boolean           // node --permission --allow-fs-read=<SPIKE_DIR>
+  nodePermission?: boolean           // node --permission with read access to exactly the worker dir, node_modules and the plugin dir
   env?: Record<string, string>       // the env the child gets. Default: empty
   cwd?: string
 }
@@ -76,53 +118,55 @@ export interface ProcessOptions {
 export class ProcessSandbox implements Sandbox {
   label: string
   restarts = 0
+  lastMetrics: CallMetrics | null = null
   private child: ChildProcess | null = null
   private buf = ''
   private waiter: ((line: string | null, why?: FailKind) => void) | null = null
   private containerName = ''
+  private cpid: number | undefined
   private limits: Limits
-  private lastRuntime = ''
-  private tooLarge = false
+  private meter = new Meter(() => this.cpid ?? this.child?.pid, () => this.o.wrap !== 'none')
+  private stderrTail = ''
+  private killedBy: 'rss' | 'cpu' | null = null
+  private killedAt = 0
   constructor(private o: ProcessOptions) { this.label = o.label; this.limits = { ...DEFAULT_LIMITS, ...o.limits } }
+
+  /** The path of the plugin's server entry as the plugin itself sees it (differs inside bubblewrap and containers). */
+  get pluginPathInside() { return this.o.wrap === 'bwrap' || this.o.wrap === 'podman' ? `/plugin/${basename(this.o.pluginPath)}` : this.o.pluginPath }
 
   private argv(): { cmd: string; args: string[] } {
     const o = this.o, L = this.limits
     const bin = BIN[o.runtime]
-    const inner = (root: string, rt: string) => {
-      const a: string[] = []
-      if (o.runtime === 'node') {
-        a.push(`--max-old-space-size=${L.memoryMB}`)
-        if (o.nodePermission) a.push('--permission', `--allow-fs-read=${root}`)
-      }
-      a.push(`${root}/src/worker/child.mjs`, '--engine', o.engine, '--plugin', o.pluginPath.replace(SPIKE_DIR, root), '--mem-mb', String(Math.min(L.memoryMB, 48)), '--wall-ms', String(L.wallMs))
-      return { rt, a }
+    const confined = o.wrap === 'bwrap' || o.wrap === 'podman'
+    const workerDir = join(SPIKE_DIR, 'src/worker'), modulesDir = join(SPIKE_DIR, 'node_modules'), pluginDir = dirname(o.pluginPath)
+    // What the child can read is exactly: the worker code, node_modules (for the engines) and the plugin package. Not the rest of the spike, not $HOME.
+    const child = confined ? '/app/worker/child.mjs' : join(workerDir, 'child.mjs')
+    const a: string[] = []
+    if (o.runtime === 'node') {
+      a.push(`--max-old-space-size=${L.memoryMB}`)
+      if (o.nodePermission) a.push('--permission', `--allow-fs-read=${workerDir}`, `--allow-fs-read=${modulesDir}`, `--allow-fs-read=${pluginDir}`)
     }
-    if (o.wrap === 'none' || o.wrap === 'cgroup') {
-      const { a } = inner(SPIKE_DIR, bin)
-      if (o.wrap === 'none') return { cmd: bin, args: a }
-      return { cmd: 'systemd-run', args: ['--user', '--scope', '--quiet', '--collect', '-p', `MemoryMax=${L.memoryMB}M`, '-p', 'MemorySwapMax=0', '-p', 'TasksMax=32', '-p', 'CPUQuota=100%', '--', bin, ...a] }
-    }
+    a.push(child, '--engine', o.engine, '--plugin', this.pluginPathInside, '--mem-mb', String(Math.min(L.memoryMB, 48)), '--wall-ms', String(L.wallMs))
+    const scope = ['--user', '--scope', '--quiet', '--collect', '-p', `MemoryMax=${L.cgroupMB ?? 256}M`, '-p', 'MemorySwapMax=0', '-p', 'TasksMax=32', '-p', 'CPUQuota=100%']
+    if (o.wrap === 'none') return { cmd: bin, args: a }
+    if (o.wrap === 'cgroup') return { cmd: 'systemd-run', args: [...scope, '--', bin, ...a] }
     if (o.wrap === 'bwrap') {
-      const { a } = inner('/spike', '/rt/bin')
-      const rtDir = dirname(bin)
       return {
         cmd: 'systemd-run',
-        args: ['--user', '--scope', '--quiet', '--collect', '-p', `MemoryMax=${L.memoryMB}M`, '-p', 'MemorySwapMax=0', '-p', 'TasksMax=32', '--', 'bwrap',
-          '--unshare-all', '--die-with-parent', '--new-session', '--cap-drop', 'ALL', '--clearenv',
+        args: [...scope, '--', 'bwrap', '--unshare-all', '--die-with-parent', '--new-session', '--cap-drop', 'ALL', '--clearenv',
           '--ro-bind', '/usr', '/usr', '--symlink', 'usr/lib', '/lib', '--symlink', 'usr/lib64', '/lib64', '--symlink', 'usr/bin', '/bin',
-          '--ro-bind', SPIKE_DIR, '/spike', '--ro-bind', rtDir, '/rt/bin', '--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp',
-          '--chdir', '/tmp', `/rt/bin/${bin.split('/').pop()}`, ...a],
+          '--ro-bind', workerDir, '/app/worker', '--ro-bind', modulesDir, '/app/node_modules', '--ro-bind', pluginDir, '/plugin', '--ro-bind', dirname(bin), '/rt/bin',
+          '--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp', '--chdir', '/tmp', `/rt/bin/${basename(bin)}`, ...a],
       }
     }
-    // rootless podman: no network, read-only root, no capabilities, cgroup limits, only the spike dir and the runtime binary dir mounted read-only
+    // rootless podman: no network, read-only root, no capabilities, cgroup limits; only the three read-only mounts and the runtime binary
     this.containerName = `ali38-pw-${process.pid}-${Math.random().toString(36).slice(2, 7)}`
-    const { a } = inner('/spike', '/rt/bin')
     return {
       cmd: 'podman',
       args: ['run', '--rm', '-i', '--name', this.containerName, '--network', 'none', '--read-only', '--cap-drop', 'all', '--security-opt', 'no-new-privileges',
-        '--memory', `${L.memoryMB}m`, '--memory-swap', `${L.memoryMB}m`, '--pids-limit', '32', '--cpus', '1', '--env-host=false', '--no-hosts', '--tmpfs', '/tmp:size=8m,noexec',
-        '-v', `${SPIKE_DIR}:/spike:ro`, '-v', `${dirname(bin)}:/rt/bin:ro`, '--workdir', '/tmp',
-        'docker.io/library/debian:13', `/rt/bin/${bin.split('/').pop()}`, ...a],
+        '--memory', `${L.cgroupMB ?? 256}m`, '--memory-swap', `${L.cgroupMB ?? 256}m`, '--pids-limit', '32', '--cpus', '1', '--env-host=false', '--no-hosts', '--tmpfs', '/tmp:size=8m,noexec',
+        '-v', `${workerDir}:/app/worker:ro`, '-v', `${modulesDir}:/app/node_modules:ro`, '-v', `${pluginDir}:/plugin:ro`, '-v', `${dirname(bin)}:/rt/bin:ro`, '--workdir', '/tmp',
+        'docker.io/library/debian:13', `/rt/bin/${basename(bin)}`, ...a],
     }
   }
 
@@ -132,28 +176,34 @@ export class ProcessSandbox implements Sandbox {
     const env = { ...(this.o.env ?? {}) }
     if (this.o.wrap === 'cgroup' || this.o.wrap === 'bwrap') Object.assign(env, { XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR!, DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS ?? `unix:path=${process.env.XDG_RUNTIME_DIR}/bus` })
     if (this.o.wrap === 'podman') Object.assign(env, { XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR!, HOME: process.env.HOME!, PATH: process.env.PATH! })
-    this.child = spawn(cmd, args, { env, cwd: this.o.cwd ?? TMP, stdio: ['pipe', 'pipe', 'pipe'], detached: false })
-    this.buf = ''; this.tooLarge = false
-    this.child.stdout!.on('data', (d: Buffer) => this.onData(d))
-    this.child.stderr!.on('data', () => {})
-    this.child.on('exit', (code, signal) => { this.exit = { code, signal }; this.waiter?.(null, 'crash'); this.child = null })
+    this.cpid = undefined; this.exit = null; this.stderrTail = ''
+    const proc = spawn(cmd, args, { env, cwd: this.o.cwd ?? TMP, stdio: ['pipe', 'pipe', 'pipe'], detached: false })
+    this.child = proc
+    this.buf = ''
+    proc.stdout!.on('data', (d: Buffer) => { if (this.child === proc) this.onData(d) })
+    proc.stderr!.on('data', (d: Buffer) => { this.stderrTail = (this.stderrTail + d.toString()).slice(-2000) })
+    // Only the CURRENT process may clear `child`: a late exit event from a killed predecessor must not null its replacement.
+    this.exited = new Promise<void>((res) => proc.on('exit', (code, signal) => { if (this.child === proc) { this.exit = { code, signal }; this.child = null; this.waiter?.(null, 'crash') } res() }))
     const ready = await this.nextLine(10_000)
-    if (!ready.line) throw new Error(`${this.label}: child did not become ready (${ready.why})`)
+    if (!ready.line) throw new Error(`${this.label}: child did not become ready (${ready.why}) ${this.stderrTail.slice(-300)}`)
     const info = JSON.parse(ready.line)
-    this.lastRuntime = `${info.runtime} / ${info.engine}`
+    if (this.o.wrap === 'podman') this.cpid = await containerPid(this.containerName)
     const load = await this.roundTrip(loadRequest(), 10_000)
     if (!load.ok) throw new Error(`${this.label}: load failed: ${load.message}`)
-    return { startMs: performance.now() - t0, manifest: load.result, runtime: this.lastRuntime }
+    return { startMs: performance.now() - t0, manifest: load.result, runtime: `${info.runtime} / ${info.engine}` }
   }
   exit: { code: number | null; signal: string | null } | null = null
+  private exited: Promise<void> = Promise.resolve()
+  /** Kill and wait until the OS has reaped the process, so the next call sees a dead worker and restarts it instead of writing into a corpse. */
+  private async killAndWait() { const p = this.exited; this.killNow(); await Promise.race([p, sleep(2000)]); await sleep(10) }
 
   private onData(d: Buffer) {
     this.buf += d.toString('utf8')
-    if (this.buf.length > this.limits.maxResultBytes && !this.buf.includes('\n')) { this.tooLarge = true; this.waiter?.(null, 'too-large'); return }
+    if (this.buf.length > this.limits.maxResultBytes && !this.buf.includes('\n')) { this.waiter?.(null, 'too-large'); return }
     const nl = this.buf.indexOf('\n')
     if (nl >= 0) {
       const line = this.buf.slice(0, nl); this.buf = this.buf.slice(nl + 1)
-      if (line.length > this.limits.maxResultBytes) { this.tooLarge = true; this.waiter?.(null, 'too-large'); return }
+      if (line.length > this.limits.maxResultBytes) { this.waiter?.(null, 'too-large'); return }
       this.waiter?.(line)
     }
   }
@@ -161,39 +211,49 @@ export class ProcessSandbox implements Sandbox {
     return new Promise((res) => {
       const nl = this.buf.indexOf('\n')
       if (nl >= 0) { const line = this.buf.slice(0, nl); this.buf = this.buf.slice(nl + 1); return res({ line }) }
+      const metering = this.limits.meter !== false
+      if (metering) this.meter.begin()
       const timer = setTimeout(() => { this.waiter = null; res({ line: null, why: 'timeout' }) }, ms)
-      const watchdog = setInterval(() => { // protects the workstation: kills runaway memory even in tiers with no other cap
-        const pid = this.child?.pid
-        if (!pid) return
-        const total = [pid, ...descendants(pid)].reduce((n, p) => n + (vmRssMB(p) ?? 0), 0)
-        if (total > this.limits.safetyRssMB) { this.watchdogFired = total; this.killNow(); }
-      }, 20)
-      this.waiter = (line, why) => { clearTimeout(timer); clearInterval(watchdog); this.waiter = null; res({ line, why }) }
+      const watchdog = setInterval(() => { // host-side accounting: kills runaway memory (workstation safety) and CPU over budget, whatever the worker does
+        if (!this.child) return
+        const { rssMB, cpuMs } = metering ? this.meter.tick() : { rssMB: this.quickRss(), cpuMs: 0 }
+        if (rssMB > this.limits.safetyRssMB) { this.killedBy = 'rss'; this.killedAt = rssMB; this.killNow() }
+        else if (cpuMs > this.limits.cpuMs && this.cpuBudgetApplies) { this.killedBy = 'cpu'; this.killedAt = cpuMs; this.killNow() }
+      }, 15)
+      this.waiter = (line, why) => { clearTimeout(timer); clearInterval(watchdog); if (metering) { this.meter.tick(); this.lastMetrics = this.meter.snapshot() } this.waiter = null; res({ line, why }) }
     })
   }
-  watchdogFired = 0
+  cpuBudgetApplies = true
+  private quickRss(): number { const pid = this.cpid ?? this.child?.pid; return pid ? [pid, ...descendants(pid)].reduce((n, p) => n + (vmRssMB(p) ?? 0), 0) : 0 }
 
   private killNow() {
     try {
-      if (this.o.wrap === 'podman' && this.containerName) spawnSync('podman', ['kill', '--signal', 'KILL', this.containerName], { stdio: 'ignore' })
+      if (this.o.wrap === 'podman' && this.containerName) podmanKill(this.containerName)
       const pid = this.child?.pid
       if (pid) for (const p of [...descendants(pid), pid].reverse()) { try { process.kill(p, 'SIGKILL') } catch {} }
+      if (this.cpid) { try { process.kill(this.cpid, 'SIGKILL') } catch {} }
     } catch {}
   }
 
   private async roundTrip(json: string, ms: number): Promise<Outcome> {
     const t0 = performance.now()
     if (!this.child) return { ok: false, kind: 'crash', message: 'not running', ms: 0 }
-    this.watchdogFired = 0
+    this.killedBy = null; this.killedAt = 0
     this.child.stdin!.write(json + '\n')
     const { line, why } = await this.nextLine(ms)
     const elapsed = performance.now() - t0
     if (line === null) {
-      const rss = this.watchdogFired
-      this.killNow()
-      const kind: FailKind = why === 'too-large' ? 'too-large' : rss ? 'memory' : why === 'timeout' ? 'timeout' : 'crash'
-      await sleep(30)
-      return { ok: false, kind, message: rss ? `host RSS watchdog killed the worker at ${rss.toFixed(0)} MB` : kind === 'crash' ? `worker exited (${JSON.stringify(this.exit)})` : `${kind} after ${elapsed.toFixed(0)} ms (worker killed)`, ms: elapsed, detail: this.exit as any }
+      const by = this.killedBy
+      await this.killAndWait()
+      const cgMB = this.lastMetrics?.peakCgroupMB ?? 0, cap = this.limits.cgroupMB ?? 256
+      const kernelOom = (this.lastMetrics?.oomKills ?? 0) > 0 || (!by && (this.exit?.signal === 'SIGKILL' || this.exit?.code === 137) && cgMB >= 0.85 * cap) // inferred: killed, not by us, with the cgroup at its cap
+      const oom = kernelOom || /heap out of memory|JavaScript heap|out of memory|ENOMEM/i.test(this.stderrTail)
+      const kind: FailKind = why === 'too-large' ? 'too-large' : by === 'rss' || oom ? 'memory' : by === 'cpu' || why === 'timeout' ? 'timeout' : 'crash'
+      const msg = by === 'rss' ? `host RSS watchdog killed the worker at ${this.killedAt.toFixed(0)} MB`
+        : by === 'cpu' ? `host CPU budget exceeded (${this.killedAt} ms of CPU used, budget ${this.limits.cpuMs} ms): worker killed`
+        : oom ? `worker died from memory exhaustion (${kernelOom ? 'kernel cgroup OOM kill, peak ' + cgMB + ' MB of ' + cap + ' MB' : 'runtime heap limit'}; exit ${JSON.stringify(this.exit)})`
+        : kind === 'crash' ? `worker exited (${JSON.stringify(this.exit)})` : `${kind} after ${elapsed.toFixed(0)} ms (worker killed)`
+      return { ok: false, kind, message: msg, ms: elapsed, detail: this.exit as any }
     }
     let r: any
     try { r = JSON.parse(line) } catch { return { ok: false, kind: 'protocol', message: 'unparseable response line', ms: elapsed } }
@@ -203,29 +263,30 @@ export class ProcessSandbox implements Sandbox {
   }
 
   async call(hook: string, args: Json[]): Promise<Outcome> {
+    if (this.child && (this.child.exitCode !== null || this.child.signalCode !== null)) await Promise.race([this.exited, sleep(500)]) // exited but the event is not delivered yet
     if (!this.child) { this.restarts++; const t0 = performance.now(); await this.start(); this.lastRestartMs = performance.now() - t0 }
-    const out = await this.roundTrip(callRequest(hook, args), this.limits.wallMs + (this.o.engine === 'native' ? 0 : 400))
-    return out
+    return this.roundTrip(callRequest(hook, args), this.limits.wallMs + (this.o.engine === 'native' ? 0 : 400))
   }
   lastRestartMs = 0
 
   async rssMB(): Promise<number | null> {
-    if (this.o.wrap === 'podman' && this.containerName) {
-      const r = spawnSync('podman', ['inspect', '-f', '{{.State.Pid}}', this.containerName], { encoding: 'utf8' })
-      const pid = Number(r.stdout.trim()); return pid ? vmRssMB(pid) : null
-    }
-    const pid = this.child?.pid
+    const pid = this.cpid ?? this.child?.pid
     if (!pid) return null
-    const all = [pid, ...descendants(pid)]
-    return all.reduce((n, p) => n + (vmRssMB(p) ?? 0), 0)
+    return [pid, ...descendants(pid)].reduce((n, p) => n + (vmRssMB(p) ?? 0), 0)
+  }
+  /** Number of processes currently alive inside the worker's cgroup or process tree (for the fork test). */
+  liveProcesses(): number {
+    const cg = this.meter.cgroupDir()
+    if (cg) { try { return Number(readFileSync(cg + '/pids.current', 'utf8')) } catch {} }
+    const pid = this.child?.pid; return pid ? 1 + descendants(pid).length : 0
   }
   alive() { return !!this.child }
   async stop() {
     if (!this.child) return
     try { this.child.stdin!.end() } catch {}
     await sleep(30)
-    if (this.child) this.killNow()
-    if (this.o.wrap === 'podman' && this.containerName) spawnSync('podman', ['rm', '-f', '-t', '0', this.containerName], { stdio: 'ignore' })
+    if (this.child) await this.killAndWait()
+    if (this.o.wrap === 'podman' && this.containerName) await run('podman', ['rm', '-f', '-t', '0', this.containerName])
     await sleep(30)
   }
 }
@@ -278,6 +339,11 @@ export class WorkerdSandbox implements Sandbox {
   private sock = ''
   private limits: Limits
   private containerName = ''
+  private cpid: number | undefined
+  private meter = new Meter(() => this.cpid ?? this.child?.pid, () => (this.o.wrap ?? 'none') !== 'none')
+  lastMetrics: CallMetrics | null = null
+  private killedBy: 'rss' | 'cpu' | null = null
+  private exited: Promise<void> = Promise.resolve()
   exit: any = null
   constructor(private o: WorkerdOptions) { this.label = o.label; this.limits = { ...DEFAULT_LIMITS, ...o.limits } }
 
@@ -318,43 +384,61 @@ const denyWorker :Workerd.Worker = (
     this.sock = join(RUN_DIR, `ali38-wd-${process.pid}-${Math.random().toString(36).slice(2, 7)}.sock`)
     this.writeConfig(insideDir ? '/sock/rpc.sock' : this.sock)
     let cmd = wd, args = ['serve', join(this.dir, 'config.capnp')]
-    if (this.o.wrap === 'cgroup') { cmd = 'systemd-run'; args = ['--user', '--scope', '--quiet', '--collect', '-p', `MemoryMax=${L.memoryMB * 3}M`, '-p', 'MemorySwapMax=0', '-p', 'TasksMax=64', '--', wd, ...args] }
+    if (this.o.wrap === 'cgroup') { cmd = 'systemd-run'; args = ['--user', '--scope', '--quiet', '--collect', '-p', `MemoryMax=${L.cgroupMB ?? 256}M`, '-p', 'MemorySwapMax=0', '-p', 'TasksMax=64', '--', wd, ...args] }
     if (this.o.wrap === 'podman') {
       this.containerName = `ali38-wd-${process.pid}-${Math.random().toString(36).slice(2, 7)}`
-      const sockDir = join(RUN_DIR, `ali38-sockdir-${process.pid}`); mkdirSync(sockDir, { recursive: true }); this.sock = join(sockDir, 'rpc.sock')
+      const sockDir = join(RUN_DIR, `ali38-sockdir-${process.pid}-${Math.random().toString(36).slice(2, 7)}`); mkdirSync(sockDir, { recursive: true }); this.sockDir = sockDir; this.sock = join(sockDir, 'rpc.sock')
       cmd = 'podman'
-      args = ['run', '--rm', '-i', '--name', this.containerName, '--network', 'none', '--read-only', '--cap-drop', 'all', '--security-opt', 'no-new-privileges', '--memory', `${L.memoryMB * 3}m`, '--memory-swap', `${L.memoryMB * 3}m`, '--pids-limit', '64', '--cpus', '1', '--env-host=false', '--no-hosts', '--tmpfs', '/tmp:size=8m',
+      args = ['run', '--rm', '-i', '--name', this.containerName, '--network', 'none', '--read-only', '--cap-drop', 'all', '--security-opt', 'no-new-privileges', '--memory', `${L.cgroupMB ?? 256}m`, '--memory-swap', `${L.cgroupMB ?? 256}m`, '--pids-limit', '64', '--cpus', '1', '--env-host=false', '--no-hosts', '--tmpfs', '/tmp:size=8m',
         '-v', `${this.dir}:/cfg:ro`, '-v', `${dirname(wd)}:/wd:ro`, '-v', `${sockDir}:/sock`,
         // workerd refuses to start without a CA bundle even when it has no network (it initialises its default `internet` TLS service). A slim image lacks one.
         '-v', '/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro', '--workdir', '/cfg', 'docker.io/library/debian:13', '/wd/workerd', 'serve', '/cfg/config.capnp']
     }
     const env: Record<string, string> = this.o.wrap === 'none' ? {} : { XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR!, HOME: process.env.HOME!, PATH: process.env.PATH!, DBUS_SESSION_BUS_ADDRESS: `unix:path=${process.env.XDG_RUNTIME_DIR}/bus` }
-    this.child = spawn(cmd, args, { env, cwd: this.dir, stdio: ['ignore', 'pipe', 'pipe'] })
+    const proc = spawn(cmd, args, { env, cwd: this.dir, stdio: ['ignore', 'pipe', 'pipe'] })
+    this.child = proc
     let stderr = ''
-    this.child.stderr!.on('data', (d: Buffer) => { stderr += d.toString() })
-    this.child.stdout!.on('data', () => {})
-    this.child.on('exit', (code, signal) => { this.exit = { code, signal }; this.child = null })
-    for (let i = 0; i < 400 && !existsSync(this.sock); i++) { if (!this.child) throw new Error(`${this.label}: workerd exited early: ${stderr.slice(0, 400)}`); await sleep(10) }
-    if (!existsSync(this.sock)) throw new Error(`${this.label}: workerd socket never appeared: ${stderr.slice(0, 400)}`)
+    proc.stderr!.on('data', (d: Buffer) => { stderr += d.toString() })
+    proc.stdout!.on('data', () => {})
+    this.exited = new Promise<void>((res) => proc.on('exit', (code, signal) => { if (this.child === proc) { this.exit = { code, signal }; this.child = null } res() }))
+    let up = false
+    for (let i = 0; i < 600 && !up; i++) { // wait until the socket ACCEPTS connections: a file can exist before listen(), or be stale from a dead predecessor
+      if (!this.child) throw new Error(`${this.label}: workerd exited early: ${stderr.slice(0, 400)}`)
+      up = existsSync(this.sock) && await new Promise<boolean>((r) => { const c = net.connect(this.sock); c.on('connect', () => { c.destroy(); r(true) }); c.on('error', () => r(false)) })
+      if (!up) await sleep(10)
+    }
+    if (!up) throw new Error(`${this.label}: workerd socket never accepted connections: ${stderr.slice(0, 400)}`)
+    this.cpid = this.o.wrap === 'podman' ? await containerPid(this.containerName) : undefined
     const load = await this.post(loadRequest(), 10_000)
     if (!load.ok) throw new Error(`${this.label}: load failed: ${load.message}`)
     return { startMs: performance.now() - t0, manifest: load.result, runtime: `workerd ${execFileSync(wd, ['--version']).toString().trim()}${this.o.wrap && this.o.wrap !== 'none' ? ' in ' + this.o.wrap : ''}` }
   }
 
-  private post(body: string, ms: number): Promise<Outcome> {
+  private async post(body: string, ms: number): Promise<Outcome> {
+    const out = await this.postInner(body, ms)
+    if (this.pendingKill) { this.pendingKill = false; const p = this.exited; await Promise.race([p, sleep(2000)]); await sleep(10) }
+    return out
+  }
+  private pendingKill = false
+  private sockDir = ''
+  private postInner(body: string, ms: number): Promise<Outcome> {
     const t0 = performance.now()
     return new Promise((res) => {
       let done = false
-      const finish = (o: Outcome) => { if (!done) { done = true; clearTimeout(timer); clearInterval(watchdog); res(o) } }
-      const timer = setTimeout(() => { this.killNow(); finish({ ok: false, kind: 'timeout', message: `timeout after ${(performance.now() - t0).toFixed(0)} ms (workerd killed: it has no per-request CPU or wall limit of its own)`, ms: performance.now() - t0 }) }, ms)
+      const finish = (o: Outcome) => { if (!done) { done = true; clearTimeout(timer); clearInterval(watchdog); if (this.limits.meter !== false) { this.meter.tick(); this.lastMetrics = this.meter.snapshot() } res(o) } }
+      const timer = setTimeout(() => { this.pendingKill = true; this.killNow(); finish({ ok: false, kind: 'timeout', message: `timeout after ${(performance.now() - t0).toFixed(0)} ms (workerd killed: it has no per-request CPU or wall limit of its own)`, ms: performance.now() - t0 }) }, ms)
+      const metering = this.limits.meter !== false
+      if (metering) this.meter.begin()
+      this.killedBy = null
       const watchdog = setInterval(() => {
-        const pid = this.child?.pid; if (!pid) return
-        const total = [pid, ...descendants(pid)].reduce((n, p) => n + (vmRssMB(p) ?? 0), 0)
-        if (total > this.limits.safetyRssMB) { this.killNow(); finish({ ok: false, kind: 'memory', message: `host RSS watchdog killed workerd at ${total.toFixed(0)} MB (workerd has no memory limit option)`, ms: performance.now() - t0 }) }
-      }, 20)
+        if (!this.child) return
+        const { rssMB, cpuMs } = metering ? this.meter.tick() : { rssMB: [this.child.pid!, ...descendants(this.child.pid!)].reduce((n, p) => n + (vmRssMB(p) ?? 0), 0), cpuMs: 0 }
+        if (rssMB > this.limits.safetyRssMB) { this.killedBy = 'rss'; this.pendingKill = true; this.killNow(); finish({ ok: false, kind: 'memory', message: `host RSS watchdog killed workerd at ${rssMB.toFixed(0)} MB (workerd has no memory limit option of its own)`, ms: performance.now() - t0 }) }
+        else if (cpuMs > this.limits.cpuMs) { this.killedBy = 'cpu'; this.pendingKill = true; this.killNow(); finish({ ok: false, kind: 'timeout', message: `host CPU budget exceeded (${cpuMs} ms used, budget ${this.limits.cpuMs} ms): workerd killed (it has no CPU limit of its own)`, ms: performance.now() - t0 }) }
+      }, 15)
       const req = http.request({ socketPath: this.sock, method: 'POST', path: '/', headers: { 'content-length': Buffer.byteLength(body) } }, (r) => {
         const chunks: Buffer[] = []; let size = 0
-        r.on('data', (c: Buffer) => { size += c.length; if (size > this.limits.maxResultBytes) { req.destroy(); this.killNow(); finish({ ok: false, kind: 'too-large', message: `response over ${this.limits.maxResultBytes} bytes`, ms: performance.now() - t0 }); return } chunks.push(c) })
+        r.on('data', (c: Buffer) => { size += c.length; if (size > this.limits.maxResultBytes) { req.destroy(); this.pendingKill = true; this.killNow(); finish({ ok: false, kind: 'too-large', message: `response over ${this.limits.maxResultBytes} bytes`, ms: performance.now() - t0 }); return } chunks.push(c) })
         r.on('end', () => {
           const ms2 = performance.now() - t0
           if (r.statusCode !== 200) return finish({ ok: false, kind: 'error', message: `HTTP ${r.statusCode}: ${Buffer.concat(chunks).toString().slice(0, 200)}`, ms: ms2 })
@@ -368,24 +452,25 @@ const denyWorker :Workerd.Worker = (
 
   private killNow() {
     try {
-      if (this.o.wrap === 'podman' && this.containerName) spawnSync('podman', ['kill', '--signal', 'KILL', this.containerName], { stdio: 'ignore' })
+      if (this.o.wrap === 'podman' && this.containerName) podmanKill(this.containerName)
       const pid = this.child?.pid
       if (pid) for (const p of [...descendants(pid), pid].reverse()) { try { process.kill(p, 'SIGKILL') } catch {} }
+      if (this.cpid) { try { process.kill(this.cpid, 'SIGKILL') } catch {} }
     } catch {}
   }
   async call(hook: string, args: Json[]): Promise<Outcome> {
+    if (this.child && (this.child.exitCode !== null || this.child.signalCode !== null)) await Promise.race([this.exited, sleep(500)])
     if (!this.child) { this.restarts++; this.cleanupFiles(); await this.start() }
     return this.post(callRequest(hook, args), this.limits.wallMs)
   }
   async rssMB() { const pid = this.child?.pid; if (!pid) return null; return [pid, ...descendants(pid)].reduce((n, p) => n + (vmRssMB(p) ?? 0), 0) }
   alive() { return !!this.child }
-  private cleanupFiles() { try { rmSync(this.sock, { force: true }) } catch {} try { rmSync(this.dir, { recursive: true, force: true }) } catch {} }
+  private cleanupFiles() { try { rmSync(this.sock, { force: true }) } catch {} try { rmSync(this.dir, { recursive: true, force: true }) } catch {} if (this.sockDir) try { rmSync(this.sockDir, { recursive: true, force: true }) } catch {} }
   async stop() {
-    if (this.child) this.killNow()
-    if (this.o.wrap === 'podman' && this.containerName) spawnSync('podman', ['rm', '-f', '-t', '0', this.containerName], { stdio: 'ignore' })
+    if (this.child) { const p = this.exited; this.killNow(); await Promise.race([p, sleep(2000)]) }
+    if (this.o.wrap === 'podman' && this.containerName) await run('podman', ['rm', '-f', '-t', '0', this.containerName])
     await sleep(50)
     this.cleanupFiles()
-    if (this.o.wrap === 'podman') try { rmSync(join(RUN_DIR, `ali38-sockdir-${process.pid}`), { recursive: true, force: true }) } catch {}
   }
 }
 

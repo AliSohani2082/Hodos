@@ -5,3 +5,4 @@ tmp/
 *.log
 # raw per-run output; the curated results/*.json files ARE committed
 results/raw/
+*.pwned

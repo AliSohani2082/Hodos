@@ -42,10 +42,10 @@ async function bench(c: (typeof CANDIDATES)[number]) {
   const row: any = { id: c.id, note: c.note }
   const starts: number[] = []
   const nStarts = /podman/.test(c.id) ? Math.min(STARTS, 3) : STARTS
-  for (let i = 0; i < nStarts; i++) { const sb = c.make(PLUGIN); const info = await sb.start(); starts.push(info.startMs); row.runtime = info.runtime; await sb.stop() }
+  for (let i = 0; i < nStarts; i++) { const sb = c.make(PLUGIN, { meter: false }); const info = await sb.start(); starts.push(info.startMs); row.runtime = info.runtime; await sb.stop() }
   const rest = starts.slice(1).sort((a, b) => a - b)
   row.coldStartMs = { ...stats(starts), first: r2(starts[0]), restMedian: r2(rest[Math.floor(rest.length / 2)] ?? starts[0]), runs: starts.map(r2) }
-  const sb: Sandbox = c.make(PLUGIN)
+  const sb: Sandbox = c.make(PLUGIN, { meter: false })
   const info = await sb.start()
   row.manifest = { blocks: info.manifest.blocks.map((b: any) => b.id), exerciseKinds: info.manifest.exerciseKinds.map((b: any) => b.id), presets: info.manifest.presets.length, layouts: info.manifest.layouts.length }
   // correctness: every case must match the in-process reference exactly
