@@ -1,0 +1,5 @@
+admin_route=denied
+listed=job.report,lesson.validate
+lesson.validate=allowed scoped teacher=t1
+job.report=allowed scoped job=mcp-probe
+out_of_scope_draft=rejected

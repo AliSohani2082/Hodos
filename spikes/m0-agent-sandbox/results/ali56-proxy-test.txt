@@ -1,0 +1,11 @@
+healthz=200
+anthropic_gateway=200
+openai_gateway=200
+admin_route=403
+anthropic_disallowed_path=403
+unknown_gateway_route=403
+absolute_http_forward=403
+connect_example.com=denied
+connect_127.0.0.1=denied
+connect_169.254.169.254=denied
+connect_ali39-postgres:5432=denied

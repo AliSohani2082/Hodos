@@ -1,0 +1,41 @@
+{
+  "harness": "claude",
+  "job": "mcpagent",
+  "where": "sandbox",
+  "policy": "allow-all",
+  "ms": 2858,
+  "stopReason": "end_turn",
+  "usage": {
+    "inputTokens": 20,
+    "outputTokens": 8,
+    "cachedReadTokens": 0,
+    "cachedWriteTokens": 0,
+    "totalTokens": 28
+  },
+  "sessionId": "e7d60e82-6525-4d69-93b9-2d72c4889f64",
+  "toolCalls": [
+    {
+      "id": "toolu_ali39",
+      "title": "mcp__hodos__lesson_validate",
+      "kind": "other",
+      "status": "completed"
+    }
+  ],
+  "decisions": [
+    {
+      "ts": "2026-10-16T17:09:15.306Z",
+      "tool": "mcp__hodos__lesson_validate",
+      "kind": "other",
+      "rawInput": {
+        "draftId": "d1",
+        "path": "lessons/01.md",
+        "markdown": "---\ntitle: Test\n---\nBody"
+      },
+      "verdict": "allow",
+      "chosenOption": "allow-once",
+      "reason": "default:allow"
+    }
+  ],
+  "text": "ALI39_MOCK_OK",
+  "exit": 0
+}
