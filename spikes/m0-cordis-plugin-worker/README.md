@@ -9,7 +9,7 @@
 
 **Exit.** A written go/no-go on cordis-on-Bun and on the plugin-worker design.
 
-**Status.** In progress. ALI-50 (cordis on Bun) and ALI-52 (isolate vs process) are done. ALI-51 (adapter) and ALI-53 (isolation tests, ADR) follow.
+**Status.** In progress. ALI-50 (cordis on Bun), ALI-52 (isolate vs process) and ALI-51 (adapter) are done. ALI-53 (isolation tests, ADR) follows.
 
 **Verdict.** ADR pending, see [`docs/adr/`](../../docs/adr/).
 
@@ -20,6 +20,7 @@
 | Path | What |
 |---|---|
 | `src/sdk/types.ts` | The public plugin contract sketch (`BlockSpec`, `ExerciseKindSpec`, `GradeResult`, `PluginContext`…). No cordis imports. |
+| `src/host/plugin-host.ts` and friends | ALI-51: the internal `PluginHost` interface, two implementations (cordis, plain Maps) and a conformance suite. Notes in [`ADAPTER.md`](ADAPTER.md). |
 | `src/cordis/` | ALI-50: typed registries as cordis `Service`s and the lifecycle check suite. |
 | `src/worker/` | ALI-52: `glue.mjs` (the JSON-RPC surface and the `apply()` recorder, identical in every runtime), `engines.mjs` (native / QuickJS / isolated-vm engines), `child.mjs` (the worker child process). |
 | `src/host/sandboxes.ts` | ALI-52/53: one `Sandbox` interface over plain process, cgroup, bubblewrap, rootless podman, in-process QuickJS and workerd. |
@@ -143,3 +144,12 @@ How to read it: `validate` is a ~100 B node, `grade` a ~1 KB item, `validateItem
 | QuickJS-wasm (`quickjs-emscripten`) | **Yes**, in-process and in a child | JS + one 503 KB wasm file | 1.45 MB with only `@jitl/quickjs-wasmfile-release-sync` and `quickjs-emscripten-core` (8 MB with the meta package, which pulls the debug and asyncify variants). No compiler, no postinstall |
 | isolated-vm | **No.** `ERR_DLOPEN_FAILED ... undefined symbol: _ZN2v815ValueSerializer8Delegate19HasCustomHostObjectEPNS_7IsolateE`: it is a native addon linked against V8 symbols, and Bun runs on JavaScriptCore. Works only in a Node child (`ivm-node`) | native addon with prebuilds per Node ABI and libc | 20 MB package (about 1 MB per prebuild); needs a Node 24+ runtime in the worker image as well as Bun; a different Node major needs a new prebuild or a node-gyp build with a C++ toolchain; install ran a lifecycle script (`node-gyp-build`) |
 | workerd | Yes, as a separate process (the npm package is a launcher for a binary) | one 133 MB binary per platform | 133 MB; has an npm postinstall script (Bun 1.4.2 ran it without asking: `bun pm untrusted` reports 0); refuses to start without a CA bundle even with no network, so a slim container image needs `ca-certificates` or a mount |
+
+## ALI-51: the plugin-host adapter
+
+```sh
+bun run adapter:test      # one conformance suite, two PluginHost implementations (cordis and plain Maps) -> results/adapter-conformance.json
+bun run adapter:noleak    # import scan + isolated `tsc --strict` proving the platform-facing files need no cordis types -> results/no-leak.json
+```
+
+Result: 20/20 checks pass (10 per adapter), including a sandboxed plugin whose worker is a QuickJS isolate and one whose worker is a plain Bun process (hooks proxied over RPC, results equal to the first-party run, dispose kills the worker), and a worker that forges a `GradeResult` (rejected host-side). Full design notes, the SDK-exposed vs internal table and the cordis mapping are in [`ADAPTER.md`](ADAPTER.md).

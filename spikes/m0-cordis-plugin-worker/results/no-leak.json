@@ -1,0 +1,17 @@
+{
+  "spike": "ALI-51",
+  "filesScanned": 15,
+  "importOffenders": [],
+  "commentFreeMentionsOutsideAdapter": [],
+  "isolatedTsc": {
+    "files": [
+      "src/sdk/types.ts",
+      "src/host/plugin-host.ts",
+      "src/host/validate-result.ts",
+      "src/host/resolve.ts",
+      "src/host/map-adapter.ts"
+    ],
+    "ok": true,
+    "tsc": "7.0.2"
+  }
+}
