@@ -45,7 +45,7 @@ def _row(c: Cell, s: dict) -> dict:
 
 def write_csv(path: Path, res: dict[Cell, dict]) -> None:
     with path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=CSV_FIELDS)
+        w = csv.DictWriter(fh, fieldnames=CSV_FIELDS, lineterminator="\n")
         w.writeheader()
         for c, s in res.items():
             r = _row(c, s)
@@ -71,7 +71,7 @@ def hint_level_table() -> list[dict]:
 
 def write_hint_csv(path: Path, rows: list[dict]) -> None:
     with path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0]))
+        w = csv.DictWriter(fh, fieldnames=list(rows[0]), lineterminator="\n")
         w.writeheader()
         for r in rows:
             w.writerow({k: (f"{v:.4f}" if isinstance(v, float) else ("never" if v is None else v)) for k, v in r.items()})

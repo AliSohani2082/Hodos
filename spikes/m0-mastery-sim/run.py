@@ -52,6 +52,9 @@ def main() -> int:
     for title, body in sections:
         md.append(f"## {title}\n\n{body}")
     (out_dir / f"RESULTS{suffix}.md").write_text("\n".join(md))
+    if args.only is None:
+        for partial in ("RESULTS_gate.md", "RESULTS_fsrs.md"):
+            (out_dir / partial).unlink(missing_ok=True)
     print("wrote", out_dir / f"RESULTS{suffix}.md", f"({time.time() - t0:.0f}s total)")
     return 0
 

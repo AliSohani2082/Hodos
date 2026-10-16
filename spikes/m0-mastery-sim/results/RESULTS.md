@@ -137,17 +137,17 @@ Every learner here never learns, so every opening is false. Columns after the fi
 |---|---|---|---|---|---|---|---|---|---|
 | mcq4 |  | `bkt_only` | PRD evidence | 20.1% [18.9%, 21.4%] | 7 | 52.5% | 92.9% | 2.1% | 98.9% |
 | mcq4 | **PRD** | `full_ms2` | PRD evidence | 9.9% [9.0%, 10.9%] | 9 | 19.1% | 70.5% | 0.8% | 80.5% |
-| mcq4 |  | `full_k2` | PRD evidence | 4.7% [4.1%, 5.5%] | 11 | 5.3% | 44.6% | 0.1% | 48.7% |
-| mcq4 |  | `full_k3` | PRD evidence | 2.2% [1.8%, 2.7%] | 13 | 1.5% | 23.5% | 0.1% | 22.7% |
+| mcq4 |  | `full_k2` | PRD evidence | 4.7% [4.1%, 5.5%] | 11 | 5.3% | 44.5% | 0.1% | 48.6% |
+| mcq4 |  | `full_k3` | PRD evidence | 2.1% [1.7%, 2.6%] | 13 | 1.4% | 23.4% | 0.1% | 22.6% |
 | mcq4 |  | `full_ms2` | first_miss | 4.0% [3.4%, 4.7%] | 11 | 19.1% | 70.5% | 0.8% | 33.5% |
-| mcq4 |  | `full_k2` | first_miss | 1.9% [1.5%, 2.3%] | 12 | 5.3% | 44.6% | 0.1% | 15.9% |
-| mcq4 |  | `full_k3` | first_miss | 1.0% [0.7%, 1.3%] | 14 | 1.5% | 23.5% | 0.1% | 6.7% |
+| mcq4 |  | `full_k2` | first_miss | 1.9% [1.5%, 2.3%] | 12 | 5.3% | 44.5% | 0.1% | 15.9% |
+| mcq4 |  | `full_k3` | first_miss | 1.0% [0.7%, 1.3%] | 14 | 1.4% | 23.4% | 0.1% | 6.6% |
 | open |  | `bkt_only` | PRD evidence | 10.0% [9.1%, 11.0%] | 8 | 20.2% | 63.9% | 0.5% | 79.8% |
 | open | **PRD** | `full_ms2` | PRD evidence | 2.4% [2.0%, 3.0%] | 10 | 2.2% | 21.1% | 0.1% | 30.6% |
-| open |  | `full_k2` | PRD evidence | 0.4% [0.3%, 0.7%] | 11 | 0.2% | 5.7% | 0.0% | 7.4% |
-| open |  | `full_k3` | PRD evidence | 0.1% [0.0%, 0.2%] | 12 | 0.0% | 1.2% | 0.0% | 1.5% |
+| open |  | `full_k2` | PRD evidence | 0.4% [0.3%, 0.7%] | 11 | 0.2% | 5.6% | 0.0% | 7.4% |
+| open |  | `full_k3` | PRD evidence | 0.1% [0.0%, 0.2%] | 12 | 0.0% | 1.2% | 0.0% | 1.4% |
 | open |  | `full_ms2` | first_miss | 0.8% [0.5%, 1.1%] | 10 | 2.2% | 21.1% | 0.1% | 7.0% |
-| open |  | `full_k2` | first_miss | 0.2% [0.1%, 0.4%] | 12 | 0.2% | 5.7% | 0.0% | 1.7% |
+| open |  | `full_k2` | first_miss | 0.2% [0.1%, 0.4%] | 12 | 0.2% | 5.6% | 0.0% | 1.7% |
 | open |  | `full_k3` | first_miss | 0.0% [0.0%, 0.1%] | 13 | 0.0% | 1.2% | 0.0% | 0.2% |
 
 ### G5. Graded-ability learners (BKT assumption broken), full MS-2 gate
@@ -162,8 +162,8 @@ No 'learned' moment exists here: ability grows continuously. 'Accuracy at openin
 | mcq4 | `full_ms2` | 0.90 | 8 / 8.8 / 14 | 0.71 | 0.53 | 71.7% | 83.5% |
 | mcq4 | `full_ms2` | 0.95 | 9 / 9.7 / 15 | 0.74 | 0.56 | 63.5% | 77.5% |
 | mcq4 | `full_ms2` | 0.98 | 10 / 10.7 / 16 | 0.77 | 0.60 | 53.4% | 69.2% |
-| mcq4 | `full_k3` | 0.90 | 13 / 14.8 / 24 | 0.75 | 0.59 | 65.0% | 80.0% |
-| mcq4 | `full_k3` | 0.95 | 13 / 15.0 / 24 | 0.77 | 0.61 | 57.0% | 74.3% |
+| mcq4 | `full_k3` | 0.90 | 13 / 14.9 / 24 | 0.75 | 0.59 | 65.0% | 80.0% |
+| mcq4 | `full_k3` | 0.95 | 13 / 15.0 / 24 | 0.77 | 0.61 | 57.1% | 74.4% |
 | mcq4 | `full_k3` | 0.98 | 14 / 15.4 / 24 | 0.79 | 0.65 | 48.4% | 66.1% |
 | open | `bkt_only` | 0.90 | 5 / 5.8 / 10 | 0.59 | 0.38 | 88.5% | 94.4% |
 | open | `bkt_only` | 0.95 | 6 / 6.8 / 11 | 0.63 | 0.41 | 81.7% | 90.5% |
@@ -171,8 +171,8 @@ No 'learned' moment exists here: ability grows continuously. 'Accuracy at openin
 | open | `full_ms2` | 0.90 | 8 / 9.1 / 15 | 0.66 | 0.45 | 80.2% | 89.3% |
 | open | `full_ms2` | 0.95 | 9 / 9.8 / 16 | 0.69 | 0.48 | 73.6% | 85.0% |
 | open | `full_ms2` | 0.98 | 10 / 10.8 / 17 | 0.72 | 0.53 | 65.0% | 78.5% |
-| open | `full_k3` | 0.90 | 14 / 16.2 / 27 | 0.70 | 0.53 | 75.4% | 87.8% |
-| open | `full_k3` | 0.95 | 14 / 16.1 / 26 | 0.72 | 0.55 | 69.2% | 83.6% |
+| open | `full_k3` | 0.90 | 14 / 16.3 / 27 | 0.70 | 0.53 | 75.5% | 87.9% |
+| open | `full_k3` | 0.95 | 14 / 16.1 / 26 | 0.72 | 0.55 | 69.2% | 83.7% |
 | open | `full_k3` | 0.98 | 14 / 16.3 / 26 | 0.75 | 0.59 | 61.8% | 77.2% |
 
 ### G6. Sensitivity of the defaults (format `mcq4`, theta = 0.95)
@@ -230,3 +230,109 @@ One estimator parameter changed per row; learners are unchanged. Typical: false-
 | 0.25 | 3 | 0.4 | 0.413 | 0.457 | 0.457 | never | never | never |
 | 0.25 | 4 | 0.2 | 0.274 | 0.284 | 0.284 | never | never | never |
 | 0.25 | 5 | 0.0 | 0.173 | 0.173 | 0.173 | never | never | never |
+
+## FSRS simulation (ALI-65)
+
+FSRS 6 via `fsrs==6.3.2`, default 21 weights, day-granular, no fuzz, no learning/relearning steps; 20 fixed seeds × 12 skills × 365 days. True initial-stability weights 0–3 and the exp(w8) recall-stability growth coefficient are multiplied by a learner log-normal factor (σ=0.3) and skill factors 0.60–1.75. Scheduler uses unperturbed weights. Initial Good review at day 0 represents graduation from the gate. Each due review draws latent remembering from true R, then an observed answer with slip s or chance guess 0.15. Correct responses are Easy 15% of the time, otherwise Good; errors are Again. Daily review cap is 10. Answer slip and actual forgetting are counted separately.
+
+### F1. Retention, adherence, and observed lapse
+
+| Target R | Slip | Attendance | Reviews | Observed lapse (95% CI) | Memory lapse / review | Slip lapse / review | Mean reviews / skill-year |
+|---:|---:|---|---:|---:|---:|---:|---:|
+| 0.85 | 0.00 | break14 | 1095 | 12.9% [11.0, 15.0] | 12.9% | 0.0% | 4.6 |
+| 0.85 | 0.00 | perfect | 1031 | 11.1% [9.3, 13.1] | 11.1% | 0.0% | 4.3 |
+| 0.85 | 0.00 | skip15 | 1017 | 11.2% [9.4, 13.3] | 11.2% | 0.0% | 4.2 |
+| 0.85 | 0.05 | break14 | 1701 | 19.9% [18.1, 21.9] | 15.2% | 4.7% | 7.1 |
+| 0.85 | 0.05 | perfect | 1484 | 17.9% [16.0, 19.9] | 14.4% | 3.5% | 6.2 |
+| 0.85 | 0.05 | skip15 | 1520 | 18.9% [17.0, 20.9] | 12.9% | 6.0% | 6.3 |
+| 0.85 | 0.10 | break14 | 2025 | 22.3% [20.5, 24.1] | 13.6% | 8.7% | 8.4 |
+| 0.85 | 0.10 | perfect | 1659 | 20.3% [18.4, 22.3] | 12.4% | 8.0% | 6.9 |
+| 0.85 | 0.10 | skip15 | 1978 | 22.6% [20.8, 24.5] | 13.8% | 8.8% | 8.2 |
+| 0.90 | 0.00 | break14 | 1319 | 7.9% [6.5, 9.5] | 7.9% | 0.0% | 5.5 |
+| 0.90 | 0.00 | perfect | 1337 | 7.8% [6.5, 9.3] | 7.8% | 0.0% | 5.6 |
+| 0.90 | 0.00 | skip15 | 1328 | 8.7% [7.3, 10.4] | 8.7% | 0.0% | 5.5 |
+| 0.90 | 0.05 | break14 | 1930 | 13.0% [11.6, 14.6] | 8.4% | 4.6% | 8.0 |
+| 0.90 | 0.05 | perfect | 1791 | 12.7% [11.3, 14.4] | 7.9% | 4.9% | 7.5 |
+| 0.90 | 0.05 | skip15 | 1737 | 12.3% [10.9, 13.9] | 8.8% | 3.6% | 7.2 |
+| 0.90 | 0.10 | break14 | 2824 | 17.6% [16.2, 19.0] | 9.1% | 8.5% | 11.8 |
+| 0.90 | 0.10 | perfect | 3367 | 19.5% [18.2, 20.9] | 10.5% | 9.0% | 14.0 |
+| 0.90 | 0.10 | skip15 | 3176 | 19.8% [18.4, 21.2] | 11.1% | 8.7% | 13.2 |
+| 0.95 | 0.00 | break14 | 2193 | 5.0% [4.2, 6.0] | 5.0% | 0.0% | 9.1 |
+| 0.95 | 0.00 | perfect | 2240 | 5.3% [4.4, 6.3] | 5.3% | 0.0% | 9.3 |
+| 0.95 | 0.00 | skip15 | 1896 | 3.8% [3.0, 4.8] | 3.8% | 0.0% | 7.9 |
+| 0.95 | 0.05 | break14 | 4314 | 10.2% [9.3, 11.1] | 5.6% | 4.6% | 18.0 |
+| 0.95 | 0.05 | perfect | 3849 | 9.4% [8.5, 10.3] | 4.5% | 4.8% | 16.0 |
+| 0.95 | 0.05 | skip15 | 3799 | 10.0% [9.1, 11.0] | 4.9% | 5.1% | 15.8 |
+| 0.95 | 0.10 | break14 | 10732 | 17.2% [16.5, 17.9] | 7.5% | 9.7% | 44.7 |
+| 0.95 | 0.10 | perfect | 9547 | 15.6% [14.9, 16.4] | 6.3% | 9.3% | 39.8 |
+| 0.95 | 0.10 | skip15 | 8278 | 15.7% [14.9, 16.5] | 6.2% | 9.5% | 34.5 |
+
+### F2. Per-skill review at target 0.90, slip 0.10, perfect attendance
+
+| Skill | Reviews / year | Lapse (95% CI) | First → final interval, days | R(day 365) | pMastered | Effective mastery | True R |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| foundations | 22.0 | 23.0% [19.3, 27.1] | 2 → 341 | 0.953 | 1.000 | 0.953 | 0.925 |
+| syntax | 13.9 | 19.0% [14.8, 24.0] | 2 → 238 | 0.952 | 1.000 | 0.952 | 0.938 |
+| types | 9.6 | 17.8% [13.0, 23.8] | 2 → 320 | 0.960 | 1.000 | 0.959 | 0.953 |
+| control | 17.5 | 22.3% [18.2, 26.9] | 2 → 284 | 0.940 | 1.000 | 0.940 | 0.935 |
+| functions | 14.6 | 19.6% [15.4, 24.5] | 2 → 341 | 0.946 | 1.000 | 0.946 | 0.944 |
+| data | 16.4 | 20.7% [16.6, 25.4] | 2 → 314 | 0.949 | 1.000 | 0.948 | 0.952 |
+| errors | 12.4 | 19.3% [14.9, 24.6] | 2 → 369 | 0.954 | 1.000 | 0.954 | 0.957 |
+| modules | 16.2 | 20.7% [16.6, 25.4] | 2 → 322 | 0.942 | 1.000 | 0.942 | 0.951 |
+| testing | 11.8 | 16.6% [12.4, 21.9] | 2 → 362 | 0.952 | 1.000 | 0.952 | 0.962 |
+| algorithms | 13.3 | 18.4% [14.2, 23.4] | 2 → 331 | 0.951 | 1.000 | 0.950 | 0.965 |
+| design | 7.3 | 12.3% [7.9, 18.6] | 2 → 334 | 0.942 | 1.000 | 0.942 | 0.960 |
+| integration | 13.3 | 16.5% [12.6, 21.5] | 2 → 358 | 0.957 | 1.000 | 0.957 | 0.973 |
+
+### F3. R(t) and effective mastery samples
+
+Selected day samples for all 12 skills and two adherence cases are in `fsrs_rt_curves.csv`; below is one representative skill, seed 0, perfect attendance. True effective mastery equals true R because all skills begin truly known at gate graduation.
+
+| Day | Scheduler R | True R | pMastered | Effective mastery |
+|---:|---:|---:|---:|---:|
+| 1 | 0.947 | 0.948 | 0.950 | 0.900 |
+| 7 | 0.945 | 0.946 | 0.992 | 0.937 |
+| 30 | 0.954 | 0.955 | 0.999 | 0.952 |
+| 90 | 0.974 | 0.975 | 1.000 | 0.974 |
+| 180 | 0.919 | 0.921 | 1.000 | 0.919 |
+| 365 | 0.962 | 0.964 | 1.000 | 0.962 |
+
+### F4. Prerequisite refresh after a break
+
+Ten dependent lessons each have one prerequisite with an initial Hard, Good, or Easy review. A fresh-item Good refresh occurs before the lesson when its R is below the threshold; predicted recall is sampled the next day. This isolates the threshold rule from the daily scheduler and assumes the refresh succeeds.
+
+| Break, days | Threshold | Refreshes / 10 | Recall without | Recall with |
+|---:|---:|---:|---:|---:|
+| 10 | 0.6 | 0 | 0.794 | 0.794 |
+| 10 | 0.7 | 0 | 0.794 | 0.794 |
+| 10 | 0.8 | 6 | 0.794 | 0.947 |
+| 10 | 0.9 | 10 | 0.794 | 0.994 |
+| 30 | 0.6 | 0 | 0.698 | 0.698 |
+| 30 | 0.7 | 6 | 0.698 | 0.912 |
+| 30 | 0.8 | 10 | 0.698 | 0.996 |
+| 30 | 0.9 | 10 | 0.698 | 0.996 |
+| 60 | 0.6 | 3 | 0.635 | 0.768 |
+| 60 | 0.7 | 6 | 0.635 | 0.886 |
+| 60 | 0.8 | 10 | 0.635 | 0.996 |
+| 60 | 0.9 | 10 | 0.635 | 0.996 |
+| 120 | 0.6 | 6 | 0.575 | 0.860 |
+| 120 | 0.7 | 10 | 0.575 | 0.997 |
+| 120 | 0.8 | 10 | 0.575 | 0.997 |
+| 120 | 0.9 | 10 | 0.575 | 0.997 |
+
+### F5. Daily load at target 0.90, slip 0.10, perfect attendance
+
+Mean completed reviews/day/learner: 0.46; peak due/day: 12; days exceeding the 10-review cap: 20/7300. Daily totals across seeds are in `fsrs_daily_load.csv`.
+
+
+### F6. BKT review-credit sensitivity after one wrong review
+
+Starting at pMastered=0.95, a wrong review at b=0 updates BKT-lite as follows. This is a deterministic rule probe; F1–F5 use λ_review=0.5.
+
+| λ_review | pMastered after error | Effective mastery at R=0.9 |
+|---:|---:|---:|
+| 0.0 | 0.691 | 0.622 |
+| 0.5 | 0.714 | 0.643 |
+| 1.0 | 0.737 | 0.664 |
+
+**Interpretation:** A target R of 0.90 is a memory-retention target, not a guarantee that 90% of answers are correct. With slip 0.10 and guess 0.15, even perfectly calibrated R=0.90 implies 17.5% observed wrong answers: `1 − (0.9×0.9 + 0.1×0.15)`. Compare F1 with the PRD's ≤15% observed-lapse target.
