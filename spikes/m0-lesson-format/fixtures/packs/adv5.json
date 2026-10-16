@@ -1,0 +1,100 @@
+{
+ "id": "adv5",
+ "chunks": [
+  {
+   "id": "src:wiki-chess-piece-relative-value#c1",
+   "outlet": "src:wiki-chess-piece-relative-value",
+   "title": "Chess piece relative value",
+   "text": "In chess, a relative value (or point value) is a numerical value conventionally assigned to each piece. Piece valuations have no role in the rules of chess but are useful as an aid to evaluating an exchange of pieces. The best-known system assigns 1 point to a pawn, 3 points to a knight or bishop, 5 points to a rook, and 9 points to the queen. For instance, sacrificing a knight or bishop under such an evaluation can still be considered a fair exchange if one can ensure the capture of three or more pawns in return. But valuation systems provide only a rough guide; a piece's true value can vary significantly depending on its position relative to all other pieces on the board."
+  },
+  {
+   "id": "src:wiki-chess-piece-relative-value#c2",
+   "outlet": "src:wiki-chess-piece-relative-value",
+   "title": "Chess piece relative value",
+   "text": "Piece values are valid for, and conceptually averaged over, tactically \"quiet\" positions where immediate tactical gain of material will not happen. The following table is the most common assignment of point values. 5 pawns—half a pawn more than the values of the bishops combined. Although it would be a very theoretical situation, there is no such bonus for a pair of same-coloured bishops. Per investigations by H. G. 5-point bonus, while two on each colour would receive a 1-point bonus. More imbalanced combinations like 3:0 or 4:0 were not tested. The position of each piece also makes a significant difference: pawns near the edges are worth less than those near the centre, pawns close to promotion are worth far more, pieces controlling the centre are worth more than average, trapped pieces (such as bad bishops) are worth less, etc."
+  },
+  {
+   "id": "src:wiki-chess-piece-relative-value#c3",
+   "outlet": "src:wiki-chess-piece-relative-value",
+   "title": "Chess piece relative value",
+   "text": "Although the 1-3-3-5-9 system of point totals is the most commonly used, many other systems of valuing pieces have been proposed. Several systems treat the bishop as slightly more powerful than a knight. , unless otherwise noted. Larry Kaufman in 2021 gives a more detailed system based on his experience working with chess engines, depending on the presence or absence of queens. He uses \"middlegame\" to mean positions where both queens are on the board, \"threshold\" for positions where there is an imbalance (one queen versus none, or two queens versus one), and \"endgame\" for positions without queens. )"
+  },
+  {
+   "id": "src:wiki-chess-piece-relative-value#c4",
+   "outlet": "src:wiki-chess-piece-relative-value",
+   "title": "Chess piece relative value",
+   "text": "The file of a pawn is also important, because this cannot change except by capture. According to Kaufman, the difference is small in the endgame (when queens are absent), but substantial in the middlegame (when queens are present): World Correspondence Chess Champion Hans Berliner gives the following valuations, based on experience and computer experiments: There are adjustments for the rank and file of a pawn and adjustments for the pieces depending on how open or closed the position is. Bishops, rooks, and queens gain up to 10% more value in open positions and lose up to 20% in closed positions. Knights gain up to 50% in closed positions and lose up to 30% in the corners and edges. The value of a good bishop may be 10% higher than that of a bad bishop."
+  },
+  {
+   "id": "src:wiki-chess-endgame#c1",
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "text": "The endgame (or ending) is the final stage of a chess game which occurs after the middlegame. It begins when few pieces are left on the board. There is no strict criterion for when an endgame begins, and different authors have different opinions. \" Using the standard system for chess piece relative value, Speelman considers that endgames are positions in which each player has thirteen or fewer points in material (not counting the king). Alternatively, they are positions in which the king can be used actively, but there are some famous exceptions to that. Minev characterizes endgames as positions having four or fewer pieces other than kings and pawns. Fine considers endgames to be positions without queens. Flear considers endgames to be positions where both players have at most one piece (other than kings and pawns) whereas Dvoretsky considers them to be positions in which at least one player has such a material configuration. Some problem composers believe that the endgame starts when the player to move can force a win or a draw against any variation of moves. Alburt and Krogius give three characteristics of an endgame:"
+  },
+  {
+   "id": "src:wiki-chess-endgame#c2",
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "text": "Generally, the player having a material advantage tries to exchange pieces but avoids exchanging pawns in the endgame. Some exceptions to this are: Many endings without pawns have been solved, that is, best play for both sides from any starting position can be determined, and the outcome (win, loss, or draw) is known. For example, the following are all wins for the side with pieces: Two of the most common pawnless endgames (when the defense has a piece in addition to the king) are (1) a queen versus a rook and (2) a rook and bishop versus a rook. A queen wins against a rook — see Queen versus rook endgame. A rook and bishop versus a rook is generally a theoretical draw, but the defense is difficult and there are winning positions (see Rook and bishop versus rook endgame)."
+  },
+  {
+   "id": "src:wiki-chess-endgame#c3",
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "text": "This is one of the most basic endgames. A draw results if the defending king can reach the square in front of the pawn or the square in front of that (or capture the pawn). If the attacking king can prevent that, the king will assist the pawn in being promoted to a queen or rook, and checkmate can be achieved. A rook pawn is an exception because the king may not be able to get out of the way of its pawn. Knight and pawn endgames feature clever manoeuvring by the knights to capture opponent pawns. While a knight is poor at chasing a passed pawn, it is the ideal piece to block a passed pawn. Knights cannot lose a tempo, so knight and pawn endgames have much in common with king and pawn endgames. ”"
+  },
+  {
+   "id": "src:wiki-chess-endgame#c4",
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "text": "This is generally a draw since the knight can be sacrificed for the pawn, however, the king and knight must be covering squares in the pawn's path. If the pawn reaches the seventh rank and is supported by its king and knight, it usually promotes and wins. In this position, White to move wins: 1. b6 Nb7! 2. Ne6! Na5 3. Kc8! N-any 4. Nc7#. If Black plays the knight to any other square on move 2, White plays Kc8 anyway, threatening b7+ and promotion if the knight leaves the defense of the b7 square. Black to move draws starting with 1... Nc4 because White cannot gain a tempo. Bishop and pawn endgames come in two distinctly different variants. If the opposing bishops go on the same color of square, the mobility of the bishops is a crucial factor. A bad bishop is one that is hemmed in by pawns of its own color, and has the burden of defending them. The adjacent diagram, from Molnar–Nagy, Hungary 1966, illustrates the concepts of good bishop versus bad bishop, opposition, zugzwang, and outside passed pawn. White wins with 1. e6! (vacating e5 for his king) 1... Bxe6 2. Bc2! (threatening Bxg6) 2... Bf7 3. Be4! (threatening Bxc6) 3... Be8 4. Ke5! e."
+  },
+  {
+   "id": "src:wiki-chess-strategy#c1",
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "text": "Under a system like this, giving up a knight or bishop to win a rook (\"winning the exchange\") is advantageous and is worth about two pawns. This ignores complications such as the current position and freedom of the pieces involved, but it is a good starting point. In an open position, bishops are more valuable than knights (a bishop pair can easily be worth seven points or more in some situations); conversely, in a closed position, bishops are less valuable than knights. A knight in the center of the board that cannot be taken, however, is known as a knight outpost and threatens several fork instances. In such a case, a knight is worth far more than a bishop. Also, many pieces have a partner. By doubling up two knights, two rooks, rook and queen, or bishop and queen, the pieces can get stronger than the sum of the individual pieces alone. When a piece loses its partner, its value slightly decreases. The king is priceless since its capture results in the defeat of that player and ends that game. However, especially in the endgame, the king can also be a fighting piece, and is sometimes given a fighting value of three-and-a-half points."
+  },
+  {
+   "id": "src:wiki-chess-strategy#c2",
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "text": "The initiative belongs to the player who can make threats that cannot be ignored, such as checking the opponent's king. They thus put their opponent in the position of having to use their turns responding to threats rather than making their own, hindering the development of their pieces. The player with the initiative is generally attacking and the other player is generally defending. It is important to defend one's pieces even if they are not directly threatened. This helps stop possible future campaigns from the opponent. If a defender must be added at a later time, this may cost a tempo or even be impossible due to a fork or discovered attack. \" Similarly, if one spots undefended enemy pieces, one should immediately take advantage of those pieces' weakness. Even a defended piece can be vulnerable. If the defending piece is also defending something else, it is called an overworked piece, and may not be able to fulfill its task. When there is more than one attacking piece, the number of defenders must also be increased, and their values taken into account. In addition to defending pieces, it is also often necessary to defend key squares, open files, and the back rank. These situations can easily occur if the pawn structure is weak."
+  },
+  {
+   "id": "src:wiki-chess-strategy#c3",
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "text": "In the endgame, passed pawns, unhindered by enemy pawns from promotion, are strong, especially if advanced or protected by another pawn. A passed pawn on the sixth rank is roughly as strong as a knight or bishop and often decides the game. ) Since knights can easily be chased away by pawn moves, it is often advantageous for knights to be placed in holes in the enemy position as outposts—squares where they cannot be attacked by pawns. Such a knight on the fifth rank is a strong asset. The ideal position for a knight is the opponent's third rank, when it is supported by one or two pawns. \" A king and one knight are not sufficient material to checkmate an opposing lone king (see Two knights endgame). A king and two knights can checkmate a lone king but cannot force it."
+  },
+  {
+   "id": "src:wiki-chess-strategy#c4",
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "text": "Queens are the most powerful pieces. They have great mobility and can make many threats at once. They can act as a rook and as a bishop at the same time. For these reasons, checkmate attacks involving a queen are easier to achieve than those without one. Although powerful, the queen is also easily harassed. Thus, it is generally wise to wait to develop the queen until after the knights and bishops have been developed to prevent the queen from being attacked by minor pieces and losing tempo. When a pawn is promoted, most of the time it is promoted to a queen. Chess strategy consists of setting and achieving long-term goals during the game—for example, where to place different pieces—while tactics concentrate on immediate maneuver. These two parts of chess thinking cannot be completely separated, because strategic goals are mostly achieved by the means of tactics, while the tactical opportunities are based on the previous strategy of play."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-chess-piece-relative-value",
+   "title": "Chess piece relative value",
+   "url": "https://en.wikipedia.org/wiki/Chess_piece_relative_value",
+   "revid": 1371179967,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-chess-endgame",
+   "title": "Chess endgame",
+   "url": "https://en.wikipedia.org/wiki/Chess_endgame",
+   "revid": 1379416665,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-chess-strategy",
+   "title": "Chess strategy",
+   "url": "https://en.wikipedia.org/wiki/Chess_strategy",
+   "revid": 1369421492,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

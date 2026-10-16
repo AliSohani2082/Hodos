@@ -1,0 +1,82 @@
+{
+ "id": "programming-s5",
+ "chunks": [
+  {
+   "id": "src:wiki-stack-abstract-data-type#c1",
+   "outlet": "src:wiki-stack-abstract-data-type",
+   "title": "Stack (abstract data type)",
+   "text": "In many implementations, a stack has more operations than the essential \"push\" and \"pop\" operations. An example of a non-essential operation is \"top of stack\", or \"peek\", which observes the top element without removing it from the stack. Since this can be broken down into a \"pop\" followed by a \"push\" to return the same data to the stack, it is not considered an essential operation. If the stack is empty, an underflow condition will occur upon execution of either the \"peek\" or \"pop\" operation. Additionally, many implementations include convenience operations that handle common tasks, such as checking if the stack is empty or returning its size."
+  },
+  {
+   "id": "src:wiki-stack-abstract-data-type#c2",
+   "outlet": "src:wiki-stack-abstract-data-type",
+   "title": "Stack (abstract data type)",
+   "text": "A stack can be easily implemented either through an array or a linked list, as it is merely a special case of a list. In either case, what identifies the data structure as a stack is not the implementation but the interface: the user is only allowed to pop or push items onto the array or linked list, with few other helper operations. The following will demonstrate both implementations using pseudocode. An array can be used to implement a (bounded) stack, as follows. The first element, usually at the zero offset, is the bottom, resulting in array[0] being the first element pushed onto the stack and the last element popped off. The program must keep track of the size (length) of the stack, using a variable top that records the number of items pushed so far, therefore pointing to the place in the array where the next element is to be inserted (assuming a zero-based index convention). Thus, the stack itself can be effectively implemented as a three-element structure:"
+  },
+  {
+   "id": "src:wiki-stack-abstract-data-type#c3",
+   "outlet": "src:wiki-stack-abstract-data-type",
+   "title": "Stack (abstract data type)",
+   "text": "Similarly, pop decrements the top index after checking for underflow, and returns the item that was previously the top one: Using a dynamic array, it is possible to implement a stack that can grow or shrink as much as needed. The size of the stack is simply the size of the dynamic array, which is a very efficient implementation of a stack since adding items to or removing items from the end of a dynamic array requires amortized O(1) time. Another option for implementing stacks is to use a singly linked list. A stack is then a pointer to the \"head\" of the list, with perhaps a counter to keep track of the size of the list:"
+  },
+  {
+   "id": "src:wiki-stack-abstract-data-type#c4",
+   "outlet": "src:wiki-stack-abstract-data-type",
+   "title": "Stack (abstract data type)",
+   "text": "Pushing and popping items happens at the head of the list; overflow is not possible in this implementation (unless memory is exhausted): Some languages, such as Perl, LISP, JavaScript and Python, make the stack operations push and pop available on their standard list/array types. Some languages, notably those in the Forth family (including PostScript), are designed around language-defined stacks that are directly visible to and manipulated by the programmer. The following is an example of manipulating a stack in Common Lisp (\">\" is the Lisp interpreter's prompt; lines not starting with \">\" are the interpreter's responses to expressions):"
+  },
+  {
+   "id": "src:wiki-queue-abstract-data-type#c1",
+   "outlet": "src:wiki-queue-abstract-data-type",
+   "title": "Queue (abstract data type)",
+   "text": "In computer science, a queue is an abstract data type that serves as an ordered collection of entities. By convention, the end of the queue where elements are added is called the back, tail, or rear of the queue. The end of the queue where elements are removed is called the head or front of the queue. The name queue is an analogy to the words used to describe people in line to wait for goods or services. It supports two main operations. Queues may be implemented as a separate data type, or maybe considered a special case of a double-ended queue (deque) and not implemented separately. For example, Perl and Ruby allow pushing and popping an array from both ends, so one can use push() and shift() functions to enqueue and dequeue a list (or, in reverse, one can use unshift() and pop()), although in some cases these operations are not efficient. C++'s Standard Template Library provides a std::queue<T> templated class which is restricted to only push/pop operations. 6) ArrayDeque. PHP has an SplQueue class and third-party libraries like beanstalk'd and Gearman."
+  },
+  {
+   "id": "src:wiki-call-stack#c1",
+   "outlet": "src:wiki-call-stack",
+   "title": "Call stack",
+   "text": "In computer science, a call stack is a stack data structure that stores information about the active subroutines and inline blocks of a computer program. This type of stack is also known as an execution stack, program stack, control stack, run-time stack, or machine stack, and is often shortened to simply the \"stack\". Although maintenance of the call stack is important for the proper functioning of most software, the details are normally hidden and automatic in high-level programming languages. Many computer instruction sets provide special instructions for manipulating stacks. A call stack is used for several related purposes, but the main reason for having one is to keep track of the point to which each active subroutine should return control when it finishes executing. An active subroutine is one that has been called, but is yet to complete execution, after which control should be handed back to the point of call. Such activations of subroutines may be nested to any level (recursive as a special case), hence the stack structure. For example, if a subroutine DrawSquare calls a subroutine DrawLine from four different places, DrawLine must know where to return when its execution completes."
+  },
+  {
+   "id": "src:wiki-call-stack#c2",
+   "outlet": "src:wiki-call-stack",
+   "title": "Call stack",
+   "text": "To accomplish this, the address following the instruction that jumps to DrawLine, the return address, is pushed onto the top of the call stack as part of each call. As noted above, the primary purpose of a call stack is to store the return addresses. When a subroutine is called, the location (address) of the instruction at which the calling routine can later resume must be saved somewhere. Using a stack to save the return address has important advantages over some alternative calling conventions, such as saving the return address before the beginning of the called subroutine or in some other fixed location. One is that each task can have its own stack, and thus the subroutine can be thread-safe, that is, able to be active simultaneously for different tasks doing different things. Another benefit is that by providing reentrancy, recursion is automatically supported. When a function calls itself recursively, a return address needs to be stored for each activation of the function so that it can later be used to return from the function activation. Stack structures provide this capability automatically. Depending on the language, operating system, and machine environment, a call stack may serve additional purposes, including, for example:"
+  },
+  {
+   "id": "src:wiki-call-stack#c3",
+   "outlet": "src:wiki-call-stack",
+   "title": "Call stack",
+   "text": "The typical call stack is used for the return address, locals, and parameters (known as a call frame). In some environments there may be more or fewer functions assigned to the call stack. In the Forth programming language, for example, ordinarily only the return address, counted loop parameters and indexes, and possibly local variables are stored on the call stack (which in that environment is named the return stack), although any data can be temporarily placed there using special return-stack handling code so long as the needs of calls and returns are respected; parameters are ordinarily stored on a separate data stack or parameter stack, typically called the stack in Forth terminology even though there is a call stack since it is usually accessed more explicitly. Some Forths also have a third stack for floating-point parameters."
+  },
+  {
+   "id": "src:wiki-call-stack#c4",
+   "outlet": "src:wiki-call-stack",
+   "title": "Call stack",
+   "text": "When stack frame sizes can differ, such as between different functions or between invocations of a particular function, popping a frame off the stack does not constitute a fixed decrement of the stack pointer. At function return, the stack pointer is instead restored to the frame pointer, the value of the stack pointer just before the function was called. Each stack frame contains a frame pointer to the top of the frame immediately below. The stack pointer is a mutable register shared between all invocations. A frame pointer of a given invocation of a function is a copy of the stack pointer as it was before the function was invoked. The locations of all other fields in the frame can be defined relative either to the top of the frame, as negative offsets of the stack pointer, or relative to the top of the frame below, as positive offsets of the frame pointer. The location of the frame pointer itself must inherently be defined as a negative offset of the stack pointer."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-stack-abstract-data-type",
+   "title": "Stack (abstract data type)",
+   "url": "https://en.wikipedia.org/wiki/Stack_(abstract_data_type)",
+   "revid": 1376688119,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-queue-abstract-data-type",
+   "title": "Queue (abstract data type)",
+   "url": "https://en.wikipedia.org/wiki/Queue_(abstract_data_type)",
+   "revid": 1370002097,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-call-stack",
+   "title": "Call stack",
+   "url": "https://en.wikipedia.org/wiki/Call_stack",
+   "revid": 1362914838,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

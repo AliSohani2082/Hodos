@@ -1,0 +1,30 @@
+{
+  "name": "m0-lesson-format",
+  "private": true,
+  "type": "module",
+  "description": "Spike (a): Markdoc vs remark-directive reliability eval (throwaway)",
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit",
+    "check": "bun run src/cli.ts check",
+    "stub": "bun run src/cli.ts stub",
+    "quote": "bun run src/cli.ts quote",
+    "build-packs": "bun run scripts/build-packs.ts && bun run scripts/attribution.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.135.0",
+    "@markdoc/markdoc": "0.5.10",
+    "ajv": "8.20.0",
+    "remark-directive": "4.0.0",
+    "remark-frontmatter": "5.0.0",
+    "remark-parse": "11.0.0",
+    "unified": "11.0.5",
+    "unist-util-visit": "5.1.0",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.3",
+    "@types/mdast": "^4.0.4",
+    "typescript": "^7.0.2"
+  }
+}

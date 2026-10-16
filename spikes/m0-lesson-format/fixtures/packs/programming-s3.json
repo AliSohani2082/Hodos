@@ -1,0 +1,88 @@
+{
+ "id": "programming-s3",
+ "chunks": [
+  {
+   "id": "src:wiki-hash-table#c1",
+   "outlet": "src:wiki-hash-table",
+   "title": "Hash table",
+   "text": "The idea of hashing arose independently in different places. In January 1953, Hans Peter Luhn wrote an internal IBM memorandum that used hashing with chaining. The first example of open addressing was proposed by A. D. Linh, building on Luhn's memorandum. Around the same time, Gene Amdahl, Elaine M. McGraw, Nathaniel Rochester, and Arthur Samuel of IBM Research implemented hashing for the IBM 701 assembler. Open addressing with linear probing is credited to Amdahl, although Andrey Ershov independently had the same idea. The term \"open addressing\" was coined by W. Wesley Peterson in his article which discusses the problem of search in large files. The first published work on hashing with chaining is credited to Arnold Dumey, who discussed the idea of using remainder modulo a prime as a hash function. The word \"hashing\" was first published in an article by Robert Morris. A theoretical analysis of linear probing was submitted originally by Konheim and Weiss."
+  },
+  {
+   "id": "src:wiki-hash-table#c2",
+   "outlet": "src:wiki-hash-table",
+   "title": "Hash table",
+   "text": "The schemes of hashing used in integer universe assumption include hashing by division, hashing by multiplication, universal hashing, dynamic perfect hashing, and static perfect hashing. However, hashing by division is the commonly used scheme. Commonly a string is used as a key to the hash function. The third edition of The C++ Programming Language describes a simple hash function in which an unsigned integer that is initially zero is repeatedly left shifted one bit and then xor'ed with the integer value of the next character. This hash value is then taken modulo the table size. If the left shift is not circular, then the string length should be at least eight bits less than the size of the unsigned integer in bits. Another common way to hash a string to an integer is with a  polynomial rolling hash function."
+  },
+  {
+   "id": "src:wiki-hash-table#c3",
+   "outlet": "src:wiki-hash-table",
+   "title": "Hash table",
+   "text": "A search algorithm that uses hashing consists of two parts. The first part is computing a hash function which transforms the search key into an array index. The ideal case is such that no two search keys hash to the same array index. However, this is not always the case and impossible to guarantee for unseen given data. Hence the second part of the algorithm is collision resolution. The two common methods for collision resolution are separate chaining and open addressing. If the element is comparable either numerically or lexically, and inserted into the list by maintaining the total order, it results in faster termination of unsuccessful searches."
+  },
+  {
+   "id": "src:wiki-hash-table#c4",
+   "outlet": "src:wiki-hash-table",
+   "title": "Hash table",
+   "text": "Linked lists in separate chaining may not be cache-conscious due to spatial locality—locality of reference—when the nodes of the linked list are scattered across memory, thus the list traversal during insert and search may entail CPU cache inefficiencies. In cache-conscious variants of collision resolution through separate chaining, a dynamic array found to be more cache-friendly is used in the place where a linked list or self-balancing binary search tree is usually deployed, since the contiguous allocation pattern of  the array could be exploited by hardware-cache prefetchers—such as translation lookaside buffers—resulting in reduced access time and memory consumption."
+  },
+  {
+   "id": "src:wiki-hash-function#c1",
+   "outlet": "src:wiki-hash-function",
+   "title": "Hash function",
+   "text": "In a hash table, a hash function takes a key as an input, which is associated with a datum or record and used to identify it to the data storage and retrieval application. The keys may be fixed-length, like an integer, or variable-length, like a name. In some cases, the key is the datum itself. The output is a hash code used to index a hash table holding the data or records, or pointers to them. A hash function may be considered to perform three functions: Hash functions are used in conjunction with hash tables to store and retrieve data items or data records. The hash function translates the key associated with each datum or record into a hash code, which is used to index the hash table. When an item is to be added to the table, the hash code may index an empty slot (also called a bucket), in which case the item is added to the table there. If the hash code indexes a full slot, then some kind of collision resolution is required: the new item may be omitted (not added to the table), or replace the old item, or be added to the table in some other location by a specified procedure. That procedure depends on the structure of the hash table. In chained hashing, each slot is the head of a linked list or chain, and items that collide at the slot are added to the chain."
+  },
+  {
+   "id": "src:wiki-hash-function#c2",
+   "outlet": "src:wiki-hash-function",
+   "title": "Hash function",
+   "text": "Chains may be kept in random order and searched linearly, or in serial order, or as a self-ordering list by frequency to speed up access. In open address hashing, the table is probed starting from the occupied slot in a specified manner, usually by linear probing, quadratic probing, or double hashing until an open slot is located or the entire table is probed (overflow). Searching for the item follows the same procedure until the item is located, an open slot is found, or the entire table has been searched (item not in table). When testing a hash function, the uniformity of the distribution of hash values can be evaluated by the chi-squared test. This test is a goodness-of-fit measure: it is the actual distribution of items in buckets versus the expected (or uniform) distribution of items. The formula is"
+  },
+  {
+   "id": "src:wiki-hash-function#c3",
+   "outlet": "src:wiki-hash-function",
+   "title": "Hash function",
+   "text": "A universal hashing scheme is a randomized algorithm that selects a hash function h among a family of such functions, in such a way that the probability of a collision of any two distinct keys is 1/m, where m is the number of distinct hash values desired—independently of the two keys. Universal hashing ensures (in a probabilistic sense) that the hash function application will behave as well as if it were using a random function, for any distribution of the input data. It will, however, have more collisions than perfect hashing and may require more operations than a special-purpose hash function."
+  },
+  {
+   "id": "src:wiki-hash-function#c4",
+   "outlet": "src:wiki-hash-function",
+   "title": "Hash function",
+   "text": "e. allow double hashing) is less useful than one that does. A hash function is applicable in a variety of situations. Particularly within cryptography, notable applications include: A hash procedure must be deterministic—for a given input value, it must always generate the same hash value. In other words, it must be a function of the data to be hashed, in the mathematical sense of the term. This requirement excludes hash functions that depend on external variable parameters, such as pseudo-random number generators or the time of day. It also excludes functions that depend on the memory address of the object being hashed, because the address may change during execution (as may happen on systems that use certain methods of garbage collection), although sometimes rehashing of the item is possible. The determinism is in the context of the reuse of the function. For example, Python adds the feature that hash functions make use of a randomized seed that is generated once when the Python process starts in addition to the input to be hashed."
+  },
+  {
+   "id": "src:wiki-hash-collision#c1",
+   "outlet": "src:wiki-hash-collision",
+   "title": "Hash collision",
+   "text": "In hash tables, since hash collisions are inevitable, hash tables have mechanisms of dealing with them, known as collision resolutions. Two of the most  common strategies are open addressing and separate chaining. The cache-conscious collision resolution is another strategy that has been discussed in the past for string hash tables. Cells in the hash table are assigned one of three states in this method – occupied, empty, or deleted. If a hash collision occurs, the table will be probed to move the record to an alternate cell that is stated as empty. There are different types of probing that take place when a hash collision happens and this method is implemented. Some types of probing are linear probing, double hashing, and quadratic probing. Open Addressing is also known as closed hashing."
+  },
+  {
+   "id": "src:wiki-hash-collision#c2",
+   "outlet": "src:wiki-hash-collision",
+   "title": "Hash collision",
+   "text": "This strategy allows more than one record to be \"chained\" to the cells of a hash table. If two records are being directed to the same cell, both would go into that cell as a linked list. This efficiently prevents a hash collision from occurring since records with the same hash values can go into the same cell, but it has its disadvantages. Keeping track of so many lists is difficult and can cause whatever tool that is being used to become very slow. Separate chaining is also known as open hashing. Although much less used than the previous two, Askitis & Zobel (2005) has proposed the cache-conscious collision resolution method in 2005. It is a similar idea to the separate chaining methods, although it does not technically involve the chained lists. In this case, instead of chained lists, the hash values are represented in a contiguous list of items. This is better suited for string hash tables and the use for numeric values is still unknown."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-hash-table",
+   "title": "Hash table",
+   "url": "https://en.wikipedia.org/wiki/Hash_table",
+   "revid": 1376684313,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-hash-function",
+   "title": "Hash function",
+   "url": "https://en.wikipedia.org/wiki/Hash_function",
+   "revid": 1379378444,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-hash-collision",
+   "title": "Hash collision",
+   "url": "https://en.wikipedia.org/wiki/Hash_collision",
+   "revid": 1364988824,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

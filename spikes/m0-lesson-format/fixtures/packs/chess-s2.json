@@ -1,0 +1,88 @@
+{
+ "id": "chess-s2",
+ "chunks": [
+  {
+   "id": "src:wiki-fork-chess#c1",
+   "outlet": "src:wiki-fork-chess",
+   "title": "Fork (chess)",
+   "text": "In chess, a fork is a tactic in which a piece attacks multiple enemy pieces simultaneously. The attacker usually aims to capture one of the forked pieces. The defender often cannot counter every threat. A fork is most effective when it is forcing, such as when the king is put in check. A fork is a type of double attack. A fork is an example of a double attack. The type of fork is named after the type of forking piece. For example, a fork by a knight is a knight fork. The attacked pieces are forked. If the king is one of the attacked pieces, the term absolute fork is sometimes used, while a fork not involving the enemy king is a relative fork. A fork of the king and queen, the highest material-gaining fork possible, is sometimes called a royal fork. A fork of the enemy king, queen, and one (or both) rooks is sometimes called a grand fork. A knight fork of the enemy king, queen, and possibly other pieces is sometimes called a family fork or family check."
+  },
+  {
+   "id": "src:wiki-fork-chess#c2",
+   "outlet": "src:wiki-fork-chess",
+   "title": "Fork (chess)",
+   "text": "While any piece can deliver a fork, knights are particularly effective as the forking piece because they cannot be captured by the non-knight pieces they attack, and as a minor piece they are less valuable than rooks and queens. Compared to forks by other pieces, a queen fork requires more specific conditions to be helpful due to the queen's higher value. A queen fork can often lead to material or positional gain, however, when the forked pieces are undefended, poorly coordinated, or when one piece is the king. This example is from the first round of the FIDE World Chess Championship 2004 between Mohamed Tissir and Alexey Dreev. After"
+  },
+  {
+   "id": "src:wiki-knight-chess#c1",
+   "outlet": "src:wiki-knight-chess",
+   "title": "Knight (chess)",
+   "text": "The knight (♘, ♞) is a piece in the game of chess. It moves two squares vertically and one square horizontally, or two squares horizontally and one square vertically, jumping over other pieces. Each player starts the game with two knights on the b- and g-files, each located between a rook and a bishop. Compared to other chess pieces, the knight's movement is unique: it moves two squares vertically and one square horizontally, or two squares horizontally and one square vertically (with both forming the shape of a capital L). Consequently, a knight alternates between light and dark squares with each move. When moving, the knight can jump over pieces to reach its destination. Knights capture in the same way, replacing the enemy piece on the square and removing it from the board. A knight can have up to eight available moves at once. Knights and pawns are the only pieces that can be moved in the chess starting position."
+  },
+  {
+   "id": "src:wiki-knight-chess#c2",
+   "outlet": "src:wiki-knight-chess",
+   "title": "Knight (chess)",
+   "text": "Knights and bishops, also known as minor pieces, have a value of about three pawns. Bishops utilize a longer range, but they can move only to squares of one color. Knights, unlike bishops, are not restricted to a single color complex; a knight on a light square can only move to dark squares and vice versa. This allows knights to be highly dynamic attackers, but it also makes them generally more susceptible to being trapped or kicked by pawns than bishops. Knights and bishops are stronger when supported by other pieces (such as pawns) to create outposts and become more powerful when they advance, as long as they remain active. Generally, knights are strongest in the center of the board, where they have up to eight moves; suboptimal on the edge of the board, where they have four; and weakest in corners, where they have only two. Knights are especially effective at forking enemy pieces, as their unique movement allows them to threaten multiple squares without being directly attacked by pieces on those squares (barring other knights)."
+  },
+  {
+   "id": "src:wiki-knight-chess#c3",
+   "outlet": "src:wiki-knight-chess",
+   "title": "Knight (chess)",
+   "text": "Generally speaking, bishops are considered by most high-level players and chess engines to be slightly more valuable than knights, as a bishop can control up to 13 squares while a knight can control up to 8; however, in practice, the relative value of a bishop or knight is highly dependent on the pawn structure and specific positional features. The knight's value is higher in closed positions since it can jump over blockades; in contrast, bishops are generally more valuable than knights in open positions as their longer range allows them to control more squares when unfettered by pawns. Enemy pawns are effective at harassing knights because a pawn attacking a knight is not itself attacked by the knight and, because a pawn is worth less than a knight, it does not matter if the knight is defended. e. a square that cannot be attacked by enemy pawns. In the diagram, White's knight on d5 is very powerful – more powerful than Black's bishop on g7. Whereas two bishops cover each other's weaknesses, two knights tend not to cooperate with each other as efficiently. As such, a pair of bishops is usually considered better than a pair of knights. World Champion José Raúl Capablanca considered that a queen and a knight is usually a better combination than a queen and a bishop."
+  },
+  {
+   "id": "src:wiki-knight-chess#c4",
+   "outlet": "src:wiki-knight-chess",
+   "title": "Knight (chess)",
+   "text": "However, Glenn Flear found no game of Capablanca's that supported his statement; statistics do not support the statement, either. In an endgame without other pieces or pawns, two knights generally have a better chance of forming a drawing fortress against a queen than do two bishops or a bishop and a knight. Compared to a bishop, a knight is often not as good in an endgame. A knight can exert control over only one part of the board at a time and often takes multiple moves to reposition to a new location, which often makes it less suitable in endgames with pawns on both sides of the board. This limitation is less important, however, in endgames with pawns on only one side of the board. Knights are superior to bishops in an endgame if all the pawns are on one side of the board. Furthermore, knights have the advantage of being able to control squares of either color, unlike a lone bishop. Nonetheless, a disadvantage of the knight (compared to the other pieces) is that by itself it cannot lose a move to put the opponent in zugzwang (see triangulation and tempo), while a bishop can. In the study by Salvio, if the knight is on a black square and it is White's turn to move, White cannot win."
+  },
+  {
+   "id": "src:wiki-chess-tactic#c1",
+   "outlet": "src:wiki-chess-tactic",
+   "title": "Chess tactic",
+   "text": "A piece is said to attack (or threaten) an opponent's piece if, on the next move, it could capture that piece. A piece is said to defend (or protect) a piece of the defender's color if, in case the defended piece were taken by the opponent, the defender could immediately recapture. Attacking a piece usually, but not always (see Sacrifice), forces the opponent to respond if the attacked piece is undefended, or if the attacking piece is of lower value than the one attacked. , the opponent will have fewer (or less valuable) pieces remaining on the board. The goal of each basic tactic is to win material. , an anticipated tactic) induces the opponent to pursue an alternative line. In amateur games, however, tactics often come to full fruition – unforeseen by the opponent and resulting in material gain and a corresponding, perhaps decisive, advantage. Material gain can be achieved by several different types of tactics."
+  },
+  {
+   "id": "src:wiki-chess-tactic#c2",
+   "outlet": "src:wiki-chess-tactic",
+   "title": "Chess tactic",
+   "text": "A discovered attack is a move that allows an attack by another piece. A piece is moved away so as to allow the attack of a friendly bishop, rook or queen on an enemy piece. If the attacked piece is the king, the situation is referred to as a discovered check. Discovered attacks are powerful since the moved piece may be able to pose a second threat. A special case of a discovered check is a double check, where both the piece being unmasked and the piece being moved (rarely a third piece instead, possible in the case of an en passant capture) attack the enemy king. A double check always forces the opponent to move the king, since it is impossible to defend against attacks from two directions in any other way."
+  },
+  {
+   "id": "src:wiki-chess-tactic#c3",
+   "outlet": "src:wiki-chess-tactic",
+   "title": "Chess tactic",
+   "text": "A pin is a move that inhibits an opponent piece from moving, because doing so would expose a more valuable (or vulnerable) piece behind it. Only bishops, rooks, and queens can perform a pin, since they can move more than one square in a straight line. If the pinned piece cannot move because doing so would produce check, the pin is called absolute. If moving the pinned piece would expose a non-king piece, the pin is called relative. A skewer is a move that attacks two pieces in a line, similar to a pin, except that the enemy piece of greater value is in front of the piece of lesser value. After the more valuable piece moves away, the lesser piece can be captured. Like pins, only queens, rooks, and bishops can perform the skewer, and skewer attacks can be either absolute (the more valuable piece in front is the king, in check) or relative (the piece in front is a non-king piece)."
+  },
+  {
+   "id": "src:wiki-chess-tactic#c4",
+   "outlet": "src:wiki-chess-tactic",
+   "title": "Chess tactic",
+   "text": "The pawn is the least valuable chess piece, so pawns are often used to capture defended pieces. A single pawn typically forces a more powerful piece, such as a rook or a knight, to retreat. The ability to fork two enemy  pieces by advancing a pawn is often a threat. Alternately, a pawn move can itself reveal a discovered attack. When pawns are arranged on a diagonal, with each pawn guarded by the pawn behind it, they form a wall or pawn chain protecting any friendly pieces behind them. A weak pawn structure, with unprotected or isolated pawns ahead of more valuable pieces, can be a decisive weakness. A pawn that has advanced all the way to the opposite side of the board is promoted to any other piece except a king."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-fork-chess",
+   "title": "Fork (chess)",
+   "url": "https://en.wikipedia.org/wiki/Fork_(chess)",
+   "revid": 1363243755,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-knight-chess",
+   "title": "Knight (chess)",
+   "url": "https://en.wikipedia.org/wiki/Knight_(chess)",
+   "revid": 1377345524,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-chess-tactic",
+   "title": "Chess tactic",
+   "url": "https://en.wikipedia.org/wiki/Chess_tactic",
+   "revid": 1362989853,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

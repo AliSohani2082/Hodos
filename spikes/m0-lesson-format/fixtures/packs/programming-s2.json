@@ -1,0 +1,88 @@
+{
+ "id": "programming-s2",
+ "chunks": [
+  {
+   "id": "src:wiki-binary-search#c1",
+   "outlet": "src:wiki-binary-search",
+   "title": "Binary search",
+   "text": "Binary search works on sorted arrays. Binary search begins by comparing an element in the middle of the array with the target value. If the target value matches the element, its position in the array is returned. If the target value is less than the element, the search continues in the lower half of the array. If the target value is greater than the element, the search continues in the upper half of the array. By doing this, the algorithm eliminates the half in which the target value cannot lie in each iteration. The above procedure only performs exact matches, finding the position of a target value. However, it is trivial to extend binary search to perform approximate matches because binary search operates on sorted arrays. For example, binary search can be used to compute, for a given value, its rank (the number of smaller elements), predecessor (next-smallest element), successor (next-largest element), and nearest neighbor. Range queries seeking the number of elements between two values can be performed with two rank queries."
+  },
+  {
+   "id": "src:wiki-binary-search#c2",
+   "outlet": "src:wiki-binary-search",
+   "title": "Binary search",
+   "text": "For example, in a 7-element array, the root requires one iteration, the two elements below the root require two iterations, and the four elements below require three iterations. In this case, the internal path length is: In analyzing the performance of binary search, another consideration is the time required to compare two elements. For integers and strings, the time required increases linearly as the encoding length (usually the number of bits) of the elements increase. For example, comparing a pair of 64-bit unsigned integers would require comparing up to double the bits as comparing a pair of 32-bit unsigned integers. The worst case is achieved when the integers are equal. This can be significant when the encoding lengths of the elements are large, such as with large integer types or long strings, which makes comparing elements expensive. Furthermore, comparing floating-point values (the most common digital representation of real numbers) is often more expensive than comparing integers or short strings. Fast floating point comparison is possible via comparing as an integer. However, this kind of comparison forms a total order, which makes every floating-point value compare differently from each other and the same as itself."
+  },
+  {
+   "id": "src:wiki-binary-search#c3",
+   "outlet": "src:wiki-binary-search",
+   "title": "Binary search",
+   "text": "0 and NaN should not compare the same as any other value including itself. According to Steel Bank Common Lisp contributor Paul Khuong, binary search leads to very few branch mispredictions despite its data-dependent nature. This is in part because most of it can be expressed as conditional moves instead of branches. The same applies to most logarithmic divide-and-conquer search algorithms. On most computer architectures, the processor has a hardware cache separate from RAM. Since they are located within the processor itself, caches are much faster to access but usually store much less data than RAM. Therefore, most processors store memory locations that have been accessed recently, along with memory locations close to it. For example, when an array element is accessed, the element itself may be stored along with the elements that are stored close to it in RAM, making it faster to sequentially access array elements that are close in index to each other (locality of reference). On a sorted array, binary search can jump to distant memory locations if the array is large, unlike algorithms (such as linear search and linear probing in hash tables) which access elements in sequence. This adds slightly to the running time of binary search for large arrays on most systems."
+  },
+  {
+   "id": "src:wiki-binary-search#c4",
+   "outlet": "src:wiki-binary-search",
+   "title": "Binary search",
+   "text": "Paul Khuong has noted that binary search on large (≥ 512 KiB) arrays of exactly a power-of-two size tends to cause an additional problem with how CPU caches are implemented. Specifically, the translation lookaside buffer (TLB) is often implemented as a content-addressable memory (CAM), with the \"key\" usually being the lower bits of a requested address. When searching on an array of exactly a power-of-two size, memory address with the same lower bits tend to be accessed, causing collisions (\"aliasing\") with the \"key\" used to fetch the CAM. The typical TLB is 4-way associative, meaning it can handle at most four addresses hitting the same \"key\", after which TLB thrashing happens. ) This can be prevented by offsetting the split point of the binary search so it divides at 31⁄64 instead of exactly the middle."
+  },
+  {
+   "id": "src:wiki-linear-search#c1",
+   "outlet": "src:wiki-linear-search",
+   "title": "Linear search",
+   "text": "In computer science, linear search or sequential search is a method for finding an element within a list. It sequentially checks each element of the list until a match is found or the whole list has been searched. A linear search runs in linear time in the worst case, and makes at most n comparisons, where n is the length of the list. If each element is equally likely to be searched, then linear search has an average case of ⁠n+1/2⁠ comparisons, but the average case can be affected if the search probabilities for each element vary. Linear search is rarely practical because other search algorithms and schemes, such as the binary search algorithm and hash tables, allow significantly faster searching for all but short lists."
+  },
+  {
+   "id": "src:wiki-linear-search#c2",
+   "outlet": "src:wiki-linear-search",
+   "title": "Linear search",
+   "text": "A linear search sequentially checks each element of the list until it finds an element that matches the target value. If the algorithm reaches the end of the list, the search terminates unsuccessfully. Given a list L of n elements with values or records L0 .... Ln−1, and target value T, the following subroutine uses linear search to find the index of the target T in L. The basic algorithm above makes two comparisons per iteration: one to check if Li equals T, and the other to check if i still points to a valid index of the list. By adding an extra record Ln to the list (a sentinel value) that equals the target, the second comparison can be eliminated until the end of the search, making the algorithm faster. The search will reach the sentinel if the target is not contained within the list."
+  },
+  {
+   "id": "src:wiki-linear-search#c3",
+   "outlet": "src:wiki-linear-search",
+   "title": "Linear search",
+   "text": "If the list is ordered such that L0 ≤ L1 ... ≤ Ln−1, the search can establish the absence of the target more quickly by concluding the search once Li exceeds the target. This variation requires a sentinel that is greater than the target. For a list with n items, the best case is when the value is equal to the first element of the list, in which case only one comparison is needed. The worst case is when the value is not in the list (or occurs only once at the end of the list), in which case n comparisons are needed. If the value being sought occurs k times in the list, and all orderings of the list are equally likely, the expected number of comparisons is"
+  },
+  {
+   "id": "src:wiki-divide-and-conquer-algorithm#c1",
+   "outlet": "src:wiki-divide-and-conquer-algorithm",
+   "title": "Divide-and-conquer algorithm",
+   "text": "Divide-and-conquer algorithms are naturally adapted for execution in multi-processor machines, especially shared-memory systems where the communication of data between processors does not need to be planned in advance because distinct sub-problems can be executed on different processors. Divide-and-conquer algorithms naturally tend to make efficient use of memory caches. The reason is that once a sub-problem is small enough, it and all its sub-problems can, in principle, be solved within the cache, without accessing the slower main memory. An algorithm designed to exploit the cache in this way is called cache-oblivious, because it does not contain the cache size as an explicit parameter. , sorting, FFTs, and matrix multiplication) to be optimal cache-oblivious algorithms–they use the cache in a probably optimal way, in an asymptotic sense, regardless of the cache size. In contrast, the traditional approach to exploiting the cache is blocking, as in loop nest optimization, where the problem is explicitly divided into chunks of the appropriate size—this can also use the cache optimally, but only when the algorithm is tuned for the specific cache sizes of a particular machine."
+  },
+  {
+   "id": "src:wiki-divide-and-conquer-algorithm#c2",
+   "outlet": "src:wiki-divide-and-conquer-algorithm",
+   "title": "Divide-and-conquer algorithm",
+   "text": "The same advantage exists with regards to other hierarchical storage systems, such as NUMA or virtual memory, as well as for multiple levels of cache: once a sub-problem is small enough, it can be solved within a given level of the hierarchy, without accessing the higher (slower) levels. g. with floating-point numbers, a divide-and-conquer algorithm may yield more accurate results than a superficially equivalent iterative method. For example, one can add N numbers either by a simple loop that adds each datum to a single variable, or by a D&C algorithm called pairwise summation that breaks the data set into two halves, recursively computes the sum of each half, and then adds the two sums. While the second method performs the same number of additions as the first and pays the overhead of the recursive calls, it is usually more accurate."
+  },
+  {
+   "id": "src:wiki-divide-and-conquer-algorithm#c3",
+   "outlet": "src:wiki-divide-and-conquer-algorithm",
+   "title": "Divide-and-conquer algorithm",
+   "text": "Divide-and-conquer algorithms are naturally implemented as recursive procedures. In that case, the partial sub-problems leading to the one currently being solved are automatically stored in the procedure call stack. A recursive function is a function that calls itself within its definition. Divide-and-conquer algorithms can also be implemented by a non-recursive program that stores the partial sub-problems in some explicit data structure, such as a stack, queue, or priority queue. g. in breadth-first recursion and the branch-and-bound method for function optimization. This approach is also the standard solution in programming languages that do not provide support for recursive procedures."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-binary-search",
+   "title": "Binary search",
+   "url": "https://en.wikipedia.org/wiki/Binary_search",
+   "revid": 1379979921,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-linear-search",
+   "title": "Linear search",
+   "url": "https://en.wikipedia.org/wiki/Linear_search",
+   "revid": 1379509240,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-divide-and-conquer-algorithm",
+   "title": "Divide-and-conquer algorithm",
+   "url": "https://en.wikipedia.org/wiki/Divide-and-conquer_algorithm",
+   "revid": 1363143428,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

@@ -1,0 +1,88 @@
+{
+ "id": "math-s4",
+ "chunks": [
+  {
+   "id": "src:wiki-linear-equation#c1",
+   "outlet": "src:wiki-linear-equation",
+   "title": "Linear equation",
+   "text": "is a linear equation in the single variable y for every value of x. It therefore has a unique solution for y, which is given by There are various ways of defining a line. In the following subsections, a linear equation of the line is given in each case. A non-vertical line can be defined by its slope m, and its y-intercept y0 (the y coordinate of its intersection with the y-axis). In this case, its linear equation can be written If, moreover, the line is not horizontal, it can be defined by its slope and its x-intercept x0. In this case, its equation can be written These forms rely on the habit of considering a nonvertical line as the graph of a function. For a line given by an equation"
+  },
+  {
+   "id": "src:wiki-linear-equation#c2",
+   "outlet": "src:wiki-linear-equation",
+   "title": "Linear equation",
+   "text": "A line that is not parallel to an axis and does not pass through the origin cuts the axes into two different points. The intercept values x0 and y0 of these two points are nonzero, and an equation of the line is which is valid also when x1 = x2 (to verify this, it suffices to verify that the two given points satisfy the equation). This form is not symmetric in the two given points, but a symmetric form can be obtained by regrouping the constant terms: Besides being very simple and mnemonic, this form has the advantage of being a special case of the more general equation of a hyperplane passing through n points in a space of dimension n − 1. These equations rely on the condition of linear dependence of points in a projective space."
+  },
+  {
+   "id": "src:wiki-equation#c1",
+   "outlet": "src:wiki-equation",
+   "title": "Equation",
+   "text": "Two equations or two systems of equations are equivalent, if they have the same set of solutions. The following operations transform an equation or a system of equations into an equivalent one – provided that the operations are meaningful for the expressions they are applied to: Equations often contain terms other than the unknowns. These other terms, which are assumed to be known, are usually called constants, coefficients or parameters. An example of an equation involving x and y as unknowns and the parameter R is An identity is an equation that is true for all possible values of the variable(s) it contains. Many identities are known in algebra and calculus. In the process of solving an equation, an identity is often used to simplify an equation, making it more easily solvable. In algebra, an example of an identity is the difference of two squares:"
+  },
+  {
+   "id": "src:wiki-equation#c2",
+   "outlet": "src:wiki-equation",
+   "title": "Equation",
+   "text": "which is true for all x and y. Trigonometry is an area where many identities exist; these are useful in manipulating or solving trigonometric equations. Two of many that involve the sine and cosine functions are: Since the sine function is a periodic function, there are infinitely many solutions if there are no restrictions on θ. In this example, restricting θ to be between 0 and 45 degrees would restrict the solution to only one number. Algebra studies two main families of equations: polynomial equations and, among them, the special case of linear equations. When there is only one variable, polynomial equations have the form P(x) = 0, where P is a polynomial, and linear equations have the form ax + b = 0, where a and b are parameters. To solve equations from either family, one uses algorithmic or geometric techniques that originate from linear algebra or mathematical analysis. Algebra also studies Diophantine equations where the coefficients and solutions are integers. The techniques used are different and come from number theory. These equations are difficult in general; one often searches just to find the existence or absence of a solution, and, if they exist, to count the number of solutions."
+  },
+  {
+   "id": "src:wiki-equation#c3",
+   "outlet": "src:wiki-equation",
+   "title": "Equation",
+   "text": ", rational numbers, real numbers, complex numbers). An algebraic equation is univariate if it involves only one variable. ). A system of linear equations (or linear system) is a collection of linear equations involving one or more variables. For example, is a system of three equations in the three variables x, y, z. A solution to a linear system is an assignment of numbers to the variables such that all the equations are simultaneously satisfied. A solution to the system above is given by since it makes all three equations valid. The word \"system\" indicates that the equations are to be considered collectively, rather than individually. In mathematics, the theory of linear systems is a fundamental part of linear algebra, a subject which is used in many parts of modern mathematics. Computational algorithms for finding the solutions are an important part of numerical linear algebra, and play a prominent role in physics, engineering, chemistry, computer science, and economics. A system of non-linear equations can often be approximated by a linear system (see linearization), a helpful technique when making a mathematical model or computer simulation of a relatively complex system."
+  },
+  {
+   "id": "src:wiki-equation#c4",
+   "outlet": "src:wiki-equation",
+   "title": "Equation",
+   "text": "A parametric equation for a curve expresses the coordinates of the points of the curve as functions of a variable, called a parameter. For example, are parametric equations for the unit circle, where t is the parameter. Together, these equations are called a parametric representation of the curve. ). An algebraic number is a number that is a solution of a non-zero polynomial equation in one variable with rational coefficients (or equivalently — by clearing denominators — with integer coefficients). Numbers such as π that are not algebraic are said to be transcendental. Almost all real and complex numbers are transcendental."
+  },
+  {
+   "id": "src:wiki-history-of-algebra#c1",
+   "outlet": "src:wiki-history-of-algebra",
+   "title": "History of algebra",
+   "text": "Algebra can essentially be considered as doing computations similar to those of arithmetic but with non-numerical mathematical objects. However, until the 19th century, algebra consisted essentially of the theory of equations. For example, the fundamental theorem of algebra belongs to the theory of equations and is not considered as belonging to algebra (in fact, every proof must use the completeness of the real numbers, which is not an algebraic property). This article describes the history of the theory of equations, referred to in this article as \"algebra\", from the origins to the emergence of algebra as a separate area of mathematics."
+  },
+  {
+   "id": "src:wiki-history-of-algebra#c2",
+   "outlet": "src:wiki-history-of-algebra",
+   "title": "History of algebra",
+   "text": "The word \"algebra\" is derived from the Arabic word الجبر al-jabr, and this comes from the treatise written in the year 830 by the medieval Persian mathematician, Al-Khwārizmī, whose Arabic title, Kitāb al-muḫtaṣar fī ḥisāb al-ğabr wa-l-muqābala, can be translated as The Compendious Book on Calculation by Completion and Balancing. The treatise provided for the systematic solution of linear and quadratic equations. According to one history, \"[i]t is not certain just what the terms al-jabr and muqabalah mean, but the usual interpretation is similar to that implied in the previous translation. The word 'al-jabr' presumably meant something like 'restoration' or 'completion' and seems to refer to the transposition of subtracted terms to the other side of an equation; the word 'muqabalah' is said to refer to 'reduction' or 'balancing'—that is, the cancellation of like terms on opposite sides of the equation. \" The term is used by al-Khwarizmi to describe the operations that he introduced, \"reduction\" and \"balancing\", referring to the transposition of subtracted terms to the other side of an equation, that is, the cancellation of like terms on opposite sides of the equation."
+  },
+  {
+   "id": "src:wiki-history-of-algebra#c3",
+   "outlet": "src:wiki-history-of-algebra",
+   "title": "History of algebra",
+   "text": "Algebra did not always make use of the symbolism that is now ubiquitous in mathematics; instead, it went through three distinct stages. The stages in the development of symbolic algebra are approximately as follows: Syncopated algebra, in which some symbolism is used, but which does not contain all of the characteristics of symbolic algebra. For instance, there may be a restriction that subtraction may be used only once within one side of an equation, which is not the case with symbolic algebra. Syncopated algebraic expression first appeared in Diophantus' Arithmetica (3rd century AD), followed by Brahmagupta's Brahma Sphuta Siddhanta (7th century). Symbolic algebra, in which full symbolism is used. Early steps toward this can be seen in the work of several Islamic mathematicians such as Ibn al-Banna (13th–14th centuries) and al-Qalasadi (15th century), although fully symbolic algebra was developed by François Viète (16th century). Later, René Descartes (17th century) introduced the modern notation (for example, the use of x—see below) and showed that the problems occurring in geometry can be expressed and solved in terms of algebra (Cartesian geometry)."
+  },
+  {
+   "id": "src:wiki-history-of-algebra#c4",
+   "outlet": "src:wiki-history-of-algebra",
+   "title": "History of algebra",
+   "text": "As important as the use or lack of symbolism in algebra was the degree of the equations that were addressed. Quadratic equations played an important role in early algebra; and throughout most of history, until the early modern period, all quadratic equations were classified as belonging to one of three categories. In addition to the three stages of expressing algebraic ideas, some authors recognized four conceptual stages in the development of algebra that occurred alongside the changes in expression. These four stages were as follows: The origins of algebra can be traced to the ancient Babylonians, who developed a positional number system that greatly aided them in solving their rhetorical algebraic equations. The Babylonians were not interested in exact solutions, but rather approximations, and so they would commonly use linear interpolation to approximate intermediate values. One of the most famous tablets is the Plimpton 322 tablet, created around 1900–1600 BC, which gives a table of Pythagorean triples and represents some of the most advanced mathematics prior to Greek mathematics."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-linear-equation",
+   "title": "Linear equation",
+   "url": "https://en.wikipedia.org/wiki/Linear_equation",
+   "revid": 1378184166,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-equation",
+   "title": "Equation",
+   "url": "https://en.wikipedia.org/wiki/Equation",
+   "revid": 1375763523,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-history-of-algebra",
+   "title": "History of algebra",
+   "url": "https://en.wikipedia.org/wiki/History_of_algebra",
+   "revid": 1373863761,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

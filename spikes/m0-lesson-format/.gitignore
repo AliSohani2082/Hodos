@@ -1,0 +1,22 @@
+node_modules/
+.env
+.scratch/
+# Raw model output is large and reproducible from the committed fixtures and prompts; the reports are the record.
+results/*/generations.jsonl
+results/*/judgments.jsonl
+results/*/tokens.json
+results/_stub/
+# The blind-check key and pairs must stay with the person running the check until they have answered.
+results/*/q2-key.json
+results/*/q2-pairs.md
+
+# Dependencies, env and secrets (keep .env.example)
+.env.*
+!.env.example
+# Bun / TypeScript / editor output
+*.log
+*.tsbuildinfo
+dist/
+coverage/
+bun.lockb
+.DS_Store

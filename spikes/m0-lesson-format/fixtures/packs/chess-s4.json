@@ -1,0 +1,82 @@
+{
+ "id": "chess-s4",
+ "chunks": [
+  {
+   "id": "src:wiki-checkmate#c1",
+   "outlet": "src:wiki-checkmate",
+   "title": "Checkmate",
+   "text": "A mate may occur in as few as two moves on one side with all of the pieces still on the board (as in fool's mate, in the opening phase of the game), in a middlegame position (as in the 1956 game called the Game of the Century between Donald Byrne and Bobby Fischer), or after many moves with as few as three pieces in an endgame. In early Sanskrit chess (c. 500–700), the king could be captured and this ended the game. The Persians (c. 700–800) introduced the idea of warning that the king was under attack (announcing check in modern terminology). This was done to avoid the early and accidental end of a game. Later, the Persians added the additional rule that a king could not be moved into check or left in check. As a result, the king could not be captured, and mate was the only decisive way of ending a game. Before about 1600, the game could also be won by capturing all of the opponent's pieces, leaving just a bare king. This style of play is now called annihilation or robado. In Medieval times, players began to consider it nobler to win by checkmate, so annihilation became a half-win for a while, until it was abandoned."
+  },
+  {
+   "id": "src:wiki-checkmate#c2",
+   "outlet": "src:wiki-checkmate",
+   "title": "Checkmate",
+   "text": "Two major pieces (queens or rooks) can easily force mate on the edge of the board using a technique known as the ladder mate. The process is to put the two pieces on adjacent ranks or files and force the king to the side of the board by using one piece to check the king and the other to cut it off from going up the board. In the illustration, White mates by forcing the Black king to the edge, one row at a time. The ladder mate can be used to mate with two rooks, two queens, or a rook and a queen. e. (1) one queen, (2) one rook, (3) two bishops on opposite-colored squares, or (4) a bishop and a knight. The king must help in accomplishing all of these mates. If the winning side has more material, mates are easier. The mate with the queen is the most common, and easiest to achieve. It often occurs when a pawn queens. A mate with the rook is also common, but a mate with two bishops or with a bishop and knight occurs infrequently. The two-bishop mate is fairly easy to accomplish, but the bishop and knight checkmate is difficult and requires precision."
+  },
+  {
+   "id": "src:wiki-checkmate#c3",
+   "outlet": "src:wiki-checkmate",
+   "title": "Checkmate",
+   "text": "The first two diagrams show representatives of the basic mate positions with a queen, which can occur on any edge of the board. Naturally, the exact position can vary from the diagram. In the first of the mate positions, the queen is directly in front of the opposing king and the white king is protecting its queen. In the second mate position, the kings are in opposition and the queen mates on the rank (or file) of the king. With the side with the queen to move, checkmate can be forced in at most ten moves from any starting position, with optimal play by both sides, but usually fewer moves are required. In positions in which a pawn has just promoted to a queen, at most nine moves are required. In the position diagrammed, White checkmates easily by confining the black king to a rectangle and shrinking the rectangle to force the king to the edge of the board:"
+  },
+  {
+   "id": "src:wiki-checkmate#c4",
+   "outlet": "src:wiki-checkmate",
+   "title": "Checkmate",
+   "text": "The winning side must be careful to not stalemate the opposing king, whereas the defender would like to get into such a position. There are five general types of stalemate positions that can occur, which the stronger side must avoid. The first two are more common. 1. Kd3+ Kd5 2. Re4 Kd6 3. Kc4! Kc6 4. Re6+ Kc7 5. Kc5 Kd7 6. Kd5 Kc7 7. Rd6 Kb7 8. Rc6 Ka7 9. Kc5 Kb7 10. Kb5 Ka7 11. Rb6 Ka8 12. Kc6 Ka7 13. Kc7 Ka8 14. Ra6# (second mate position, rotated). There are two stalemate patterns: The two bishops mate is the checkmate of a bare king by the opponent's two bishops and king. The superior side is able to drive the bare king into a corner and force mate using the two bishops and king collaboratively. The only stipulation is that the two bishops must move on opposite-colored squares. Accomplishing the mate requires a maximum of 19 moves."
+  },
+  {
+   "id": "src:wiki-fool-s-mate#c1",
+   "outlet": "src:wiki-fool-s-mate",
+   "title": "Fool's mate",
+   "text": "The fool's mate is the fastest checkmate in chess delivered after the fewest possible moves from the game's starting position. It arises from the following moves (minor variations are possible): Fool's mate was named and described in The Royal Game of Chess-Play, a 1656 text by Francis Beale that adapted the work of the early chess writer Gioachino Greco. Prior to the mid-19th century, there was not a prevailing convention as to whether White or Black moved first; according to Beale, the matter was to be decided in some prior contest or decision of the players' choice. In Beale's example, Black was the player to move first, with each player making two moves to various squares or \"houses\", after which White achieved checkmate."
+  },
+  {
+   "id": "src:wiki-fool-s-mate#c2",
+   "outlet": "src:wiki-fool-s-mate",
+   "title": "Fool's mate",
+   "text": "g4 Qh4# There are eight distinct ways in which fool's mate can be reached. White may alternate the order of f- and g-pawn moves, Black may move their e-pawn to e6 or e5, and White may move their f-pawn to f3 or f4. Mating patterns similar to fool's mate can occur early in the game. Such patterns in historical games illustrate the weakness along the e1–h4 and e8–h5 diagonals early in the game. White can mate Black using a pattern that resembles fool's mate, though it takes at least an extra turn. If the typical fool's mate setup is played, except White plays h3 instead of g4, a similar forced mate can result: 2... Qh4+ 3. g3 Qxg3#. Like fool's mate, there are eight distinct ways for this to happen."
+  },
+  {
+   "id": "src:wiki-back-rank-checkmate#c1",
+   "outlet": "src:wiki-back-rank-checkmate",
+   "title": "Back-rank checkmate",
+   "text": "In chess, a back-rank checkmate (also known as a corridor mate) is a checkmate delivered by a rook or queen along the opponent's back rank (that is, the row closest to them) in which the mated king is unable to move up the board because the king is blocked by friendly pieces (usually pawns) on the second rank. Beginners are more likely to succumb to back-rank checkmate, as they are more likely to miss threats in general. At higher levels of play, though the mate itself does not occur very often, play is often affected by the possibility of it—being forced to prevent the mate at all costs may leave a player vulnerable to other threats and tactical ideas they might be more likely to miss."
+  },
+  {
+   "id": "src:wiki-back-rank-checkmate#c2",
+   "outlet": "src:wiki-back-rank-checkmate",
+   "title": "Back-rank checkmate",
+   "text": "Back-rank mates are often guarded against by a friendly rook or queen protecting the back rank. It may be possible, however, for the attacking side to deflect one of these pieces away from defensive duties, sacrifice a queen for one of them, or exchange one of them, or the pieces may simply be overworked. Rxd8#. Qxa8! Rxd8#. Qf3! Qf6! and Black still cannot take due to the back-rank mate. Back-rank threats can be guarded against more permanently by moving one of the pawns in front of the king to give the king a flight square (or luft). g6, giving the king a square on g7 to which it can safely move. h6 in this example would not do the job, as after the d3-rook moves, the h7-square is covered by the white bishop. g. Bb7? Qxc8+! Rxd7 when the queen once again cannot be taken due to the back-rank threat."
+  },
+  {
+   "id": "src:wiki-back-rank-checkmate#c3",
+   "outlet": "src:wiki-back-rank-checkmate",
+   "title": "Back-rank checkmate",
+   "text": "It is often not a good idea to play such pawn moves unless there is a pressing need to do so, as they can not only represent a loss of time, but may also allow enemy penetration around the squares weakened by the pawn advance. h6 is often played to \"put the question\" to a white bishop on g5, for example). (See also Fianchetto). Qf1 Rd1?? Rxd8#. Hooper, David; Whyld, Kenneth (1996) [First pub. 1992]. ). Oxford University Press. ISBN 0-19-280049-3. Schiller, Eric (1999). ). Cardoza Publishing. ISBN 0-940685-93-0. How to Play Chess:Back-rank mate audio. The United States Chess Federation – A Common Tactic: The Back Rank Problem by GM Susan Polgar, August 6, 2008"
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-checkmate",
+   "title": "Checkmate",
+   "url": "https://en.wikipedia.org/wiki/Checkmate",
+   "revid": 1374597621,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-fool-s-mate",
+   "title": "Fool's mate",
+   "url": "https://en.wikipedia.org/wiki/Fool's_mate",
+   "revid": 1379320423,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-back-rank-checkmate",
+   "title": "Back-rank checkmate",
+   "url": "https://en.wikipedia.org/wiki/Back-rank_checkmate",
+   "revid": 1356335821,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

@@ -1,0 +1,100 @@
+{
+ "id": "math-s3",
+ "chunks": [
+  {
+   "id": "src:wiki-prime-number#c1",
+   "outlet": "src:wiki-prime-number",
+   "title": "Prime number",
+   "text": "is finite. Because of Brun's theorem, it is not possible to use Euler's method to solve the twin prime conjecture, that there exist infinitely many twin primes. An arithmetic progression is a finite or infinite sequence of numbers such that consecutive numbers in the sequence all have the same difference. This difference is called the modulus of the progression. For example, is an infinite arithmetic progression with modulus 9. In an arithmetic progression, all the numbers have the same remainder when divided by the modulus; in this example, the remainder is 3. Because both the modulus 9 and the remainder 3 are multiples of 3, so is every element in the sequence. Therefore, this progression contains only one prime number, 3 itself. In general, the infinite progression"
+  },
+  {
+   "id": "src:wiki-prime-number#c2",
+   "outlet": "src:wiki-prime-number",
+   "title": "Prime number",
+   "text": "Before computers, mathematical tables listing all of the primes or prime factorizations up to a given limit were commonly printed. The oldest known method for generating a list of primes is called the sieve of Eratosthenes. The animation shows an optimized variant of this method. Another more asymptotically efficient sieving method for the same problem is the sieve of Atkin. In advanced mathematics, sieve theory applies similar methods to other problems. In addition to the aforementioned tests that apply to any natural number, some numbers of a special form can be tested for primality more quickly. For example, the Lucas–Lehmer primality test can determine whether a Mersenne number (one less than a power of two) is prime, deterministically, in the same time as a single iteration of the Miller–Rabin test. This is why since 1992 (as of October 2024) the largest known prime has always been a Mersenne prime. It is conjectured that there are infinitely many Mersenne primes. The following table gives the largest known primes of various types. Some of these primes have been found using distributed computing. In 2009, the Great Internet Mersenne Prime Search project was awarded a US$100,000 prize for first discovering a prime with at least 10 million digits."
+  },
+  {
+   "id": "src:wiki-prime-number#c3",
+   "outlet": "src:wiki-prime-number",
+   "title": "Prime number",
+   "text": "The Electronic Frontier Foundation also offers $150,000 and $250,000 for primes with at least 100 million digits and 1 billion digits, respectively. Prime numbers are of central importance to number theory but also have many applications to other areas within mathematics, including abstract algebra and elementary geometry. For example, it is possible to place prime numbers of points in a two-dimensional grid so that no three are in a line, or so that every triangle formed by three of the points has large area. Another example is Eisenstein's criterion, a test for whether a polynomial is irreducible based on divisibility of its coefficients by a prime number and its square."
+  },
+  {
+   "id": "src:wiki-prime-number#c4",
+   "outlet": "src:wiki-prime-number",
+   "title": "Prime number",
+   "text": "The concept of a prime number is so important that it has been generalized in different ways in various branches of mathematics. Generally, \"prime\" indicates minimality or indecomposability, in an appropriate sense. For example, the prime field of a given field is its smallest subfield that contains both 0 and 1. It is either the field of rational numbers or a finite field with a prime number of elements, whence the name. Often a second, additional meaning is intended by using the word prime, namely that any object can be, essentially uniquely, decomposed into its prime components. For example, in knot theory, a prime knot is a knot that is indecomposable in the sense that it cannot be written as the connected sum of two nontrivial knots. Any knot can be uniquely expressed as a connected sum of prime knots. The prime decomposition of 3-manifolds is another example of this type. Beyond mathematics and computing, prime numbers have potential connections to quantum mechanics, and have been used metaphorically in the arts and literature. They have also been used in evolutionary biology to explain the life cycles of cicadas."
+  },
+  {
+   "id": "src:wiki-sieve-of-eratosthenes#c1",
+   "outlet": "src:wiki-sieve-of-eratosthenes",
+   "title": "Sieve of Eratosthenes",
+   "text": "A prime number is a natural number that has exactly two distinct natural number divisors: the number 1 and itself. To find all the prime numbers less than or equal to a given integer n by Eratosthenes's method: To find all the prime numbers less than or equal to 30, proceed as follows. First, generate a list of natural numbers from 2 to 30: The first number in the list is 2; cross out every 2nd number in the list after 2 by counting up from 2 in increments of 2 (these will be all the multiples of 2 in the list): The next number in the list after 2 is 3; cross out every 3rd number in the list after 3 by counting up from 3 in increments of 3 (these will be all the multiples of 3 in the list):"
+  },
+  {
+   "id": "src:wiki-sieve-of-eratosthenes#c2",
+   "outlet": "src:wiki-sieve-of-eratosthenes",
+   "title": "Sieve of Eratosthenes",
+   "text": "e. all the multiples of 5): The next number not yet crossed out in the list after 5 is 7; the next step would be to cross out every 7th number in the list after 7, but they are all already crossed out at this point, as these numbers (14, 21, 28) are also multiples of smaller primes because 7 × 7 is greater than 30. The numbers not crossed out at this point in the list are all the prime numbers below 30: This algorithm produces all primes not greater than n. It includes a common optimization, which is to start enumerating the multiples of each prime i from i2. The time complexity of this algorithm is O(n log log n), provided the array update is an O(1) operation, as is usually the case."
+  },
+  {
+   "id": "src:wiki-sieve-of-eratosthenes#c3",
+   "outlet": "src:wiki-sieve-of-eratosthenes",
+   "title": "Sieve of Eratosthenes",
+   "text": "As Sorenson notes, the problem with the sieve of Eratosthenes is not the number of operations it performs but rather its memory requirements. For large n, the range of primes may not fit in memory; worse, even for moderate n, its cache use is highly suboptimal. The algorithm walks through the entire array A, exhibiting almost no locality of reference. A solution to these problems is offered by segmented sieves, where only portions of the range are sieved at a time. These have been known since the 1970s, and work as follows: , without an upper bound) by interleaving the generation of primes with the generation of their multiples (so that primes can be found in gaps between the multiples), where the multiples of each prime p are generated directly by counting up from the square of the prime in increments of p (or 2p for odd primes). The generation must be initiated only when the prime's square is reached, to avoid adverse effects on efficiency. It can be expressed symbolically under the dataflow paradigm as"
+  },
+  {
+   "id": "src:wiki-sieve-of-eratosthenes#c4",
+   "outlet": "src:wiki-sieve-of-eratosthenes",
+   "title": "Sieve of Eratosthenes",
+   "text": "Euler's proof of the zeta product formula contains a version of the sieve of Eratosthenes in which each composite number is eliminated exactly once. The same sieve was rediscovered and observed to take linear time by Gries & Misra (1978). It, too, starts with a list of numbers from 2 to n in order. On each step the first element is identified as the next prime, is multiplied with each element of the list (thus starting with itself), and the results are marked in the list for subsequent deletion. The initial element and the marked elements are then removed from the working sequence, and the process is repeated:"
+  },
+  {
+   "id": "src:wiki-fundamental-theorem-of-arithmetic#c1",
+   "outlet": "src:wiki-fundamental-theorem-of-arithmetic",
+   "title": "Fundamental theorem of arithmetic",
+   "text": "In mathematics, the fundamental theorem of arithmetic, also called the unique factorization theorem and prime factorization theorem, states that every integer greater than 1 is either prime or can be represented uniquely as a product of prime numbers, up to the order of the factors. For example, The theorem generalizes to other algebraic structures that are called unique factorization domains and include principal ideal domains, Euclidean domains, and polynomial rings over a field. However, the theorem does not hold for algebraic integers. This failure of unique factorization is one of the reasons for the difficulty of the proof of Fermat's Last Theorem. The implicit use of unique factorization in rings of algebraic integers is behind the error of many of the numerous false proofs that have been written during the 358 years between Fermat's statement and Wiles's proof."
+  },
+  {
+   "id": "src:wiki-fundamental-theorem-of-arithmetic#c2",
+   "outlet": "src:wiki-fundamental-theorem-of-arithmetic",
+   "title": "Fundamental theorem of arithmetic",
+   "text": "The fundamental theorem can be derived from Book VII, propositions 30, 31 and 32, and Book IX, proposition 14 of Euclid's Elements. If two numbers by multiplying one another make some number, and any prime number measure the product, it will also measure one of the original numbers. ) Proposition 30 is referred to as Euclid's lemma, and it is the key in the proof of the fundamental theorem of arithmetic. Any composite number is measured by some prime number. ) Proposition 31 is proved directly by infinite descent. Any number either is prime or is measured by some prime number. Proposition 32 is derived from proposition 31, and proves that the decomposition is possible."
+  },
+  {
+   "id": "src:wiki-fundamental-theorem-of-arithmetic#c3",
+   "outlet": "src:wiki-fundamental-theorem-of-arithmetic",
+   "title": "Fundamental theorem of arithmetic",
+   "text": "where p1 < p2 < ... < pk are primes and the ni are positive integers. This representation is commonly extended to all positive integers, including 1, by the convention that the empty product is equal to 1 (the empty product corresponds to k = 0). This representation is called the canonical representation of n, or the standard form of n. For example, where a finite number of the ni are positive integers, and the others are zero. Allowing negative exponents provides a canonical form for positive rational numbers. The canonical representations of the product, greatest common divisor (GCD), and least common multiple (LCM) of two numbers a and b can be expressed simply in terms of the canonical representations of a and b themselves:"
+  },
+  {
+   "id": "src:wiki-fundamental-theorem-of-arithmetic#c4",
+   "outlet": "src:wiki-fundamental-theorem-of-arithmetic",
+   "title": "Fundamental theorem of arithmetic",
+   "text": "However, integer factorization, especially of large numbers, is much more difficult than computing products, GCDs, or LCMs, so these formulas have limited use in practice. Many arithmetic functions are defined using the canonical representation. In particular, the values of additive and multiplicative functions are determined by their values on the powers of prime numbers. The proof of uniqueness uses Euclid's lemma (Elements VII, 30): If a prime divides the product of two integers, then it must divide at least one of these integers. It must be shown that every integer greater than 1 is either prime or a product of primes. Let n be an integer greater than 1 and make the inductive assumption that every integer greater than 1 and less than n is either prime or a product of primes. If n is prime, there is nothing more to prove. Otherwise, there are integers a and b,  where n = a b, and 1 < a ≤ b < n. By the inductive hypothesis, a = p1 p2 ⋅⋅⋅ pj and b = q1 q2 ⋅⋅⋅ qk are products of primes. But then n = a b = p1 p2 ⋅⋅⋅ pj q1 q2 ⋅⋅⋅ qk is a product of primes."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-prime-number",
+   "title": "Prime number",
+   "url": "https://en.wikipedia.org/wiki/Prime_number",
+   "revid": 1376977902,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-sieve-of-eratosthenes",
+   "title": "Sieve of Eratosthenes",
+   "url": "https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes",
+   "revid": 1378696777,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-fundamental-theorem-of-arithmetic",
+   "title": "Fundamental theorem of arithmetic",
+   "url": "https://en.wikipedia.org/wiki/Fundamental_theorem_of_arithmetic",
+   "revid": 1379891142,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

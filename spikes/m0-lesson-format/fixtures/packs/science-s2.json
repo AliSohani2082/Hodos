@@ -1,0 +1,82 @@
+{
+ "id": "science-s2",
+ "chunks": [
+  {
+   "id": "src:wiki-half-life#c1",
+   "outlet": "src:wiki-half-life",
+   "title": "Half-life",
+   "text": "The rate of this kind of reaction does not depend on the substrate concentration, [A]. Thus the concentration decreases linearly. In first order reactions, the rate of reaction will be proportional to the concentration of the reactant. Thus the concentration will decrease exponentially. In second order reactions, the rate of reaction is proportional to the square of the concentration. By integrating this rate, it can be shown that the concentration [A] of the reactant decreases following this formula: Some quantities decay by two exponential-decay processes simultaneously. In this case, the actual half-life T½ can be related to the half-lives t1 and t2 that the quantity would have if each of the decay processes acted in isolation:"
+  },
+  {
+   "id": "src:wiki-radioactive-decay#c1",
+   "outlet": "src:wiki-radioactive-decay",
+   "title": "Radioactive decay",
+   "text": "However, the biological effects of radiation due to radioactive substances were less easy to gauge. This gave the opportunity for many physicians and corporations to market radioactive substances as patent medicines. Examples were radium enema treatments, and radium-containing waters to be drunk as tonics. Marie Curie protested against this sort of treatment, warning that \"radium is dangerous in untrained hands\". Curie later died from aplastic anaemia, likely caused by exposure to ionizing radiation. By the 1930s, after a number of cases of bone necrosis and death of radium treatment enthusiasts, radium-containing medicinal products had been largely removed from the market (radioactive quackery)."
+  },
+  {
+   "id": "src:wiki-radioactive-decay#c2",
+   "outlet": "src:wiki-radioactive-decay",
+   "title": "Radioactive decay",
+   "text": "Radioactive decay results in a reduction of summed rest mass, once the released energy (the disintegration energy) has escaped in some way. Although decay energy is sometimes defined as associated with the difference between the mass of the parent nuclide products and the mass of the decay products, this is true only of rest mass measurements, where some energy has been removed from the product system. This is true because the decay energy must always carry mass with it, wherever it appears (see mass in special relativity) according to the formula E = mc2. The decay energy is initially released as the energy of emitted photons plus the kinetic energy of massive emitted particles (that is, particles that have rest mass). If these particles come to thermal equilibrium with their surroundings and photons are absorbed, then the decay energy is transformed to thermal energy, which retains its mass. Decay energy, therefore, remains associated with a certain measure of the mass of the decay system, called invariant mass, which does not change during the decay, even though the energy of decay is distributed among decay particles."
+  },
+  {
+   "id": "src:wiki-radioactive-decay#c3",
+   "outlet": "src:wiki-radioactive-decay",
+   "title": "Radioactive decay",
+   "text": "The energy of photons, the kinetic energy of emitted particles, and, later, the thermal energy of the surrounding matter, all contribute to the invariant mass of the system. Thus, while the sum of the rest masses of the particles is not conserved in radioactive decay, the system mass and system invariant mass (and also the system total energy) is conserved throughout any decay process. This is a restatement of the equivalent laws of conservation of energy and conservation of mass. In electron capture, some proton-rich nuclides were found to capture their own atomic electrons instead of emitting positrons, and subsequently, these nuclides emit only a neutrino and a gamma ray from the excited nucleus (and often also Auger electrons and characteristic X-rays, as a result of the re-ordering of electrons to fill the place of the missing captured electron). These types of decay involve the nuclear capture of electrons or emission of electrons or positrons, and thus acts to move a nucleus toward the ratio of neutrons to protons that has the least energy for a given total number of nucleons. This consequently produces a more stable (lower energy) nucleus."
+  },
+  {
+   "id": "src:wiki-radioactive-decay#c4",
+   "outlet": "src:wiki-radioactive-decay",
+   "title": "Radioactive decay",
+   "text": "A hypothetical process of positron capture, analogous to electron capture, is theoretically possible in antimatter atoms, but has not been observed, as complex antimatter atoms beyond antihelium are not experimentally available. Such a decay would require antimatter atoms at least as complex as beryllium-7, which is the lightest known isotope of normal matter to undergo decay by electron capture. Shortly after the discovery of the neutron in 1932, Enrico Fermi realized that certain rare beta-decay reactions immediately yield neutrons as an additional decay particle, so called beta-delayed neutron emission. Neutron emission usually happens from nuclei that are in an excited state, such as the excited 17O* produced from the beta decay of 17N. The neutron emission process itself is controlled by the nuclear force and therefore is extremely fast, sometimes referred to as \"nearly instantaneous\". Isolated proton emission was eventually observed in some elements. It was also found that some heavy elements may undergo spontaneous fission into products that vary in composition. In a phenomenon called cluster decay, specific combinations of neutrons and protons other than alpha particles (helium nuclei) were found to be spontaneously emitted from atoms."
+  },
+  {
+   "id": "src:wiki-exponential-decay#c1",
+   "outlet": "src:wiki-exponential-decay",
+   "title": "Exponential decay",
+   "text": "A quantity is subject to exponential decay if it decreases at a rate proportional to its current value. Symbolically, this process can be expressed by the following differential equation, where N is the quantity and λ (lambda) is a positive rate called the exponential decay constant, disintegration constant, rate constant, or transformation constant: A more intuitive characteristic of exponential decay for many people is the time required for the decaying quantity to fall to one half of its initial value. ) This time is called the half-life, and often denoted by the symbol t1/2. The half-life can be written in terms of the decay constant, or the mean lifetime, as:"
+  },
+  {
+   "id": "src:wiki-exponential-decay#c2",
+   "outlet": "src:wiki-exponential-decay",
+   "title": "Exponential decay",
+   "text": "where the final substitution, N0 = eC, is obtained by evaluating the equation at t = 0, as N0 is defined as being the quantity at t = 0. This is the form of the equation that is most commonly used to describe exponential decay. Any one of decay constant, mean lifetime, or half-life is sufficient to characterise the decay. The notation λ for the decay constant is a remnant of the usual notation for an eigenvalue. In this case, λ is the eigenvalue of the negative of the differential operator with N(t) as the corresponding eigenfunction. e. the individual lifetime of each object is exponentially distributed), which has a well-known expected value. We can compute it here using integration by parts."
+  },
+  {
+   "id": "src:wiki-exponential-decay#c3",
+   "outlet": "src:wiki-exponential-decay",
+   "title": "Exponential decay",
+   "text": "A quantity may decay via two or more different processes simultaneously. ) have different probabilities of occurring, and thus occur at different rates with different half-lives, in parallel. The total decay rate of the quantity N is given by the sum of the decay routes; thus, in the case of two processes: Exponential decay occurs in a wide variety of situations. Most of these fall into the domain of the natural sciences. Many decay processes that are often treated as exponential, are really only exponential so long as the sample is large and the law of large numbers holds. For small samples, a more general analysis is necessary, accounting for a Poisson process."
+  },
+  {
+   "id": "src:wiki-exponential-decay#c4",
+   "outlet": "src:wiki-exponential-decay",
+   "title": "Exponential decay",
+   "text": "Finance: a retirement fund will decay exponentially being subject to discrete payout amounts, usually monthly, and an input subject to a continuous interest rate. A differential equation dA/dt = input − output can be written and solved to find the time to reach any amount A, remaining in the fund. In simple glottochronology, the (debatable) assumption of a constant decay rate in languages allows one to estimate the age of single languages. (To compute the time of split between two languages requires additional assumptions, independent of exponential decay). The core routing protocol on the Internet, BGP, has to maintain a routing table in order to remember the paths a packet can be deviated to. When one of these paths repeatedly changes its state from available to not available (and vice versa), the BGP router controlling that path has to repeatedly add and remove the path record from its routing table (flaps the path), thus spending local resources such as CPU and RAM and, even more, broadcasting useless information to peer routers. To prevent this undesired behavior, an algorithm named route flapping damping assigns each route a weight that gets bigger each time the route changes its state and decays exponentially with time."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-half-life",
+   "title": "Half-life",
+   "url": "https://en.wikipedia.org/wiki/Half-life",
+   "revid": 1373221894,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-radioactive-decay",
+   "title": "Radioactive decay",
+   "url": "https://en.wikipedia.org/wiki/Radioactive_decay",
+   "revid": 1377221715,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-exponential-decay",
+   "title": "Exponential decay",
+   "url": "https://en.wikipedia.org/wiki/Exponential_decay",
+   "revid": 1358231453,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

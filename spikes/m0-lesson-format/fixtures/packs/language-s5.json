@@ -1,0 +1,100 @@
+{
+ "id": "language-s5",
+ "chunks": [
+  {
+   "id": "src:wiki-tone-linguistics#c1",
+   "outlet": "src:wiki-tone-linguistics",
+   "title": "Tone (linguistics)",
+   "text": "Most languages use pitch as intonation to convey prosody and pragmatics, but this does not make them tonal languages. In tonal languages, each syllable has an inherent pitch contour, and thus minimal pairs (or larger minimal sets) exist between syllables with the same segmental features (consonants and vowels) but different tones. Vietnamese and Chinese have heavily studied tone systems, as well as amongst their various dialects. Below is a table of the six Vietnamese tones and their corresponding tone accent or diacritics: In a number of East Asian languages, tonal differences are closely intertwined with phonation differences. In Vietnamese, for example, the ngã and sắc tones are both high-rising but the former is distinguished by having glottalization in the middle. Similarly, the nặng and huyền tones are both low-falling, but the nặng tone is shorter and pronounced with creaky voice at the end, while the huyền tone is longer and often has breathy voice. In some languages, such as Burmese, pitch and phonation are so closely intertwined that the two are combined in a single phonological system, where neither can be considered without the other. The distinctions of such systems are termed registers."
+  },
+  {
+   "id": "src:wiki-tone-linguistics#c2",
+   "outlet": "src:wiki-tone-linguistics",
+   "title": "Tone (linguistics)",
+   "text": "The tone register here should not be confused with register tone described in the next section. Kuang identified two types of phonation: pitch-dependent and pitch-independent. Contrast of tones has long been thought of as differences in pitch height. However, several studies pointed out that tone is actually multidimensional. Contour, duration, and phonation may all contribute to the differentiation of tones. Investigations from the 2010s using perceptual experiments seem to suggest phonation counts as a perceptual cue. Many languages use tone in a more limited way. In Japanese, fewer than half of the words have a drop in pitch; words contrast according to which syllable this drop follows. Such minimal systems are sometimes called pitch accent since they are reminiscent of stress accent languages, which typically allow one principal stressed syllable per word. However, there is debate over the definition of pitch accent and whether a coherent definition is even possible."
+  },
+  {
+   "id": "src:wiki-tone-linguistics#c3",
+   "outlet": "src:wiki-tone-linguistics",
+   "title": "Tone (linguistics)",
+   "text": "Both lexical or grammatical tone and prosodic intonation are cued by changes in pitch, as well as sometimes by changes in phonation. Lexical tone coexists with intonation, with the lexical changes of pitch like waves superimposed on larger swells. For example, Luksaneeyanawin (1993) describes three intonational patterns in Thai: falling (with semantics of \"finality, closedness, and definiteness\"), rising (\"non-finality, openness and non-definiteness\") and \"convoluted\" (contrariness, conflict and emphasis). The phonetic realization of these intonational patterns superimposed on the five lexical tones of Thai (in citation form) are as follows:"
+  },
+  {
+   "id": "src:wiki-tone-linguistics#c4",
+   "outlet": "src:wiki-tone-linguistics",
+   "title": "Tone (linguistics)",
+   "text": "With convoluted intonation, it appears that high and falling tone conflate, while the low tone with convoluted intonation has the same contour as rising tone with rising intonation. Languages with simple tone systems or pitch accent may have one or two syllables specified for tone, with the rest of the word taking a default tone. Such languages differ in which tone is marked and which is the default. In Navajo, for example, syllables have a low tone by default, whereas marked syllables have high tone. In the related language Sekani, however, the default is high tone, and marked syllables have low tone. There are parallels with stress: English stressed syllables have a higher pitch than unstressed syllables."
+  },
+  {
+   "id": "src:wiki-standard-chinese-phonology#c1",
+   "outlet": "src:wiki-standard-chinese-phonology",
+   "title": "Standard Chinese phonology",
+   "text": "The phonology of Standard Chinese has historically derived from the Beijing dialect of Mandarin. However, pronunciation varies widely among speakers, who may introduce elements of their local varieties. Television and radio announcers are chosen for their ability to affect a standard accent. e. vowels and consonants—but also tones, and each syllable has one. In addition to the four main tones, there is a neutral tone that appears on weak syllables. This article uses the International Phonetic Alphabet (IPA) to compare the phonetic values corresponding to syllables romanized with pinyin. The sounds shown in parentheses are sometimes not analyzed as separate phonemes; for more on these, see § Denti-alveolar and retroflex series below. Excluding these, and excluding the glides [j], [ɥ], and [w], there are 19 consonant phonemes in the inventory."
+  },
+  {
+   "id": "src:wiki-standard-chinese-phonology#c2",
+   "outlet": "src:wiki-standard-chinese-phonology",
+   "title": "Standard Chinese phonology",
+   "text": "Between pairs of plosives or affricates having the same place of articulation and manner of articulation, the primary distinction is not voiced vs. voiceless (as in French or Russian), but unaspirated vs. aspirated (as in Scottish Gaelic or Icelandic). The unaspirated plosives and affricates may however become voiced in weak syllables (see § Syllable reduction below). In pinyin, an unaspirated/aspirated pair such as /p/ and /pʰ/ is represented with b and p respectively. More details about the individual consonant sounds are given in the following table. All of the consonants may occur as the initial sound of a syllable, with the exception of /ŋ/ (unless the zero initial is assigned to this phoneme; see below). Excepting the rhotic coda, the only consonants that can appear in syllable coda (final) position are /n/ and /ŋ/ (although [m] may occur as an allophone of /n/ before labial consonants in fast speech). Final /n/, /ŋ/ may be pronounced without complete oral closure, resulting in a syllable that in fact ends with a long nasalized vowel. See also § Syllable reduction, below."
+  },
+  {
+   "id": "src:wiki-standard-chinese-phonology#c3",
+   "outlet": "src:wiki-standard-chinese-phonology",
+   "title": "Standard Chinese phonology",
+   "text": "The consonants listed in the first table above as denti-alveolar are sometimes described as alveolars, and sometimes as dentals. The affricates and the fricative are particularly often described as dentals; these are generally pronounced with the tongue on the lower teeth. The retroflex consonants (like those of Polish) are actually apical rather than subapical, and so are considered by some authors not to be truly retroflex; they may be more accurately called post-alveolar. Some speakers not from Beijing may lack the retroflexes in their native dialects, and may thus replace them with dentals."
+  },
+  {
+   "id": "src:wiki-standard-chinese-phonology#c4",
+   "outlet": "src:wiki-standard-chinese-phonology",
+   "title": "Standard Chinese phonology",
+   "text": "A full syllable such as ai, in which the vowel is not preceded by any of the standard initial consonants or glides, is said to have a null initial or zero onset. This may be realized as a consonant sound: [ʔ] and [ɣ] are possibilities, as are [ŋ] and [ɦ] in some non-standard varieties. It has been suggested by San Duanmu that such an onset be regarded as a special phoneme, or as an instance of the phoneme /ŋ/, although it can also be treated as no phoneme (absence of onset). By contrast, in the case of the particle 啊, a, which is a weak onset-less syllable, linking occurs with the previous syllable (as described under § Syllable reduction, below). When a stressed vowel-initial Chinese syllable follows a consonant-final syllable, the consonant does not directly link with the vowel. Instead, the zero onset seems to intervene in between. 棉袄; mián'ǎo; 'cotton jacket' becomes [mjɛnʔau], [mjɛnɣau]. However, in connected speech none of these output forms is natural. Instead, when the words are spoken together the most natural pronunciation is rather similar to [mjɛ̃ːau], in which there is no nasal closure or any version of the zero onset, and instead nasalization of the vowel occurs."
+  },
+  {
+   "id": "src:wiki-pinyin#c1",
+   "outlet": "src:wiki-pinyin",
+   "title": "Pinyin",
+   "text": "Matteo Ricci, a Jesuit missionary in China, wrote the first book that used the Latin alphabet to write Chinese, entitled Xizi Qiji (Hsi-tzŭ Ch'i-chi; 西字奇蹟; 'Miracle of Western Letters') and published in Beijing in 1605. Twenty years later, fellow Jesuit Nicolas Trigault published 'Aid to the Eyes and Ears of Western Literati' (西儒耳目資; Xīrú ěrmù zī; Hsi ju erh mu tzŭ) in Hangzhou. Neither book had any influence among the contemporary Chinese literati, and the romanizations they introduced primarily were useful for Westerners. During the late Qing, the reformer Song Shu (1862–1910) proposed that China adopt a phonetic writing system. A student of the scholars Yu Yue and Zhang Taiyan, Song had observed the effect of the kana syllabaries and Western learning during his visits to Japan. While Song did not himself propose a transliteration system for Chinese, his discussion ultimately led to a proliferation of proposed schemes. The Wade–Giles system was produced by Thomas Wade in 1859, and further improved by Herbert Giles, presented in Chinese–English Dictionary (1892). It was popular, and was used in English-language publications outside China until 1979."
+  },
+  {
+   "id": "src:wiki-pinyin#c2",
+   "outlet": "src:wiki-pinyin",
+   "title": "Pinyin",
+   "text": "In 1943, the US military tapped Yale University to develop another romanization system for Mandarin Chinese intended for pilots flying over China—much more than previous systems, the result appears very similar to modern Hanyu Pinyin. Chinese phonology is generally described in terms of initials (声母; 聲母; shēngmǔ) and finals (韵母; 韻母; yùnmǔ). This is distinct from the concept of consonant and vowel sounds as basic units in traditional (and most other phonetic systems used to describe the Chinese language). Every syllable in Standard Chinese can be described as a pair of one initial and one final, except for the special syllable er or when a trailing -r is considered part of a syllable (a phenomenon known as erhua). The latter case, though a common practice in some sub-dialects, is rarely used in official publications. e. when a \"medial\" is placed in front of the final. For example, the medials [i] and [u] are pronounced with such tight openings at the beginning of a final that some native Chinese speakers (especially when singing) pronounce yī (衣; 'clothes'), officially pronounced /í/, as /jí/ and wéi (围; 圍; 'to enclose'), officially pronounced /uěi/, as /wěi/ or /wuěi/."
+  },
+  {
+   "id": "src:wiki-pinyin#c3",
+   "outlet": "src:wiki-pinyin",
+   "title": "Pinyin",
+   "text": "Often these medials are treated as separate from the finals rather than as part of them; this convention is followed in the chart of finals below. In each cell below, the pinyin letters assigned to each initial are accompanied by their phonetic realizations in brackets, notated according to the International Phonetic Alphabet. In each cell below, the first line indicates the International Phonetic Alphabet (IPA) transcription, the second indicates pinyin for a standalone (no-initial) form, and the third indicates pinyin for a combination with an initial. Other than finals modified by an -r, which are omitted, the following is an exhaustive table of all possible finals. The only syllable-final consonants in Standard Chinese are -n, -ng, and -r, the last of which is attached as a grammatical suffix. A Chinese syllable ending with any other consonant either is from a non-Mandarin language (a southern Chinese language such as Cantonese, reflecting final consonants in Old Chinese), or indicates the use of a non-pinyin romanization system, such as one that uses final consonants to indicate tones."
+  },
+  {
+   "id": "src:wiki-pinyin#c4",
+   "outlet": "src:wiki-pinyin",
+   "title": "Pinyin",
+   "text": "Technically, i, u, ü without a following vowel are finals, not medials, and therefore take the tone marks, but they are more concisely displayed as above. In addition, ê [ɛ] (欸; 誒) and syllabic nasals m (呒, 呣), n (嗯, 唔), ng (嗯, 𠮾) are used as interjections or in neologisms; for example, pinyin defines the names of several pinyin letters using -ê finals. According to the Scheme for the Chinese Phonetic Alphabet, ng can be abbreviated with the shorthand ŋ. However, this shorthand is rarely used due to difficulty of entering it on computers. The pinyin system also uses four diacritics to mark the tones of Mandarin. In the pinyin system, four main tones of Mandarin are shown by diacritics: ā, á, ǎ, and à. There is no symbol or diacritic for the neutral tone: a. The diacritic is placed over the letter that represents the syllable nucleus, unless that letter is missing. Tones are used in Hanyu Pinyin symbols, and they do not appear in Chinese characters. Tones are written on the finals of Chinese pinyin. If the tone mark is written over an i, then it replaces the tittle, as in yī."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-tone-linguistics",
+   "title": "Tone (linguistics)",
+   "url": "https://en.wikipedia.org/wiki/Tone_(linguistics)",
+   "revid": 1379552375,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-standard-chinese-phonology",
+   "title": "Standard Chinese phonology",
+   "url": "https://en.wikipedia.org/wiki/Standard_Chinese_phonology",
+   "revid": 1377646072,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-pinyin",
+   "title": "Pinyin",
+   "url": "https://en.wikipedia.org/wiki/Pinyin",
+   "revid": 1379787349,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}
