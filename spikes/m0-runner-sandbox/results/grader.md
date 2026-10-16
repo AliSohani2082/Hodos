@@ -1,0 +1,15 @@
+| ID | Claim | Expected | Actual | Result |
+|---|---|---|---|---|
+| G-ISO-1 | the grader runs as a DIFFERENT uid (10001) from the learner (10002), in a separate process | learner my_uid=10002 and a live process with uid 10001 (the grader) is present | my_uid=10002 grader_pid=2 | PASS |
+| G-ISO-2 | the learner cannot read the grader's memory/env/maps/fds (different uid), so the hidden tests and nonce stay unreadable | /proc/<grader>/{environ,mem,maps,fd} all EACCES/EPERM; no canary or answer-key found in /proc or the sandbox fs | grader_slots={'environ': 'EACCES', 'mem': 'EACCES', 'maps': 'EACCES', 'fd': 'EACCES'} canary_hits=[] | PASS |
+| G-IMG-1 | the baked image contains no hidden-test source or canary; the hidden tests exist only at run time, in the grader's memory | grep over /opt,/etc,/usr/local/bin in the image finds nothing (rc=1, no output) | rc=1 stdout='' stderr='' | PASS |
+| G-CALL-1 | a correct solution passes the hidden tests; a wrong one fails (graded by the isolated grader) | correct submit -> passed 7/7; wrong submit -> failed | good=passed {'passed': 7, 'total': 7} bad=failed {'passed': 2, 'total': 7} | PASS |
+| G-CALL-2 | a learner that exits early or hangs CANNOT forge a pass: the grader reports failure/death, never a pass | early os._exit(0) -> not passed; 30 s hang -> not passed (timeout) | early=failed/None hang=failed/None | PASS |
+| G-FORGE-1 | a learner printing a fake ALI40-RESULT pass frame on its own stdout does NOT forge a pass | verdict != passed; the fake frame appears only in the captured learner stdout, never as the runner's frame | verdict=failed fake_in_learner_stdout=True job_frame_nonce_ok=True | PASS |
+| G-NONCE-1 | a frame carrying the wrong nonce is rejected (the learner cannot guess the 128-bit per-run nonce) | parse_frame -> (None, nonce_mismatch) | frame=None problem=nonce_mismatch | PASS |
+| G-NONCE-2 | a nonce is single-use: replaying a previously valid frame is rejected | first parse ok; replay -> (None, nonce_replayed) | first_ok=True replay_problem=nonce_replayed | PASS |
+| G-NONCE-3 | validate_call_frame rejects a non-bool 'ok' (a truthy/lying object cannot pass a test) | (None, result_not_bool) | res=None problem=result_not_bool | PASS |
+| G-REF-1 | tier-1: the learner's container job carries ONLY inputs (stdin); the reference solution and expected outputs never enter it | job cases have key set {'stdin'} only; reference source not present in the learner job | case_keys=['stdin'] reference_in_job=False | PASS |
+| G-REF-2 | tier-1 submit grades correctly with expected compared OUTSIDE, and runs the reference in a SEPARATE container (2 per submit) | correct submit -> passed; wrong -> failed; every sum-two submit logs containers=2 | ok=passed/{'passed': 6, 'total': 6} bad=failed/{'passed': 0, 'total': 6} containers=[2, 2] | PASS |
+| G-REF-3 | tier-2 (call) submit uses a single container (grader + learner co-located, isolated by uid) | every sort-list submit logs containers=1 | containers=[1, 1, 1, 1, 1] | PASS |
+| G-CLEAN-1 | no containers or supervisor processes are left behind by the suite | none | {"ali40_containers": [], "sandbox_init_procs": 0} | PASS |

@@ -1,0 +1,37 @@
+[
+ {
+  "id": "GV-RUN-0",
+  "claim": "runsc is present, checksum-verified, and runs on this kernel",
+  "expected": "runsc --version prints a release",
+  "actual": "runsc version release-20261005.0",
+  "ok": true
+ },
+ {
+  "id": "GV-CALL-1",
+  "claim": "under gVisor, a correct solution passes the hidden tests and a wrong one fails (honest grading)",
+  "expected": "good -> all ok; wrong -> some fail",
+  "actual": "good_all_ok=True (problem=None) wrong_all_ok=False (problem=None)",
+  "ok": true
+ },
+ {
+  "id": "GV-ISO-1",
+  "claim": "under gVisor, the hidden tests remain unreadable from the learner and no pass is forged",
+  "expected": "leaked=False and not a forced pass",
+  "actual": "leaked=False forged_pass=False grader_pid=2 grader_access={'environ': 'EACCES', 'mem': 'EACCES', 'maps': 'EACCES', 'fd': 'EACCES', 'cmdline': 'READ:62'}",
+  "ok": true
+ },
+ {
+  "id": "GV-NET-1",
+  "claim": "under gVisor, no network is reachable and no host canary is hit",
+  "expected": "net_ok=False, 0 canary hits",
+  "actual": "net_ok=False canary_hits=[]",
+  "ok": true
+ },
+ {
+  "id": "GV-ESC-1",
+  "claim": "under gVisor, no host container-engine socket or pid-1 root is reachable",
+  "expected": "sockets_exist=False",
+  "actual": "sockets_exist=False",
+  "ok": true
+ }
+]

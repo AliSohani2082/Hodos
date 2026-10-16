@@ -1,0 +1,28 @@
+{
+ "call_run_ms": {
+  "n": 20,
+  "p50": 969,
+  "p95": 1592,
+  "min": 847,
+  "max": 1592,
+  "mean": 1070
+ },
+ "io_submit_ms": {
+  "n": 20,
+  "p50": 1224,
+  "p95": 1802,
+  "min": 815,
+  "max": 1802,
+  "mean": 1255
+ },
+ "concurrency": {
+  "parallel": 3,
+  "wall_ms": 2598,
+  "verdicts": {
+   "2": "passed",
+   "0": "passed",
+   "1": "passed"
+  }
+ },
+ "note": "rootless podman 6.1.2 + crun; measured end-to-end through the HTTP API incl. container create/start/run/teardown; io_submit runs the reference in a 2nd container."
+}
