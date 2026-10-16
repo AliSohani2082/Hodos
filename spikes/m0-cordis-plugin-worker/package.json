@@ -4,14 +4,23 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Throwaway M0 spike (b): cordis on Bun and plugin-worker isolation. Not imported by the app.",
-  "engines": { "bun": ">=1.4.0", "node": ">=24" },
+  "engines": {
+    "bun": ">=1.4.0",
+    "node": ">=24"
+  },
   "scripts": {
     "cordis:bun": "bun run src/cordis/lifecycle.ts",
     "cordis:node": "node --expose-gc src/cordis/lifecycle.ts",
     "cordis:diff": "bun run scripts/diff-cordis.ts",
-    "cordis:decorators": "bun run src/cordis/decorators-bun.ts"
+    "cordis:decorators": "bun run src/cordis/decorators-bun.ts",
+    "bench:latency": "bun run src/bench/latency.ts",
+    "bench:render": "bun run scripts/render-latency.ts",
+    "compat:bun": "bun run scripts/compat-bun.ts"
   },
   "dependencies": {
-    "cordis": "4.0.0-rc.11"
+    "cordis": "4.0.0-rc.11",
+    "isolated-vm": "7.0.1",
+    "quickjs-emscripten": "0.32.0",
+    "workerd": "1.20261016.1"
   }
 }
