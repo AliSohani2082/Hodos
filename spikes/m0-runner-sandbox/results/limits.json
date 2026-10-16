@@ -1,0 +1,142 @@
+[
+ {
+  "id": "L-ID-1",
+  "claim": "learner runs non-root with an empty capability set (effective, permitted AND bounding), no_new_privs, seccomp filter",
+  "expected": "uid=10002 CapEff=0 CapBnd=0 NoNewPrivs=1 Seccomp=2",
+  "actual": "uid=10002 CapEff=0000000000000000 CapBnd=0000000000000000 NoNewPrivs=1 Seccomp=2",
+  "ok": true
+ },
+ {
+  "id": "L-FS-1",
+  "claim": "the only writable path is /work (16 MiB tmpfs); rootfs, /tmp, /etc, /opt and /dev/shm are read-only",
+  "expected": "writable: /work only; every other probed path EROFS",
+  "actual": "{\"/\": \"EROFS\", \"/opt/ali40\": \"EROFS\", \"/etc\": \"EROFS\", \"/usr\": \"EROFS\", \"/tmp\": \"EROFS\", \"/work\": \"writable\", \"/dev/shm\": \"EROFS\", \"/run\": \"EROFS\"}",
+  "ok": true
+ },
+ {
+  "id": "L-ENV-1",
+  "claim": "no application environment leaks into the sandbox",
+  "expected": "environ keys subset of {PATH, LANG}",
+  "actual": "['LANG', 'PATH']",
+  "ok": true
+ },
+ {
+  "id": "L-NOSOCK-1",
+  "claim": "no host container-engine socket and no host bind mount is visible (TM-013)",
+  "expected": "no docker/podman/containerd/crio socket path exists; no mount under /home,/run/user,/var/run,...",
+  "actual": "sockets_present=[] suspicious_mounts=[] all_mounts=['/', '/dev', '/dev/full', '/dev/mqueue', '/dev/null', '/dev/pts', '/dev/random', '/dev/shm', '/dev/tty', '/dev/urandom', '/dev/zero', '/etc/hostname', '/proc', '/proc/acpi', '/proc/asound', '/proc/bus', '/proc/fs', '/proc/interrupts', '/proc/irq', '/proc/kcore', '/proc/keys', '/proc/scsi', '/proc/sys', '/proc/sysrq-trigger', '/proc/timer_list', '/run/.containerenv', '/sys', '/sys/devices/system/cpu/cpu0/thermal_throttle', '/sys/devices/system/cpu/cpu1/thermal_throttle', '/sys/devices/system/cpu/cpu2/thermal_throttle', '/sys/devices/system/cpu/cpu3/thermal_throttle', '/sys/devices/system/cpu/cpu4/thermal_throttle', '/sys/devices/system/cpu/cpu5/thermal_throttle', '/sys/devices/system/cpu/cpu6/thermal_throttle', '/sys/devices/system/cpu/cpu7/thermal_throttle', '/sys/devices/virtual/powercap', '/sys/firmware', '/sys/fs/cgroup', '/work']",
+  "ok": true
+ },
+ {
+  "id": "L-NET-1",
+  "claim": "no network: only loopback, no route; TCP/UDP/DNS/abstract-unix/raw to dummy host listeners and public IPs all fail",
+  "expected": "interfaces=['lo'], routes=0, zero host listener hits, raw socket EPERM",
+  "actual": "interfaces=['lo'] routes=0 hits=[] results={'tcp.host_loopback_canary': 'ECONNREFUSED', 'tcp.host_lan_canary': 'ENETUNREACH', 'tcp.public_dns_53': 'ENETUNREACH', 'tcp.public_443': 'ENETUNREACH', 'udp.dns_1.1.1.1': 'ENETUNREACH', 'dns.example.com': 'FAILED:gaierror', 'unix_abstract.host_canary': 'ECONNREFUSED', 'raw_socket': 'EPERM', 'af_packet': 'EPERM'}",
+  "ok": true
+ },
+ {
+  "id": "L-PID-1",
+  "claim": "PID cap 64 (cgroup pids.max): bounded fork loop stops with EAGAIN near the cap; kernel counts the hits",
+  "expected": "fork.error=EAGAIN, children in [55,63], pids.events max >= 1, pids.max=64",
+  "actual": "fork.error=EAGAIN children=62 pids.peak=64 pids.events={'max': '1'} pids.max=64",
+  "ok": true
+ },
+ {
+  "id": "L-MEM-1",
+  "claim": "memory cap 256 MiB (no swap): allocator is OOM-killed, supervisor survives and reports",
+  "expected": "learner exit -9, never reaches 'survived', oom_kill>=1, last alloc < 256 MiB",
+  "actual": "exit=-9 last_alloc_mib=240 oom_kill=1 memory.peak=256MiB survived=False",
+  "ok": true
+ },
+ {
+  "id": "L-DISK-1",
+  "claim": "disk cap: the /work tmpfs is 16 MiB (ENOSPC), one file is capped at 8 MiB (EFBIG), /dev/shm is read-only",
+  "expected": "disk.error=ENOSPC with written <= 16 MiB; fsize.error=EFBIG; shm.error=EROFS",
+  "actual": "disk.error=ENOSPC written_mib=15 fsize.error=EFBIG shm.error=EROFS",
+  "ok": true
+ },
+ {
+  "id": "L-DISK-2",
+  "claim": "inode exhaustion of /work is bounded (podman cannot set nr_inodes; the 256 MiB memory cap is the real bound)",
+  "expected": "60k empty files either hit ENOSPC or complete without killing the supervisor/host",
+  "actual": "inodes.created=60000 inodes.error=none exit=0 memory.peak=70MiB",
+  "ok": true
+ },
+ {
+  "id": "L-OUT-1",
+  "claim": "output cap: an unbounded stdout+stderr flood is cut by the supervisor (kept 32 KiB/stream, killed past 8x)",
+  "expected": "reason=output_flood, kept <= 32 KiB per stream, killed within 2 s, runner stdout stays 1 line",
+  "actual": "reason=output_flood stdout_kept=32768 stderr_kept=32768 read_total=692224 ms=38",
+  "ok": true
+ },
+ {
+  "id": "L-TIME-1",
+  "claim": "wall-time cap: busy loop killed at the 2.0 s per-case limit and nothing survives",
+  "expected": "reason=timeout, 2.0 s <= ms < 2.5 s, kill_ms < 250",
+  "actual": "reason=timeout ms=2023 kill_ms=10",
+  "ok": true
+ },
+ {
+  "id": "L-TIME-2",
+  "claim": "a sleeping program is also killed at the wall limit",
+  "expected": "reason=timeout",
+  "actual": "reason=timeout ms=2035",
+  "ok": true
+ },
+ {
+  "id": "L-CPU-1",
+  "claim": "CPU cap (cpus=1): 4 spinning processes for 1.5 s wall consume ~1.5 CPU-s, not 6",
+  "expected": "cgroup CPU usage <= 2.2 s (4x1.5 = 6.0 s uncapped)",
+  "actual": "cpu_usage_s=1.88 wall_s=1.57 nr_throttled=16",
+  "ok": true
+ },
+ {
+  "id": "L-API-1",
+  "claim": "runner API requires the per-service secret",
+  "expected": "no secret -> 401; wrong secret -> 401",
+  "actual": "none=401 wrong=401",
+  "ok": true
+ },
+ {
+  "id": "L-API-2",
+  "claim": "callers cannot choose mounts, network, image, limits, caps or sockets: every such field is rejected before any container starts",
+  "expected": "all 400 unknown_fields:<field>",
+  "actual": "{\"mounts\": [400, \"unknown_fields:mounts\"], \"volumes\": [400, \"unknown_fields:volumes\"], \"network\": [400, \"unknown_fields:network\"], \"image\": [400, \"unknown_fields:image\"], \"privileged\": [400, \"unknown_fields:privileged\"], \"limits\": [400, \"unknown_fields:limits\"], \"env\": [400, \"unknown_fields:env\"], \"cap_add\": [400, \"unknown_fields:cap_add\"], \"docker_socket\": [400, \"unknown_fields:docker_socket\"]}",
+  "ok": true
+ },
+ {
+  "id": "L-API-3",
+  "claim": "only the learner-code profile is enabled; other \u00a79.4 profiles and oversized submissions are rejected",
+  "expected": "agent-job -> 400 profile_not_enabled; 70 KB submission -> 413",
+  "actual": "agent-job=400/profile_not_enabled big=413/submission_too_large",
+  "ok": true
+ },
+ {
+  "id": "L-API-4",
+  "claim": "every job spec is logged and rejected specs are counted (alert hook); the logged podman argv has no socket/volume/privileged",
+  "expected": "policy rejects == 11, unauthorized == 2, REJECTED log lines == 13, logged argv contains --network none and none of the forbidden flags",
+  "actual": "counters={'jobs': 9, 'rejected': 11, 'unauthorized': 2} rejected_events=13 net_none=True forbidden=[]",
+  "ok": true
+ },
+ {
+  "id": "L-RUN-1",
+  "claim": "a correct Python submission passes the practice tests; a wrong one fails with per-test feedback",
+  "expected": "correct -> passed (3/3), wrong -> failed (0/3)",
+  "actual": "correct=passed [True, True, True] wrong=failed [False, False, False]",
+  "ok": true
+ },
+ {
+  "id": "L-PERF-1",
+  "claim": "end-to-end latency of a 3-case run (container create+start+run+teardown), 20 sequential runs",
+  "expected": "recorded (no threshold)",
+  "actual": "p50=864.5 ms p95=1199 ms min=677 max=1356",
+  "ok": true
+ },
+ {
+  "id": "L-CLEAN-1",
+  "claim": "no containers or supervisor processes are left behind by the suite",
+  "expected": "none",
+  "actual": "{\"ali40_containers\": [], \"sandbox_init_procs\": 0}",
+  "ok": true
+ }
+]

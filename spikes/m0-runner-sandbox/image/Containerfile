@@ -1,0 +1,10 @@
+# learner-code sandbox image (ALI-40 spike). Base pinned by index digest (python:3.13-slim).
+FROM docker.io/library/python@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
+
+# The trusted in-container code is baked in, root-owned and read-only, so the runner never
+# bind-mounts anything from the host into the sandbox (no caller-chosen or host mounts at all).
+COPY --chmod=0444 *.py /opt/ali40/
+
+# No application user is created on purpose: sandbox_init.py (PID 1, container-root) drops
+# children to the numeric uids 10001 (grader) and 10002 (learner) itself.
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 LANG=C.UTF-8

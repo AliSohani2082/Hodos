@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.env
+# local state written by the runner and the test drivers
+runs/
+.tools/
+image/IMAGE_ID
+*.log
+# raw per-attack transcripts are regenerated; the summary tables under results/ are committed
+results/raw/
