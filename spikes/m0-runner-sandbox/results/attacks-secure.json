@@ -1,0 +1,322 @@
+[
+ {
+  "id": "read-proc-grader",
+  "category": "read",
+  "claim": "read the grader's /proc/{environ,mem,maps,fd,cmdline}",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'leaked': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "read-fs-walk",
+  "category": "read",
+  "claim": "walk the filesystem for the hidden-test canary / answer key",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'leaked': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "read-ptrace",
+  "category": "read",
+  "claim": "PTRACE_ATTACH the grader and pid 1",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'attached': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "read-vm-readv",
+  "category": "read",
+  "claim": "process_vm_readv the grader's memory",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'read_ok': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "read-env",
+  "category": "read",
+  "claim": "dump own env and /proc/1/environ for the nonce",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'env_leak': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "read-inherited-fds",
+  "category": "read",
+  "claim": "read inherited fds 0..255 for the result pipe / socket contents",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'leaked': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "read-ipc",
+  "category": "read",
+  "claim": "scan /dev/shm, /proc/net/unix and sysv IPC",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'leaked': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "kill-grader",
+  "category": "kill",
+  "claim": "SIGKILL/SIGSTOP/SIGTERM the grader",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'killed': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "kill-supervisor",
+  "category": "kill",
+  "claim": "signal pid 1 (the supervisor) with SIGKILL/SIGTERM/SIGSTOP",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'sent': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "forge-stdout-frame",
+  "category": "forge",
+  "claim": "print a fake ALI40-RESULT pass frame on stdout (x50)",
+  "expected": "contained: not_passed, no_leak",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "forge-write-fds",
+  "category": "forge",
+  "claim": "open /proc/1/fd/1, /dev/stdout and grader fds, write a fake frame",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'wrote': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "forge-early-exit",
+  "category": "forge",
+  "claim": "exit 0 before any test runs",
+  "expected": "contained: not_passed, no_leak",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "forge-colocated-pass",
+  "category": "forge",
+  "claim": "read the nonce + hidden test names, print a fully valid forged pass frame, exit before the grader runs",
+  "expected": "contained: not_passed, no_leak",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "steal-nonce",
+  "category": "forge",
+  "claim": "steal the per-run nonce from own env / grader env / grader mem",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'nonce_found': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "forge-socket-protocol",
+  "category": "forge",
+  "claim": "grab the RPC socket fd and send junk / oversize / wrong-id / never reply",
+  "expected": "contained: not_passed, no_leak",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "forge-lying-return",
+  "category": "forge",
+  "claim": "return NaN / lying __eq__ across the RPC boundary",
+  "expected": "contained: not_passed, no_leak",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "forge-monkeypatch",
+  "category": "forge",
+  "claim": "monkeypatch json/sys.modules/the learner harness",
+  "expected": "contained: not_passed, no_leak",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "dos-fork-bomb",
+  "category": "dos",
+  "claim": "unbounded fork bomb",
+  "expected": "contained: not_passed, no_leak, no_leftovers",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "dos-thread-bomb",
+  "category": "dos",
+  "claim": "unbounded thread creation",
+  "expected": "contained: not_passed, no_leak, no_leftovers",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "dos-disk-fill",
+  "category": "dos",
+  "claim": "fill the /work tmpfs",
+  "expected": "contained: not_passed, no_leak, no_leftovers",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "dos-mem-bomb",
+  "category": "dos",
+  "claim": "allocate until OOM",
+  "expected": "contained: not_passed, no_leak, no_leftovers",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "dos-cpu-spin",
+  "category": "dos",
+  "claim": "infinite CPU loop (wall-time cap)",
+  "expected": "contained: not_passed, no_leak, no_leftovers",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "dos-output-flood",
+  "category": "dos",
+  "claim": "flood stdout",
+  "expected": "contained: not_passed, no_leak, no_leftovers",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "dos-import-hang",
+  "category": "dos",
+  "claim": "hang during import (before my_sort is defined)",
+  "expected": "contained: not_passed, no_leak, no_leftovers",
+  "actual": "verdict=failed error=None obs={} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "net-exfil",
+  "category": "network",
+  "claim": "TCP/UDP/DNS/raw to loopback canary and public IPs",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'net_ok': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "escape-sockets",
+  "category": "escape",
+  "claim": "open host container-engine sockets / pid1 root",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'sockets_exist': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "escape-privs",
+  "category": "escape",
+  "claim": "setuid(0), chroot, usable device via mknod, unshare(NEWUSER)",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'escaped': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "escape-cgroup-proc",
+  "category": "escape",
+  "claim": "write cgroup / /proc/sys / core_pattern / sysrq / self mem",
+  "expected": "contained: not_passed, no_leak, obs",
+  "actual": "verdict=failed error=None obs={'wrote': 'False'} leftovers=none",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "wb-nonce-brute",
+  "category": "forge",
+  "claim": "100k forged frames with guessed nonces are all rejected",
+  "expected": "0 accepted",
+  "actual": "accepted=0/100000",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "wb-replay",
+  "category": "forge",
+  "claim": "a captured valid frame replayed 1000x is rejected (single-use nonce)",
+  "expected": "first accepted, 0 replays accepted",
+  "actual": "first=True replays_accepted=0",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "net-canary-hits",
+  "category": "network",
+  "claim": "no attack ever reached a host canary listener (TCP/UDP/abstract-unix)",
+  "expected": "0 canary hits",
+  "actual": "hits=[]",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ },
+ {
+  "id": "final-clean",
+  "category": "cleanup",
+  "claim": "no ali40 container or supervisor process remains after the whole suite",
+  "expected": "none",
+  "actual": "{\"ali40_containers\": [], \"sandbox_init_procs\": 0}",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ }
+]

@@ -1,0 +1,12 @@
+[
+ {
+  "id": "kill-grader",
+  "category": "kill",
+  "claim": "SIGKILL/SIGSTOP/SIGTERM the grader",
+  "expected": "COMPROMISED (killed True / leak / forged pass): isolation absent",
+  "actual": "killed=True needle=False verdict=error",
+  "ok": true,
+  "reasons": [],
+  "flags": []
+ }
+]

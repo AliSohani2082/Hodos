@@ -248,14 +248,20 @@ def run_call(job):
         p = spawn([PY, "-I", "-B", "/opt/ali40/colocated_harness.py"], UID_LEARNER,
                   GID_LEARNER, subprocess.DEVNULL, int(limits["wall_s"]) + 1,
                   env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LANG": "C.UTF-8", "ALI40_NONCE": job["nonce"]})
-        # This control deliberately uses the same stdout channel. Copy only its frame.
-        stdout, stderr = p.communicate(timeout=limits["wall_s"])
+        # This control deliberately uses the same stdout channel. Copy only its frame to the result
+        # channel; the child's stderr (where adversarial probes print OBS) goes to the operator
+        # stream so the driver can still observe what the attack did.
+        try:
+            stdout, stderr = p.communicate(timeout=limits["wall_s"])
+        except subprocess.TimeoutExpired:
+            kill_uid(UID_LEARNER)
+            stdout, stderr = p.communicate()
         TRACKED.discard(p.pid)
         kill_uid(UID_LEARNER)
+        if stderr:
+            sys.stderr.write(stderr.decode("utf-8", "replace")[:4096])
         if p.returncode == 0:
             os.write(OUT_FD, stdout)
-        else:
-            sys.stderr.write(stderr.decode("utf-8", "replace")[:4096])
         return None
 
     sg, sl = socket.socketpair()
