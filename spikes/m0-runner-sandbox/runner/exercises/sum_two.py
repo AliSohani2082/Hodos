@@ -12,6 +12,23 @@ PRACTICE = [
     {"name": "zeros", "stdin": "0 0\n", "expected": "0\n"},
 ]
 
-# A correct solution, used by tests and as the baseline for timing. NOT used for grading and not
-# present in the sandbox; the grading-time reference lives in reference_sum_two.py (host side).
+# A correct solution, used by tests and as the baseline for timing.
 EXAMPLE_SOLUTION = "a, b = map(int, input().split())\nprint(a + b)\n"
+
+# The grading-time reference. On `submit`, the runner generates random inputs, runs THIS source in
+# a *separate* sandbox container (same learner-code profile, no network, non-root) to produce the
+# expected stdout, and compares outside the sandbox. The reference therefore never shares a process
+# or a container with the learner's code, and the expected values never enter the learner sandbox.
+REFERENCE_SOLUTION = "a, b = map(int, input().split())\nprint(a + b)\n"
+
+
+def gen_hidden(rng):
+    """~6 randomized hidden stdin cases (incl. big / negative numbers). Returns [{name, stdin}];
+    the expected output is computed by running REFERENCE_SOLUTION in its own sandbox, never here."""
+    cases = [{"name": "both negative", "stdin": "-1000000 -2000000\n"},
+             {"name": "large magnitude", "stdin": "999999999999 1\n"}]
+    for i in range(4):
+        a = rng.randint(-10**12, 10**12)
+        b = rng.randint(-10**12, 10**12)
+        cases.append({"name": f"random {i}", "stdin": f"{a} {b}\n"})
+    return cases

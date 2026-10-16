@@ -29,8 +29,21 @@ class Outcome:
     argv: list = field(default_factory=list)
 
 
+_USED_NONCES = set()
+_NONCE_LOCK = threading.Lock()
+
+
 def new_nonce():
     return secrets.token_hex(16)  # 128 bits, single use, known to the runner and the grader only
+
+
+def _consume_nonce(nonce):
+    """Single-use: True the first time this exact nonce is accepted, False on any replay."""
+    with _NONCE_LOCK:
+        if nonce in _USED_NONCES:
+            return False
+        _USED_NONCES.add(nonce)
+        return True
 
 
 def run_container(job, image_id, wall_s, profile=profiles.LEARNER_CODE):
@@ -115,4 +128,36 @@ def parse_frame(outcome, nonce):
     got = frame.get("nonce")
     if not isinstance(got, str) or not hmac.compare_digest(got.encode(), nonce.encode()):
         return None, "nonce_mismatch"
+    if not _consume_nonce(nonce):
+        return None, "nonce_replayed"
     return frame, None
+
+
+def validate_call_frame(frame, nonce, expected_names):
+    """Trust a 'call' verdict only if the grader (a) exited 0, (b) echoed the per-run nonce from its
+    own private channel, (c) declared done, and (d) ran EXACTLY the test names the runner expected,
+    each with a real boolean ok. Anything else is a forged/damaged result, never a pass.
+    Returns (results, problem). `frame` has already passed parse_frame (outer nonce + single use)."""
+    g = frame.get("grader")
+    if not isinstance(g, dict):
+        return None, "no_grader"
+    if g.get("exit") != 0:
+        return None, f"grader_exit_{g.get('exit')}"
+    res = g.get("result")
+    if not isinstance(res, dict):
+        return None, "grader_no_result"
+    gn = res.get("nonce")
+    if not isinstance(gn, str) or not hmac.compare_digest(gn.encode(), nonce.encode()):
+        return None, "grader_nonce_mismatch"
+    if res.get("done") is not True:
+        return None, "grader_not_done"
+    results = res.get("results")
+    if not isinstance(results, list) or len(results) != len(expected_names):
+        return None, "result_count"
+    names = [r.get("name") if isinstance(r, dict) else None for r in results]
+    if names != list(expected_names):
+        return None, "result_names"
+    for r in results:
+        if type(r.get("ok")) is not bool:   # a lying __eq__ / truthy object is not a real bool
+            return None, "result_not_bool"
+    return results, None
