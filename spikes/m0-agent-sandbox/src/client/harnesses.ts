@@ -22,12 +22,6 @@ export interface Plan {
 // env common to both harnesses inside the sandbox
 const common = (n: Net): Record<string, string> => ({
   HOME: "/home/agent",
-  HTTP_PROXY: n.proxy,
-  HTTPS_PROXY: n.proxy,
-  http_proxy: n.proxy,
-  https_proxy: n.proxy,
-  NO_PROXY: new URL(n.proxy).hostname,
-  no_proxy: new URL(n.proxy).hostname,
   NO_BROWSER: "1",
 });
 
@@ -64,8 +58,8 @@ export function plan(h: Harness, n: Net, opts: { model?: string; maxTurns?: numb
   }
   // codex
   return {
-    command: "codex-acp",
-    args: [],
+    command: "sh",
+    args: ["-c", "mkdir -p /home/agent/.codex && exec codex-acp"],
     env: {
       ...common(n),
       CODEX_HOME: "/home/agent/.codex",

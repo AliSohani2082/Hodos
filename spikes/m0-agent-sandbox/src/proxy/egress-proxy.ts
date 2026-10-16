@@ -24,6 +24,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { connect as netConnect, isIP, type Socket } from "node:net";
 import { lookup } from "node:dns/promises";
 import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { makeLogger } from "../lib/log.ts";
 
 const PORT = Number(process.env.LISTEN_PORT ?? 8080);
@@ -92,7 +93,7 @@ async function gateway(req: IncomingMessage, res: ServerResponse, route: Route, 
   }
   const hadCredential = headers.has("x-api-key") || headers.has("authorization");
   route.inject?.(headers);
-  const target = route.upstream.replace(/\/$/, "") + rest + url.search;
+  const target = route.upstream.replace(/\/$/, "") + (route.prefix === "/mcp" ? "/mcp" : "") + rest + url.search;
   const started = Date.now();
   try {
     const hasBody = method !== "GET" && method !== "HEAD";
@@ -110,7 +111,7 @@ async function gateway(req: IncomingMessage, res: ServerResponse, route: Route, 
     });
     res.writeHead(up.status, out);
     log("egress", { decision: "allow", ...base, upstreamHost: new URL(target).host, status: up.status, sandboxSentCredential: hadCredential, injected: Boolean(route.inject), ms: Date.now() - started });
-    if (up.body) Readable.fromWeb(up.body as any).pipe(res);
+    if (up.body) await pipeline(Readable.fromWeb(up.body as any), res);
     else res.end();
   } catch (e) {
     log("egress", { decision: "error", ...base, error: String(e).slice(0, 200) });

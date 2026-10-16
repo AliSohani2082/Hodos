@@ -79,7 +79,9 @@ try {
       const session = await ctx.buildSession({ cwd: "/workspace", mcpServers, _meta: p.sessionMeta } as any).start();
       transcript({ session: session.sessionId });
       if (a["cancel-after-ms"]) setTimeout(() => ctx.notify(acp.methods.agent.session.cancel, { sessionId: session.sessionId }), Number(a["cancel-after-ms"]));
-      session.prompt(prompt).catch(() => {});
+      transcript({ promptSent: true });
+      const promptResponse = session.prompt(prompt);
+      promptResponse.catch((e) => transcript({ promptError: String(e) }));
       for (;;) {
         const m = await session.nextUpdate();
         if (m.kind === "stop") return { stopReason: m.stopReason, usage: (m.response as any).usage ?? null, sessionId: session.sessionId };
