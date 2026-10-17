@@ -58,7 +58,7 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
           ? `**FUNDED REDUCED EVALUATION**: ${taskIds.size} of ${TASKS.length} tasks with up to ${samples} sample(s) per cell. The specified 36 tasks x 2 arms x 3 models x 3 samples (648 generations) exceeds the $19.00 new-spend approval; this run prioritises paired Opus and Sonnet results. K1-K6 thresholds are unchanged, but the reduced sample weakens their precision. The rule calculation below is descriptive until coverage and quality checks are complete.`
           : `**OFFLINE OR PARTIAL RUN**: ${taskIds.size} of ${TASKS.length} tasks, up to ${samples} sample(s) per cell. The K1-K6 thresholds assume the full 36 tasks x 3 samples, so nothing below is a verdict.`,
     '',
-    `${ok.length} finished generations, ${records.length - ok.length} unfinished (budget or API error, excluded). Spend so far: ${usd(spent)} on generation${judgments.length ? ` and ${usd(judgments.reduce((n, j) => n + j.costUSD, 0))} on judging` : ''}.`,
+    `${ok.length} finished generations, ${records.length - ok.length} unsuccessful attempts (budget or API error, excluded; retries can succeed later). Spend so far: ${usd(spent)} on generation${judgments.length ? ` and ${usd(judgments.reduce((n, j) => n + j.costUSD, 0))} on judging` : ''}.`,
     ...(args.totalSpendUSD !== undefined ? [reducedPilot ? `Cumulative OpenRouter spend recorded across smoke and generation: $${args.totalSpendUSD.toFixed(8)} of the $4.50 pilot cap.` : `New OpenRouter spend recorded since the full-run approval: $${args.totalSpendUSD.toFixed(8)} of the $19.00 hard cap.`] : []),
     ...(reducedPilot ? ['[Ten-output manual scoring spot-check](spot-check.md).'] : []),
     '',

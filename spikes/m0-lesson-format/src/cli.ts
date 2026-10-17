@@ -7,6 +7,7 @@
 //   bun run src/cli.ts count|judge|report|q2 ...
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { OpenRouterLlm, type LlmClient } from './llm.ts'
+import { readJudgments, runJudge } from './judge.ts'
 import { costOf, RESERVE_PRICES, worstCase } from './cost.ts'
 import { writeResultsCsv } from './csv.ts'
 import { print } from './print.ts'
@@ -187,7 +188,18 @@ async function main() {
     }
 
     case 'judge': {
-      die('Judge requires a separately verified affordable quote; no judge calls were sent.')
+      if (!has('confirm-full')) die('Judging is a paid part of the approved full run; pass --confirm-full after checking its quote. Nothing was sent.')
+      const cap = liveCap()
+      requireCredentials()
+      const dir = runDir('full')
+      const records = readRecords(dir)
+      if (!records.some((r) => r.status === 'ok')) die(`no completed generations in ${dir}`)
+      const spent = newSpend(RESULTS)
+      const priorHere = readJudgments(dir).reduce((n, j) => n + j.costUSD, 0)
+      if (spent >= cap) die(`Recorded new spend $${spent.toFixed(2)} has reached the approved cap $${cap.toFixed(2)}. Nothing was sent.`)
+      const res = await runJudge({ dir, records, client: new OpenRouterLlm(), capUSD: cap, initialSpentUSD: spent - priorHere, concurrency: Number(flag('concurrency') ?? 1), maxTokens: Number(flag('max-tokens') ?? 1000) })
+      console.log(`judge done: ${JSON.stringify(res)}`)
+      return
     }
 
     case 'report': {
