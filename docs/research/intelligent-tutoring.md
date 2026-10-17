@@ -204,6 +204,8 @@ gate_open(skill) =
 ```
 With these defaults, a learner starting at `p0 = 0.1` passes 0.95 after 3 clean correct answers on typical practice items (P reaches 0.98), or 2 from `p0 = 0.3` `[measured: arithmetic]`. That matches the "3 in a row" heuristic used in ASSISTments `[paper: summary]`. It is also why the distinct-item floor and the unassisted-checkpoint clause matter: BKT alone opens the gate quickly.
 
+> **M0 update (ADR-0005, spike (e)).** For guessable formats the gate requires **three** unassisted checkpoint successes on distinct items (not one), a **wrong first attempt is recorded as a failure** even if a later hint produces a correct answer, and checkpoints enforce attempt limits or cooldowns. Simulation showed `P(L)` is an **evidence index**, not a calibrated probability of mastery — graded-ability learners pass θ=0.95 at mean true accuracy ≈0.74 — so treat it as such until it is calibrated on real data.
+
 ### 3.3 Elo for `pattern` and `judgment`
 
 ```text

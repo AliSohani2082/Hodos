@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Proposed; M0 exit review (ALI-42) accepts or revises it |
-| **Date** | 2026-10-16 |
+| **Status** | Accepted |
+| **Date** | 2026-10-18 |
 | **Spike** | M0 (b), [cordis and plugin worker spike](../../spikes/m0-cordis-plugin-worker/README.md) |
 | **Issue** | [ALI-38](https://linear.app/ali-inc/issue/ALI-38), with ALI-50, ALI-51, ALI-52 and ALI-53 |
 | **Amends** | PRD [§8.1](../PRD.md#81-scopes-and-contributions), [§8.3](../PRD.md#83-sandbox-model), [§9.3](../PRD.md#93-stack), [§9.4](../PRD.md#94-isolation-zones), [§15](../PRD.md#15-risks), [Appendix A](../PRD.md#appendix-a-decision-log); threat model [TM-003](../hodos-threat-model.md). The M0 exit review folds these edits into the source documents. |

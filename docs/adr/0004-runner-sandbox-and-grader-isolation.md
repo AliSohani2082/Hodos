@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Proposed |
-| **Date** | 2026-10-16 |
+| **Status** | Accepted |
+| **Date** | 2026-10-18 |
 | **Spike** | M0 (d), [`spikes/m0-runner-sandbox/`](../../spikes/m0-runner-sandbox/README.md) |
 | **Issue** | [ALI-40](https://linear.app/ali-inc/issue/ALI-40) (subtasks ALI-60, ALI-61, ALI-62) |
 | **Amends** | None. Confirms PRD **EX-5**, **EX-5b**, **DP-3** and the §9.4 `learner-code` profile as written; nuances for ALI-42 are in [Consequences](#consequences). |

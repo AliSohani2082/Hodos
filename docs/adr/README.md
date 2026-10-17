@@ -15,4 +15,8 @@ ADRs are not edited after they are accepted, except to fix typos or to set the s
 
 | ADR | Title | Status | Spike |
 |---|---|---|---|
-| | | | |
+| [0001](0001-markdoc-lesson-ir.md) | Markdoc as the lesson IR | Proposed — inconclusive | M0 (a), [ALI-37](https://linear.app/ali-inc/issue/ALI-37) |
+| [0002](0002-cordis-on-bun-and-plugin-worker-isolation.md) | cordis on Bun and non-first-party plugin workers | Accepted | M0 (b), [ALI-38](https://linear.app/ali-inc/issue/ALI-38) |
+| [0003](0003-agent-sandbox-egress.md) | Agent-job sandbox and egress boundary | Accepted | M0 (c), [ALI-39](https://linear.app/ali-inc/issue/ALI-39) |
+| [0004](0004-runner-sandbox-and-grader-isolation.md) | Runner sandbox and isolated hidden-test grader | Accepted | M0 (d), [ALI-40](https://linear.app/ali-inc/issue/ALI-40) |
+| [0005](0005-bkt-lite-and-fsrs-defaults.md) | BKT-lite mastery gate and FSRS defaults | Accepted | M0 (e), [ALI-41](https://linear.app/ali-inc/issue/ALI-41) |

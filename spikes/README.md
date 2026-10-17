@@ -10,6 +10,16 @@ Throwaway code for the five M0 spikes in [PRD §14](../docs/PRD.md#14-roadmap) (
 | (d) | [`m0-runner-sandbox/`](m0-runner-sandbox/) | Can the runner execute learner code with hidden tests out of its reach? | Verdict on the runner isolation design |
 | (e) | [`m0-mastery-sim/`](m0-mastery-sim/) | Do BKT-lite and FSRS behave as the PRD assumes in simulation? | Verdict on both models and their default parameters |
 
+## Verdicts (M0 exit review, [ALI-42](https://linear.app/ali-inc/issue/ALI-42))
+
+| | Verdict | ADR | Notes |
+|---|---|---|---|
+| (a) | **Inconclusive — deferred** | [ADR-0001](../docs/adr/0001-markdoc-lesson-ir.md) | Only a reduced funded run (117/120 cells, Opus + Sonnet, 1 sample); Q1/Q2 not judged. LS-2 stays provisional; the full go/no-go is [ALI-49](https://linear.app/ali-inc/issue/ALI-49). |
+| (b) | **Go with changes** | [ADR-0002](../docs/adr/0002-cordis-on-bun-and-plugin-worker-isolation.md) | Bun + `cordis@4.0.0-rc.11` behind an internal adapter; non-first-party hooks in QuickJS-wasm inside an OS-confined Bun worker. |
+| (c) | **Go with changes** (Claude Code, Codex; mock-backed) | [ADR-0003](../docs/adr/0003-agent-sandbox-egress.md) | Rootless crun, egress-proxy-only network, key injection at the proxy. Real-model escape tests required before multi-account production; Gemini CLI / OpenCode not yet supported. |
+| (d) | **Go with changes** | [ADR-0004](../docs/adr/0004-runner-sandbox-and-grader-isolation.md) | Rootless podman + crun; tier-1 preferred; 32/32 adversarial submissions contained. Tier-2 grader moves to its own container in production. |
+| (e) | **Go with changes** | [ADR-0005](../docs/adr/0005-bkt-lite-and-fsrs-defaults.md) | θ=0.95 with ≥3 unassisted distinct checkpoint successes and a first-miss rule; FSRS-6 at R=0.90 with a precise lapse definition. |
+
 ## Conventions
 
 - **One directory per spike**, named `m0-<topic>`. Each has a `README.md` with the question, the exit criteria, how to run it and a link to its ADR once written.
