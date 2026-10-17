@@ -1,7 +1,8 @@
 import { afterAll, expect, test } from 'bun:test'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { resultsCsv } from '../src/csv.ts'
-import { approvedCap, recordedSpend } from '../src/spend.ts'
+import { approvedCap, recordedSpend, newSpend } from '../src/spend.ts'
+import { CreditGuard, CreditLimitError } from '../src/credits.ts'
 import type { GenRecord } from '../src/score.ts'
 
 const root = new URL('../.scratch/spend-test/', import.meta.url).pathname
@@ -18,9 +19,9 @@ test('CSV has generation metrics and usage, with empty scores for unfinished cel
   expect(csv).toContain('error,,,,,,,,,,,0,10,20,30,40,0.25')
 })
 
-test('hard cap rejects missing, invalid and over $150 values', () => {
-  expect(approvedCap('4.50')).toBe(4.5)
-  for (const value of [undefined, '0', '-1', '4.51', 'Infinity', 'oops'])
+test('new approval has a hard $19 cap', () => {
+  expect(approvedCap('19')).toBe(19)
+  for (const value of [undefined, '0', '-1', '19.01', 'Infinity', 'oops'])
     expect(() => approvedCap(value)).toThrow()
 })
 
@@ -33,4 +34,20 @@ test('spend is summed across pilot, full, judge failures and smoke; stub is excl
   writeFileSync(`${root}/smoke/smoke-spend.jsonl`, '{"costUSD":0.01}\n')
   writeFileSync(`${root}/_stub/generations.jsonl`, '{"costUSD":999}\n')
   expect(recordedSpend(root)).toBeCloseTo(10.01)
+  expect(newSpend(root)).toBeCloseTo(10.01 - 3.24134741)
+})
+
+test('credit guard refuses a request whose reservation would cross account baseline plus $19', async () => {
+  const fakeFetch = async () => Response.json({ data: { total_usage: 26.35 } })
+  const guard = new CreditGuard('dummy', fakeFetch as unknown as typeof fetch)
+  expect(await guard.assertAvailable(0.04)).toBeCloseTo(26.35)
+  await expect(guard.assertAvailable(0.05)).rejects.toBeInstanceOf(CreditLimitError)
+})
+
+test('credit guard refuses calls when the effective key budget is exhausted', async () => {
+  const fakeFetch = async (url: string) => Response.json(url.endsWith('/key')
+    ? { data: { effective_budget: { remaining_usd: -0.17 }, limit_remaining: 44.58 } }
+    : { data: { total_usage: 9.49 } })
+  const guard = new CreditGuard('dummy', fakeFetch as unknown as typeof fetch)
+  await expect(guard.assertAvailable(0.01)).rejects.toBeInstanceOf(CreditLimitError)
 })

@@ -2,6 +2,7 @@
 // cannot bias it, and it is blind to the arm. One judgment per output.
 import { appendFileSync, existsSync, readFileSync } from 'node:fs'
 import { Budget, costOf, worstCase } from './cost.ts'
+import { CreditLimitError } from './credits.ts'
 import type { LlmClient } from './llm.ts'
 import { renderPlain } from './render.ts'
 import type { GenRecord } from './score.ts'
@@ -80,7 +81,7 @@ export async function runJudge(opts: { dir: string; records: GenRecord[]; client
       if (!budget.tryReserve(worst)) { stopped = true; return }
       let charged = 0
       try {
-        const res = await opts.client.complete({ model: JUDGE_MODEL, system: SYSTEM, turns: [{ role: 'user', content: user }], maxTokens, schema: SCHEMA })
+        const res = await opts.client.complete({ model: JUDGE_MODEL, system: SYSTEM, turns: [{ role: 'user', content: user }], maxTokens, schema: SCHEMA, reservationUSD: worst })
         const cost = costOf(JUDGE_MODEL, res.usage)
         budget.settle(worst, cost)
         charged = cost
@@ -90,8 +91,16 @@ export async function runJudge(opts: { dir: string; records: GenRecord[]; client
         appendFileSync(file, JSON.stringify({ key: rec.key, scores, q1, notes: String(parsed.notes ?? ''), costUSD: cost } satisfies Judgment) + '\n')
         log(`judged ${rec.key} q1=${q1.toFixed(2)} total=$${budget.spent.toFixed(2)}/${opts.capUSD}`)
       } catch (err) {
-        if (charged) appendFileSync(`${opts.dir}/judge-spend.jsonl`, JSON.stringify({ key: rec.key, costUSD: charged }) + '\n')
-        else budget.settle(worst, 0)
+        if (err instanceof CreditLimitError) {
+          if (err.requestStarted) { budget.settle(worst, worst); charged = worst }
+          else budget.release(worst)
+          stopped = true
+        } else if (!charged) {
+          // A network failure might occur after the paid request began; retain the reservation.
+          budget.settle(worst, worst)
+          charged = worst
+        }
+        if (charged) appendFileSync(`${opts.dir}/judge-spend.jsonl`, JSON.stringify({ key: rec.key, costUSD: charged, error: err instanceof Error ? err.message : String(err) }) + '\n')
         log(`  judge ERROR ${rec.key}: ${err instanceof Error ? err.message : err}`)
       }
     }

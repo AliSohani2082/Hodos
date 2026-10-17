@@ -40,8 +40,18 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
   const spent = records.reduce((n, r) => n + r.costUSD, 0)
   const taskIds = new Set(scored.map((x) => x.task.id))
   const samples = Math.max(0, ...scored.map((x) => x.rec.sample))
-  const full = taskIds.size === TASKS.length && samples >= 3
+  const full = taskIds.size === TASKS.length && samples >= 3 && ok.length >= TASKS.length * 2 * MODELS.length * 3
   const reducedPilot = run === 'pilot'
+  const fundedRun = run === 'full'
+  const reducedFullOmit = new Set(['math-s1', 'programming-s2', 'chess-s3', 'language-s4', 'history-s5', 'science-s1'])
+  const plannedFullTasks = TASKS.filter((task) => !reducedFullOmit.has(task.id))
+  const finishedKeys = new Set(ok.map((r) => r.key))
+  const missingFullCells = fundedRun
+    ? plannedFullTasks.flatMap((task) => (['claude-opus-5-5', 'claude-sonnet-5-5'] as Model[])
+        .flatMap((model) => (['markdoc', 'directive'] as Arm[])
+          .map((arm) => `${model}|${arm}|${task.id}|1`)
+          .filter((key) => !finishedKeys.has(key))))
+    : []
   const judgments = readJudgments(dir)
   const quality = qualityOf(scored, judgments)
   if (quality && args.q2prefM !== undefined) quality.q2prefM = args.q2prefM
@@ -53,11 +63,21 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
       ? `**Full run**: ${taskIds.size} tasks, ${samples} samples per cell.`
       : reducedPilot
         ? `**REDUCED PILOT / PARTIAL RUN**: ${taskIds.size} of ${TASKS.length} tasks, up to ${samples} sample(s) per cell. The planned reduced pilot uses 6 of the original 12 pilot tasks: one base task per domain; the 6 adversarial tasks were omitted to fit the $4.50 cumulative cap. The K1-K6 thresholds assume the full 36 tasks x 3 samples, so nothing below is a verdict.`
-        : `**OFFLINE OR PARTIAL RUN**: ${taskIds.size} of ${TASKS.length} tasks, up to ${samples} sample(s) per cell. The K1-K6 thresholds assume the full 36 tasks x 3 samples, so nothing below is a verdict.`,
+        : fundedRun
+          ? `**FUNDED REDUCED EVALUATION**: ${taskIds.size} of ${TASKS.length} tasks with up to ${samples} sample(s) per cell. The specified 36 tasks x 2 arms x 3 models x 3 samples (648 generations) exceeds the $19.00 new-spend approval; this run prioritises paired Opus and Sonnet results. K1-K6 thresholds are unchanged, but the reduced sample weakens their precision. The rule calculation below is descriptive until coverage and quality checks are complete.`
+          : `**OFFLINE OR PARTIAL RUN**: ${taskIds.size} of ${TASKS.length} tasks, up to ${samples} sample(s) per cell. The K1-K6 thresholds assume the full 36 tasks x 3 samples, so nothing below is a verdict.`,
     '',
-    `${ok.length} finished generations, ${records.length - ok.length} unfinished (budget or API error, excluded). Spend so far: ${usd(spent)} on generation${judgments.length ? ` and ${usd(judgments.reduce((n, j) => n + j.costUSD, 0))} on judging` : ''}.`,
-    ...(args.totalSpendUSD !== undefined ? [`Cumulative OpenRouter spend recorded across smoke and generation: $${args.totalSpendUSD.toFixed(8)} of the $4.50 hard cap.`] : []),
-    '[Ten-output manual scoring spot-check](spot-check.md).',
+    `${ok.length} finished generations, ${records.length - ok.length} unsuccessful attempts (budget or API error, excluded; retries can succeed later). Spend so far: ${usd(spent)} on generation${judgments.length ? ` and ${usd(judgments.reduce((n, j) => n + j.costUSD, 0))} on judging` : ''}.`,
+    ...(args.totalSpendUSD !== undefined ? [reducedPilot ? `Cumulative OpenRouter spend recorded across smoke and generation: $${args.totalSpendUSD.toFixed(8)} of the $4.50 pilot cap.` : `New OpenRouter spend recorded since the full-run approval: $${args.totalSpendUSD.toFixed(8)} of the $19.00 hard cap.`] : []),
+    ...(reducedPilot ? ['[Ten-output manual scoring spot-check](spot-check.md).'] : []),
+    '',
+  )
+  if (fundedRun) L.push(
+    '## Completion and interpretation',
+    '',
+    `**INCONCLUSIVE.** ${ok.length} of ${plannedFullTasks.length * 4} planned reduced-run cells completed. ${missingFullCells.length} are missing: ${missingFullCells.length ? missingFullCells.map((key) => `\`${key}\``).join(', ') : 'none'}. The original 648-generation specification also included six more tasks, Haiku 5.5 and two further samples per cell. Q1 judging and the Q2 human blind check were not done. The user stopped paid work after the in-flight cell finished.`,
+    '',
+    'The K1-K6 thresholds below are unchanged. With one sample per task, incomplete paired coverage, and no Q1/Q2 quality evidence, the descriptive rule output is not a go/no-go on the provisional lesson IR.',
     '',
   )
 
@@ -129,8 +149,8 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
   // ----- decision
   L.push('## Go / no-go (lesson-ir.md §8.5)', '')
   const decision = decide(scored, { quality, iterationUsed: args.iterationUsed })
-  if (!full) L.push('> Pilot or partial data: the gates below are shown to exercise the pipeline, not as a decision.', '')
-  L.push(`**Verdict by the rules: ${decision.verdict.toUpperCase()}** (rule ${decision.rule}). ${decision.reason}.`, '')
+  if (!full) L.push('> Reduced or partial data: these unchanged gates show the observed sample and do not establish a go/no-go decision. K5 intervals are wider with one sample per task; absent Q1 or Q2 leaves K6 untested.', '')
+  L.push(`**${full ? 'Verdict by the rules' : 'Descriptive rule output'}: ${decision.verdict.toUpperCase()}** (rule ${decision.rule}). ${decision.reason}.`, '')
   L.push('| Gate | Model | Format | Measured | Pass |', '|---|---|---|---|---|')
   const fmt = (c: { id: string; value: number | string }) => (typeof c.value === 'number' ? (c.id === 'K3' ? num(c.value) : c.id.startsWith('K5') ? pp(c.value) : c.id === 'K6a' ? num(c.value) : pct(c.value)) : c.value)
   const mark = (p: boolean | null) => (p === null ? 'n/a' : p ? 'pass' : 'FAIL')
@@ -166,7 +186,7 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
   L.push(
     '',
     `**Quote for the full run** (216 generations per model, scaled from the measured cost per generation${judgments.length ? ' and measured judge cost' : '; judge cost still the spec assumption'}):`,
-    `generation ${usd(quoteGen)} + judge ${usd(judgeCost)} = ${usd(sub)}, plus 25% contingency = **${usd(sub * 1.25)}**. This is a planning estimate from the reduced pilot; live cost uses OpenRouter's usage.cost. The $150 full-run cap is not approved or funded.`,
+    `generation ${usd(quoteGen)} + judge ${usd(judgeCost)} = ${usd(sub)}, plus 25% contingency = **${usd(sub * 1.25)}**. This is a planning estimate; live cost uses OpenRouter's usage.cost. The current new-spend approval is $19.00 and cannot fund this specified design.`,
     '',
     '_Estimate rests on this run\'s mix of tasks; a pilot with fewer tasks than the full set can mis-estimate by tens of percent._',
     '',

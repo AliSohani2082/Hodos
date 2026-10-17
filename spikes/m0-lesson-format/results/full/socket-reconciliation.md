@@ -1,0 +1,5 @@
+# Repair socket failure accounting
+
+Three Opus S5 repair streams closed before returning usage (`chess-s5` Markdoc, `language-s5` directive, `science-s5` Markdoc). Each generation had earlier successful rounds. The live budget charged those rounds and a worst-case reservation for the failed request, but the saved error record mistakenly retained only the last reservation. Before any resume, the three records were corrected by adding their already-recorded round costs, **$0.78013760** in total. The [CSV](socket-reconciliation.csv) lists each correction. The local ledger after reconciliation is **$11.96068155** of the $19.00 new-spend cap; the account credits endpoint reported $11.35276604 above the baseline at that checkpoint, so the local ledger remains conservative.
+
+The runner now saves earlier round costs on transport errors and retries one transient socket failure within the same round under a fresh reservation. This preserves the prompt and settings and avoids paying again for earlier successful rounds. Any failed stream remains charged at its reserved worst case because it may have been partially billed.

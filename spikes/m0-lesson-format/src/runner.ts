@@ -3,7 +3,9 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { Budget, costOf, RESERVE_PRICES, worstCase } from './cost.ts'
-import type { LlmClient, Turn } from './llm.ts'
+import { CreditLimitError } from './credits.ts'
+import { CREDIT_BASELINE_USD, CREDIT_LIMIT_USD, PRIOR_APPROVAL_SPEND_USD } from './spend.ts'
+import type { CompleteResult, LlmClient, Turn } from './llm.ts'
 import { examples, repairPrompt, syntaxSection, systemPrompt, taskPrompt } from './prompts.ts'
 import { MAX_REPAIRS, type GenRecord, type RoundRecord } from './score.ts'
 import { contextFor, loadPack } from './tasks.ts'
@@ -57,7 +59,7 @@ async function runOne(cfg: RunConfig, budget: Budget, model: Model, arm: Arm, ta
   const turns: Turn[] = [{ role: 'user', content: taskPrompt(task, pack), cache: true }]
   const rec: GenRecord = { key: keyOf(model, arm, task.id, sample), run: cfg.run, model, arm, taskId: task.id, sample, status: 'ok', rounds: [], costUSD: 0 }
 
-  for (let i = 0; i <= MAX_REPAIRS; i++) {
+  rounds: for (let i = 0; i <= MAX_REPAIRS; i++) {
     const worst = i === 0 && firstReservation !== undefined ? firstReservation : worstCase(model, estimateInputTokens(system, turns), cfg.maxTokens)
     if (i === 0 && firstReservation !== undefined) {
       if (budget.remaining < 0) {
@@ -66,18 +68,31 @@ async function runOne(cfg: RunConfig, budget: Budget, model: Model, arm: Arm, ta
         break
       }
     } else if (!budget.tryReserve(worst)) { rec.status = 'budget'; break }
-    let res
-    try {
-      res = await cfg.client.complete({ model, system, turns, maxTokens: cfg.maxTokens })
-    } catch (err) {
-      // A connection can fail after OpenRouter accepted and billed the request. Charge the reservation
-      // conservatively so resume cannot spend it a second time.
-      budget.settle(worst, worst)
-      rec.status = 'error'
-      rec.costUSD = worst
-      rec.error = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
-      break
+    let res: CompleteResult | undefined
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        res = await cfg.client.complete({ model, system, turns, maxTokens: cfg.maxTokens, reservationUSD: worst })
+        break
+      } catch (err) {
+        if (err instanceof CreditLimitError) {
+          if (err.requestStarted) { budget.settle(worst, worst); rec.costUSD += worst }
+          else budget.release(worst)
+          rec.status = 'budget'
+          rec.error = err.message
+          break rounds
+        }
+        // A broken stream may already have been billed. Hold its reservation, then retry this round once
+        // under a fresh reservation so earlier successful rounds need not be regenerated.
+        budget.settle(worst, worst)
+        rec.costUSD += worst
+        const transient = err instanceof TypeError && /socket connection was closed|fetch failed/i.test(err.message)
+        if (attempt === 0 && transient && budget.tryReserve(worst)) continue
+        rec.status = 'error'
+        rec.error = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+        break rounds
+      }
     }
+    if (!res) break
     const cost = costOf(model, res.usage)
     budget.settle(worst, cost)
     const text = extractLesson(res.text)
@@ -108,7 +123,7 @@ export async function runEval(cfg: RunConfig) {
   const budget = new Budget(cfg.capUSD)
   budget.spent = (cfg.initialSpentUSD ?? 0) + prior.reduce((n, r) => n + r.costUSD, 0)
   if (!existsSync(`${cfg.dir}/run.json`))
-    writeFileSync(`${cfg.dir}/run.json`, JSON.stringify({ run: cfg.run, startedAt: new Date().toISOString(), provider: 'OpenRouter', models: cfg.models, arms: cfg.arms, tasks: cfg.tasks.map((t) => t.id), samples: cfg.samples, capUSD: cfg.capUSD, maxTokens: cfg.maxTokens, effort: 'medium', pricing: 'actual usage.cost from OpenRouter; published rates are used only for pre-call reservation', reservePrices: RESERVE_PRICES, promptFingerprint: promptFingerprint(), reducedPilot: cfg.run === 'pilot' ? { tasks: cfg.tasks.length, originalPilotTasks: 12, omittedAdversarialTasks: ['adv1', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6'] } : undefined }, null, 2))
+    writeFileSync(`${cfg.dir}/run.json`, JSON.stringify({ run: cfg.run, startedAt: new Date().toISOString(), provider: 'OpenRouter', models: cfg.models, arms: cfg.arms, tasks: cfg.tasks.map((t) => t.id), samples: cfg.samples, capUSD: cfg.capUSD, maxTokens: cfg.maxTokens, effort: 'medium', pricing: 'actual usage.cost from OpenRouter; published rates are used only for pre-call reservation', reservePrices: RESERVE_PRICES, promptFingerprint: promptFingerprint(), newApproval: cfg.run === 'full' ? { priorLocalSpendUSD: PRIOR_APPROVAL_SPEND_USD, creditTotalUsageBaselineUSD: CREDIT_BASELINE_USD, creditTotalUsageStopUSD: CREDIT_LIMIT_USD } : undefined, reducedPilot: cfg.run === 'pilot' ? { tasks: cfg.tasks.length, originalPilotTasks: 12, omittedAdversarialTasks: ['adv1', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6'] } : undefined }, null, 2))
 
   // Reserve both syntax arms' first call before either starts, so the cap cannot leave a task/model pair one-sided.
   const groups: { task: Task; model: Model }[] = []

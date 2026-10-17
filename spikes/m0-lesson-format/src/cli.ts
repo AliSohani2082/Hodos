@@ -1,4 +1,4 @@
-// CLI. Live calls require an explicit approved cap (hard maximum $4.50 for the reduced pilot).
+// CLI. New live calls use a $19 approval measured from the completed pilot and account-credit baselines.
 //   bun run src/cli.ts check                          validate the gold lesson of every task in both arms (free)
 //   bun run src/cli.ts quote [--tasks pilot|all]      estimate cost from measured prompt sizes (free)
 //   bun run src/cli.ts run --tasks pilot --cap-usd 4.50  reduced pilot, cumulative with smoke
@@ -7,6 +7,7 @@
 //   bun run src/cli.ts count|judge|report|q2 ...
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { OpenRouterLlm, type LlmClient } from './llm.ts'
+import { readJudgments, runJudge } from './judge.ts'
 import { costOf, RESERVE_PRICES, worstCase } from './cost.ts'
 import { writeResultsCsv } from './csv.ts'
 import { print } from './print.ts'
@@ -15,7 +16,7 @@ import { exportPairs, scorePairs } from './q2.ts'
 import { buildReport } from './report.ts'
 import { readRecords, runEval } from './runner.ts'
 import { StubLlm } from './stub.ts'
-import { approvedCap, recordedSpend } from './spend.ts'
+import { approvedCap, newSpend, recordedSpend } from './spend.ts'
 import { goldDoc } from './synth.ts'
 import { estimateTokens } from './score.ts'
 import { contextFor, loadPack, PILOT_TASK_IDS, TASKS, taskById } from './tasks.ts'
@@ -32,12 +33,16 @@ const flag = (name: string): string | undefined => {
 const has = (name: string) => args.includes(`--${name}`)
 const ALL_MODELS: Model[] = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5']
 const REDUCED_PILOT_TASK_IDS = PILOT_TASK_IDS.slice(0, 6)
+// One base task omitted per domain (all five shapes remain represented); all six adversarial tasks retained.
+const REDUCED_FULL_OMIT = new Set(['math-s1', 'programming-s2', 'chess-s3', 'language-s4', 'history-s5', 'science-s1'])
+const REDUCED_FULL_TASK_IDS = TASKS.filter((t) => !REDUCED_FULL_OMIT.has(t.id)).map((t) => t.id)
 const RESULTS = new URL('../results/', import.meta.url).pathname
 
 function pickTasks(): Task[] {
   const v = flag('tasks') ?? 'pilot'
   if (v === 'all') return TASKS
   if (v === 'pilot') return REDUCED_PILOT_TASK_IDS.map(taskById)
+  if (v === 'reduced-full') return REDUCED_FULL_TASK_IDS.map(taskById)
   return v.split(',').map(taskById)
 }
 const pickModels = (): Model[] => (flag('models') ? (flag('models')!.split(',') as Model[]) : ALL_MODELS)
@@ -117,18 +122,16 @@ async function main() {
         liveCap()
         const tasksFlag = flag('tasks') ?? 'pilot'
         const samples = Number(flag('samples') ?? (tasksFlag === 'all' ? 3 : 1))
-        if ((tasksFlag === 'all' || samples > 1) && !has('confirm-full'))
+        if ((tasksFlag === 'all' || samples > 1 || flag('run') === 'full') && !has('confirm-full'))
           die('This is the full-run shape (all tasks or >1 sample). It needs explicit budget approval: pass --confirm-full once the budget has been approved. Nothing was sent.')
         requireCredentials()
         client = new OpenRouterLlm()
       }
       const tasks = pickTasks()
       const samples = Number(flag('samples') ?? (flag('tasks') === 'all' ? 3 : 1))
-      if (!stub && (flag('tasks') === 'all' || samples > 1))
-        die('The full run is not approved or funded. Only the reduced pilot is authorized. Nothing was sent.')
       const dir = runDir(stub ? '_stub' : flag('tasks') === 'all' ? 'full' : 'pilot')
       const cap = stub ? 1e9 : liveCap()
-      const spent = stub ? 0 : recordedSpend(RESULTS)
+      const spent = stub ? 0 : newSpend(RESULTS)
       const priorHere = stub ? 0 : readRecords(dir).reduce((n, r) => n + r.costUSD, 0)
       if (!stub && spent >= cap) die(`Recorded spend $${spent.toFixed(2)} has reached the approved cap $${cap.toFixed(2)}. Nothing was sent.`)
       console.log(`run dir: ${dir}  cap: $${cap}  tasks: ${tasks.length}  samples: ${samples}`)
@@ -145,7 +148,7 @@ async function main() {
       const system = 'You are a connectivity check. Reply with the single word OK.'
       const user = 'Reply with the single word OK.'
       const worst = worstCase(model, system.length + user.length, 1000)
-      if (recordedSpend(RESULTS) + worst > cap) die('Smoke reservation exceeds the approved cumulative cap. Nothing was sent.')
+      if (newSpend(RESULTS) + worst > cap) die('Smoke reservation exceeds the approved cumulative cap. Nothing was sent.')
       let res
       try {
         res = await new OpenRouterLlm().complete({
@@ -153,6 +156,7 @@ async function main() {
           system,
           turns: [{ role: 'user', content: user, cache: true }],
           maxTokens: 1000,
+          reservationUSD: worst,
         })
       } catch {
         const smokeDir = `${RESULTS}smoke`
@@ -184,7 +188,18 @@ async function main() {
     }
 
     case 'judge': {
-      die('Quality judging belongs to the unapproved full run. Nothing was sent.')
+      if (!has('confirm-full')) die('Judging is a paid part of the approved full run; pass --confirm-full after checking its quote. Nothing was sent.')
+      const cap = liveCap()
+      requireCredentials()
+      const dir = runDir('full')
+      const records = readRecords(dir)
+      if (!records.some((r) => r.status === 'ok')) die(`no completed generations in ${dir}`)
+      const spent = newSpend(RESULTS)
+      const priorHere = readJudgments(dir).reduce((n, j) => n + j.costUSD, 0)
+      if (spent >= cap) die(`Recorded new spend $${spent.toFixed(2)} has reached the approved cap $${cap.toFixed(2)}. Nothing was sent.`)
+      const res = await runJudge({ dir, records, client: new OpenRouterLlm(), capUSD: cap, initialSpentUSD: spent - priorHere, concurrency: Number(flag('concurrency') ?? 1), maxTokens: Number(flag('max-tokens') ?? 1000) })
+      console.log(`judge done: ${JSON.stringify(res)}`)
+      return
     }
 
     case 'report': {
@@ -192,7 +207,7 @@ async function main() {
       const records = readRecords(dir)
       if (!records.length) die(`no records in ${dir}`)
       const q2 = existsSync(`${dir}/q2-score.json`) ? (JSON.parse(readFileSync(`${dir}/q2-score.json`, 'utf8')).prefM as number) : undefined
-      const md = buildReport({ run: dir.split('/').pop()!, records, dir, q2prefM: q2, iterationUsed: has('iteration-used'), totalSpendUSD: recordedSpend(RESULTS) })
+      const md = buildReport({ run: dir.split('/').pop()!, records, dir, q2prefM: q2, iterationUsed: has('iteration-used'), totalSpendUSD: dir.endsWith('/full') ? newSpend(RESULTS) : recordedSpend(RESULTS) })
       mkdirSync(dir, { recursive: true })
       writeFileSync(`${dir}/report.md`, md)
       writeResultsCsv(dir, records)
