@@ -2,7 +2,7 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import type { Usage } from './score.ts'
 import { OPENROUTER_MODELS, type Model } from './types.ts'
-import { CreditGuard } from './credits.ts'
+import { CreditGuard, CreditLimitError } from './credits.ts'
 
 export interface Turn {
   role: 'user' | 'assistant'
@@ -89,6 +89,7 @@ export class OpenRouterLlm implements LlmClient {
       body: JSON.stringify(body),
       signal: controller.signal,
     })
+    if (response.status === 403) throw new CreditLimitError('OpenRouter rejected the request (HTTP 403); check the effective key budget', false)
     if (!response.ok || !response.body) throw new Error(`OpenRouter request failed (HTTP ${response.status})`)
     const reader = response.body.getReader()
     const decoder = new TextDecoder()

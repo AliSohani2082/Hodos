@@ -1,0 +1,79 @@
+{
+  "run": "full",
+  "startedAt": "2026-10-17T20:59:08.707Z",
+  "provider": "OpenRouter",
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5"
+  ],
+  "arms": [
+    "markdoc",
+    "directive"
+  ],
+  "tasks": [
+    "math-s2",
+    "math-s3",
+    "math-s4",
+    "math-s5",
+    "programming-s1",
+    "programming-s3",
+    "programming-s4",
+    "programming-s5",
+    "chess-s1",
+    "chess-s2",
+    "chess-s4",
+    "chess-s5",
+    "language-s1",
+    "language-s2",
+    "language-s3",
+    "language-s5",
+    "history-s1",
+    "history-s2",
+    "history-s3",
+    "history-s4",
+    "science-s2",
+    "science-s3",
+    "science-s4",
+    "science-s5",
+    "adv1",
+    "adv2",
+    "adv3",
+    "adv4",
+    "adv5",
+    "adv6"
+  ],
+  "samples": 1,
+  "capUSD": 19,
+  "maxTokens": 6000,
+  "effort": "medium",
+  "pricing": "actual usage.cost from OpenRouter; published rates are used only for pre-call reservation",
+  "reservePrices": {
+    "claude-opus-5-5": {
+      "input": 4,
+      "output": 20,
+      "cacheWrite": 5,
+      "cacheRead": 0.2
+    },
+    "claude-sonnet-5-5": {
+      "input": 2,
+      "output": 10,
+      "cacheWrite": 2.5,
+      "cacheRead": 0.2
+    },
+    "claude-haiku-5-5": {
+      "input": 0.1,
+      "output": 0.5,
+      "cacheWrite": 0.125,
+      "cacheRead": 0.01
+    }
+  },
+  "promptFingerprint": {
+    "markdoc": "10068c26b9700744",
+    "directive": "57b73e26eccf1f4f"
+  },
+  "newApproval": {
+    "priorLocalSpendUSD": 3.24134741,
+    "creditTotalUsageBaselineUSD": 7.3976,
+    "creditTotalUsageStopUSD": 26.3976
+  }
+}

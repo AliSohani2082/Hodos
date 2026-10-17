@@ -1,0 +1,7 @@
+# OpenRouter key-budget interruption
+
+The first funded run stopped after 16 completed generations because the key's effective budget was $2.00 even though the OpenRouter account had more than $20 of remaining credit. The key endpoint reported `effective_budget.remaining_usd = -0.1770497`, and generation began returning HTTP 403. No credential value was printed or stored here.
+
+The runner conservatively charged its pre-call reservations for 53 HTTP 403 responses, temporarily adding $7.37852075 to the local ledger. Those responses contained no generation or usage record. After the process stopped, the key endpoint reported cumulative key usage of **$5.41839711**, exactly the previous pilot/smoke spend **$3.24134741** plus successful funded generations **$2.17704970**. The account credits endpoint later reported `total_usage = 9.57465784`, or **$2.17705784** above the user-provided 7.3976 baseline (the $0.00000814 difference already existed before the run).
+
+The 53 rejected records were therefore reconciled to `costUSD: 0` in `generations.jsonl`, and their original held amounts were preserved in [403-reservations.csv](403-reservations.csv). They remain `status: error` and are excluded from reliability metrics. The harness now checks the effective key budget before each request and during streams; a 403 stops the run without consuming another local reservation. The approved **$19.00 new-spend cap** and account `total_usage` stop point **26.3976** are unchanged.

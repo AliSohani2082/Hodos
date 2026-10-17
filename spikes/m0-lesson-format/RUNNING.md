@@ -15,7 +15,7 @@ Everything is TypeScript on Bun. It is throwaway code: nothing in `spikes/` is i
 | `prompts/` | Frozen base rules, one syntax section per arm, two translated example lessons per arm. |
 | `fixtures/packs/` | 36 source packs: real Wikipedia text (CC BY-SA 4.0), 8–12 chunks each. `fixtures/ATTRIBUTION.md` lists the articles and revisions. |
 | `src/tasks.ts` | The 36 tasks (30 base + 6 adversarial), gold checklists, literal and nesting checks, the 12-task pilot subset. |
-| `src/runner.ts`, `src/cost.ts` | The loop, resumable, with a budget guard that reserves each call's worst case before sending. |
+| `src/runner.ts`, `src/cost.ts`, `src/credits.ts` | The resumable loop, local pre-call reservation, and independent OpenRouter account/key budget checks. |
 | `src/score.ts`, `src/stats.ts`, `src/report.ts` | M1–M7 and extras, cluster bootstrap, rules K1–K6 and 1–5, the report. |
 | `src/judge.ts`, `src/q2.ts` | Q1 LLM judge on a format-normalised rendering; Q2 blind human check. |
 | `src/print.ts`, `src/synth.ts`, `src/stub.ts` | Printers for both syntaxes, gold lessons, and an offline stub model. |
@@ -37,14 +37,14 @@ bun run src/cli.ts report --run _stub
 
 ## Spending money
 
-The authorized OpenRouter key is stored as `OPENROUTER_API_KEY` in the ignored `.env`. The approved cumulative cap is **$4.50 including smoke and reduced pilot**. The CLI enforces this as its hard ceiling, reads actual costs from OpenRouter usage data, and reserves the maximum completion cost at published OpenRouter model rates before each request. Run paid commands one at a time; the local spend ledger does not coordinate separate processes. The full run and judging are disabled because they are not approved or funded.
+The authorized OpenRouter key is stored as `OPENROUTER_API_KEY` in the ignored `.env`. The completed smoke and pilot cost **$3.24134741** under their old $4.50 approval. A separate approval now caps **all new spend at $19.00**. The runner subtracts the verified pilot baseline from its local ledger and reserves the maximum completion cost before every paid call. It also checks `GET /api/v1/credits` against the user-specified `total_usage` stop point **26.3976** and `GET /api/v1/key` for the effective key budget, before every call and during streaming. Run paid commands one process at a time; the local ledger does not coordinate separate processes.
 
 The client uses OpenRouter's [OpenAI-compatible chat completion endpoint](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion) with Anthropic model IDs (for example [`anthropic/claude-opus-5.5`](https://openrouter.ai/anthropic/claude-opus-5.5)). It requests streaming usage and cost via `usage: {include: true}`; the ledger takes actual per-call dollars from `usage.cost`.
 
-1. **Smoke test**: `bun run src/cli.ts smoke --cap-usd 4.50`. This reserves before calling and records OpenRouter's actual usage cost.
-2. **Reduced pilot**: `bun run src/cli.ts run --tasks pilot --cap-usd 4.50`. It uses 6 base tasks (one per domain) × 2 arms × 3 models = 36 first-pass generations, with up to 3 repair rounds. The 6 adversarial tasks are omitted from the original 12-task pilot to fit the approved cap. Both arms' first call for a task/model pair are reserved together; if the remaining budget cannot cover both, neither starts. Afterward run `bun run src/cli.ts count` (local visible-token estimates) and `bun run src/cli.ts report`.
-3. The full run is **not approved or funded**. Do not start generation, judging or Q2 work. ALI-49 remains blocked pending a separate approval and budget.
-4. Record the pilot numbers and limitations in [ADR 0001](../../docs/adr/0001-markdoc-lesson-ir.md); it must remain explicitly a reduced pilot, not a go/no-go result.
+1. **Reduced pilot (completed)**: six base tasks × two arms × three models × one sample = 36 generations. Its 10-output spot-check, report, CSV and compressed raw generations are committed under `results/pilot/`.
+2. **Funded reduced evaluation (interrupted)**: `bun run src/cli.ts run --tasks reduced-full --models claude-opus-5-5,claude-sonnet-5-5 --samples 1 --run full --confirm-full --cap-usd 19 --concurrency 1`. The [pre-run quote](results/full/plan.md) scales pilot cost to $16.00 for 30 tasks and leaves 18.8% headroom. This command is resumable and skips completed generations. Both syntax arms' first calls are reserved as a pair.
+3. **Current blocker**: after 16 successful generations ($2.17704970 actual new spend), the existing key's effective $2 budget caused HTTP 403. [Reconciliation](results/full/403-reconciliation.md) records the 53 rejected, unbilled attempts and the provider ledger check. **Do not resume paid calls until the key budget has been raised or a replacement key has been placed in the ignored `.env`, and the coordinator confirms it.** The account itself had funds at the interruption.
+4. Once unblocked, resume the command in step 2. If headroom remains, `--tasks all` with the same model, sample, run and cap flags adds the six omitted task pairs. Then run `bun run src/cli.ts count --run full`, `bun run src/cli.ts report --run full`, and `bun run src/cli.ts q2 export --run full --pairs 30 --model claude-opus-5-5`. The judge runs only if a complete, balanced Q1 comparison fits the remaining $19 budget; it is currently disabled in the CLI. A person must read `q2-pairs.md`, fill `q2-answers.json`, and keep `q2-key.json` hidden until finished. Record measured limits and the verdict or explicit inconclusive finding in [ADR 0001](../../docs/adr/0001-markdoc-lesson-ir.md).
 
 If rule 2 fires (Markdoc fails K1–K4), one prompt iteration is allowed (budget about $20): edit `prompts/`, re-run only the failing tasks (`--tasks id1,id2 --run <new run name>`), and pass `--iteration-used` to `report` once it has been spent, so rule 3 can apply.
 
@@ -64,7 +64,7 @@ These are where a reviewer should push back.
 - **Caching and cost.** OpenRouter receives explicit prompt-cache markers. Actual cost comes from OpenRouter's `usage.cost`; published model rates are used only for the reserve-before-call guard. Visible output-token M7 is estimated locally because the OpenRouter chat API does not provide a count-only endpoint.
 - **No refusal fallbacks.** The server-side fallback would swap in another model and contaminate the per-model results. A refusal is recorded as a failure.
 - **Whole-answer code fences** are unwrapped (`extractLesson`), the same for both arms.
-- **Pilot subset.** One base task per domain, covering all five shapes and all visual blocks except `timeline`, plus the six adversarial tasks.
+- **Pilot subset.** One base task per domain, covering all five shapes and all visual blocks except `timeline`; the six adversarial tasks were omitted to fit the original pilot cap.
 
 ## What this does not tell us
 

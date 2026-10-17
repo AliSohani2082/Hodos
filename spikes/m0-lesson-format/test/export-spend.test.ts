@@ -43,3 +43,11 @@ test('credit guard refuses a request whose reservation would cross account basel
   expect(await guard.assertAvailable(0.04)).toBeCloseTo(26.35)
   await expect(guard.assertAvailable(0.05)).rejects.toBeInstanceOf(CreditLimitError)
 })
+
+test('credit guard refuses calls when the effective key budget is exhausted', async () => {
+  const fakeFetch = async (url: string) => Response.json(url.endsWith('/key')
+    ? { data: { effective_budget: { remaining_usd: -0.17 }, limit_remaining: 44.58 } }
+    : { data: { total_usage: 9.49 } })
+  const guard = new CreditGuard('dummy', fakeFetch as unknown as typeof fetch)
+  await expect(guard.assertAvailable(0.01)).rejects.toBeInstanceOf(CreditLimitError)
+})
