@@ -8,10 +8,19 @@ export class CreditLimitError extends Error {
 export class CreditGuard {
   constructor(private readonly apiKey: string, private readonly fetcher: typeof fetch = fetch) {}
 
+  private async get(url: string): Promise<Response> {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try { return await this.fetcher(url, { headers: { Authorization: `Bearer ${this.apiKey}` } }) }
+      catch (error) {
+        if (attempt === 2) throw error
+        await new Promise((resolve) => setTimeout(resolve, 200 * (attempt + 1)))
+      }
+    }
+    throw new CreditLimitError('Credit check failed')
+  }
+
   async totalUsage(): Promise<number> {
-    const response = await this.fetcher('https://openrouter.ai/api/v1/credits', {
-      headers: { Authorization: `Bearer ${this.apiKey}` },
-    })
+    const response = await this.get('https://openrouter.ai/api/v1/credits')
     if (!response.ok) throw new CreditLimitError(`Credit check failed (HTTP ${response.status})`)
     const json = await response.json() as { data?: { total_usage?: number } }
     const usage = Number(json.data?.total_usage)
@@ -20,9 +29,7 @@ export class CreditGuard {
   }
 
   async keyRemaining(): Promise<number> {
-    const response = await this.fetcher('https://openrouter.ai/api/v1/key', {
-      headers: { Authorization: `Bearer ${this.apiKey}` },
-    })
+    const response = await this.get('https://openrouter.ai/api/v1/key')
     if (!response.ok) throw new CreditLimitError(`Key budget check failed (HTTP ${response.status})`)
     const json = await response.json() as { data?: { effective_budget?: { remaining_usd?: number }; limit_remaining?: number | null } }
     const values = [json.data?.effective_budget?.remaining_usd, json.data?.limit_remaining]
