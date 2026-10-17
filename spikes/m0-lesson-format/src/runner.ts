@@ -83,7 +83,7 @@ async function runOne(cfg: RunConfig, budget: Budget, model: Model, arm: Arm, ta
       // conservatively so resume cannot spend it a second time.
       budget.settle(worst, worst)
       rec.status = 'error'
-      rec.costUSD = worst
+      rec.costUSD += worst
       rec.error = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
       break
     }

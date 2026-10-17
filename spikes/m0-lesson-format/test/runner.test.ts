@@ -132,6 +132,22 @@ describe('runner', () => {
     const second = await runEval({ ...c, client: new StubLlm(0) })
     expect(second.ran).toBe(2)
   })
+
+  test('a failed repair record retains earlier successful round cost plus its uncertain reservation', async () => {
+    const client: LlmClient = {
+      async complete(req) {
+        if (req.turns.length > 1) throw new TypeError('socket connection was closed')
+        return new StubLlm(1).complete(req)
+      },
+    }
+    const c = cfg({ client, tasks: [taskById('math-s3')], models: ['claude-opus-5-5'], concurrency: 1 })
+    const result = await runEval(c)
+    const records = readRecords(c.dir)
+    expect(records).toHaveLength(2)
+    expect(records.every((r) => r.status === 'error' && r.rounds.length === 1)).toBe(true)
+    expect(records.every((r) => r.costUSD > r.rounds[0]!.costUSD)).toBe(true)
+    expect(records.reduce((sum, r) => sum + r.costUSD, 0)).toBeCloseTo(result.spent)
+  })
 })
 
 describe('extractLesson', () => {
