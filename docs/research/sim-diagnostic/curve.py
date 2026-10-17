@@ -8,7 +8,7 @@ def marg_of(parts, w, n):
         for v in s: m[v] += wi
     return m
 
-def run(n, layers, slip, guess, tn, rng, policy, K=3000, qmax=30, stop_err=0.05):
+def run(n, layers, slip, guess, tn, rng, policy, K=3000, qmax=30, stop_err=0.05, q_min=5, q_cap=25):
     layer_of, anc, desc = make_dag(n, layers, 3, rng)
     parts = [sample_state(n, layer_of, anc, rng, 1.0) for _ in range(K)]
     w = [1.0/K]*K
@@ -19,7 +19,8 @@ def run(n, layers, slip, guess, tn, rng, policy, K=3000, qmax=30, stop_err=0.05)
         acc = sum((m[v] >= .5) == (v in truth) for v in range(n))/n
         curve[q] = acc
         experr = sum(min(x, 1-x) for x in m)/n
-        if stopped_at is None and experr < stop_err:
+        # diagnostic rule (intelligent-tutoring.md §4.2): stop at experr < 5%, but not before q_min questions
+        if stopped_at is None and ((q >= q_min and experr < stop_err) or q >= q_cap):
             stopped_at, stopped_acc = q, acc
         if q == qmax: break
         if policy == 'half':
@@ -35,7 +36,7 @@ def run(n, layers, slip, guess, tn, rng, policy, K=3000, qmax=30, stop_err=0.05)
         z = sum(w); w = [x/z for x in w]
         if 1/sum(x*x for x in w) < K/4:
             parts = rng.choices(parts, weights=w, k=K); w = [1.0/K]*K
-    if stopped_at is None: stopped_at, stopped_acc = qmax, curve[qmax]
+    if stopped_at is None: stopped_at, stopped_acc = q_cap, curve[q_cap]
     return curve, stopped_at, stopped_acc
 
 rng = random.Random(11)

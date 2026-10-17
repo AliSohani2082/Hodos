@@ -10,7 +10,7 @@ Goal: the platform never imports cordis. cordis is pre-stable (`4.0.0-rc.11`; PR
 | [`src/host/map-adapter.ts`](src/host/map-adapter.ts) | `PluginHost` on plain Maps. 61 lines. Doubles as the in-memory host the SDK's contract-test harness would use. | No |
 | [`src/host/cordis-adapter.ts`](src/host/cordis-adapter.ts) | `PluginHost` on cordis. 100 lines. | **Yes, the only one** |
 
-Checks: `bun run adapter:test` runs one conformance suite (10 checks) against both adapters, 20/20 pass. `bun run adapter:noleak` scans imports and then compiles the five platform-facing files with `tsc --strict` in a directory that has no `node_modules`, so a cordis type anywhere in them fails the build. A negative control (inject `import type { Context } from 'cordis'` into `resolve.ts`) makes both fail.
+Checks: `bun run adapter:test` runs one conformance suite against both adapters: 10 shared checks plus a cordis-only check (A11, rootless Podman), 21/21 pass. `bun run adapter:noleak` scans imports and then compiles the five platform-facing files with `tsc --strict` in a directory that has no `node_modules`, so a cordis type anywhere in them fails the build. A negative control (inject `import type { Context } from 'cordis'` into `resolve.ts`) makes both fail.
 
 ## The interface
 

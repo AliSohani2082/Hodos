@@ -56,7 +56,12 @@ const stream = acp.ndJsonStream(Writable.toWeb(child.stdin) as WritableStream<Ui
 const toolCalls: { id: string; title: string; kind?: string; status?: string }[] = [];
 let text = "";
 const t0 = Date.now();
-const watchdog = setTimeout(() => { console.error("client wall-clock timeout"); child.kill("SIGKILL"); }, Number(a["timeout-s"]) * 1000);
+const watchdog = setTimeout(() => {
+  console.error("client wall-clock timeout");
+  // SIGKILL on the local `podman run` client does not stop the container, so remove it by name.
+  if (a.where !== "host") spawn("podman", ["rm", "-f", "-t", "0", `ali39-job-${a.job}`], { stdio: "ignore" });
+  child.kill("SIGKILL");
+}, Number(a["timeout-s"]) * 1000);
 
 let result: Record<string, unknown> = {};
 try {

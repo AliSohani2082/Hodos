@@ -213,6 +213,7 @@ def _execute_io(req, ex, prof, image_id, t0, debug):
         containers = 2
         if ref_frame is None:
             problem = problem or f"reference_{ref_problem}"
+            frame = None          # cannot grade without expected values: fail closed as "error"
         else:
             # The reference's stdout becomes the expected value — computed outside the learner box.
             for i, c in enumerate(cases):

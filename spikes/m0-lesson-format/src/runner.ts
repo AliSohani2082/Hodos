@@ -156,7 +156,11 @@ export async function runEval(cfg: RunConfig) {
           const rec = await runOne(cfg, budget, g.model, arm, g.task, s, reservations.get(arm))
           if (rec.rounds.length || rec.costUSD > 0) appendFileSync(file, JSON.stringify(rec) + '\n')
           if (rec.status === 'ok') stats.ran++
-          else if (rec.status === 'budget') { stats.budgetStopped++; return }
+          else if (rec.status === 'budget') {
+            stats.budgetStopped++
+            for (const later of arms.slice(arms.indexOf(arm) + 1)) budget.release(reservations.get(later)!)
+            return
+          }
           else { stats.errors++; log(`  ERROR ${key}: ${rec.error}`) }
           const last = rec.rounds[rec.rounds.length - 1]
           log(`${rec.status.padEnd(6)} ${key}  rounds=${rec.rounds.length} stop=${last?.stopReason} cost=$${rec.costUSD.toFixed(3)} total=$${budget.spent.toFixed(2)}/${cfg.capUSD}`)

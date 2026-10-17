@@ -13,7 +13,7 @@ for hostport in 'ali39-postgres 5432' 'ali39-runner 7070' 'ali39-mcp 7000' 'ali3
 done
 for url in 'http://192.168.1.101:19939/' 'http://192.168.1.250:19939/' 'http://169.254.169.254/latest/meta-data/' 'https://1.1.1.1/' 'https://example.com/'; do
   code=$(env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy curl -sS --connect-timeout 2 --max-time 3 -o /tmp/ali39-escape-body -w '%{http_code}' "$url" 2>/dev/null)
-  [ "$code" = 200 ] && result=UNEXPECTED || result=blocked
+  [ "${code:-000}" != 000 ] && result=UNEXPECTED || result=blocked
   echo "direct_http=$result:$url:${code:-000}"
 done
 dns=$(getent hosts example.com 2>/dev/null | head -1)

@@ -2,7 +2,7 @@
 
 A self-hostable, open-source platform where a teacher steers any AI coding agent to build a course, approves it like a pull request, and students learn from it with a mastery model the platform guarantees.
 
-**Status:** pre-code. The design is written down and the M0 spikes are next.
+**Status:** pre-code. M0 (the five spikes) has concluded and its ADRs are indexed. The Markdoc lesson-IR decision (ADR 0001) remains open, and M1 is next.
 
 ## Where things are
 

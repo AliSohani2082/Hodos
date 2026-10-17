@@ -39,8 +39,10 @@ NEEDLES = [b"HODOS-" + b"CANARY-7a3f9c2e1b8d4056", b"ANSWER-" + b"KEY-sort-list-
 def has_needle(b):
     return any(n in b for n in NEEDLES)
 LIBC = ctypes.CDLL(None, use_errno=True)
-def eprint(m):
-    sys.stderr.write(m + "\n"); sys.stderr.flush()
+def eprint(m, flush=True):
+    sys.stderr.write(m + "\n")
+    if flush:
+        sys.stderr.flush()
 '''
 
 ATTACKS = []

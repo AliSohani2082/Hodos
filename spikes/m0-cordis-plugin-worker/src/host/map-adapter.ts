@@ -1,4 +1,4 @@
-// PluginHost WITHOUT cordis: plain Maps and explicit disposer lists, ~90 lines. Exists to prove the interface is swappable and to give the
+// PluginHost WITHOUT cordis: plain Maps and explicit disposer lists, ~60 lines. Exists to prove the interface is swappable and to give the
 // conformance suite a second implementation. Not a recommendation: it has no dependency injection, no hot-swapping of services, no fiber states.
 import type { Disposer, PluginModule } from '../sdk/types.ts'
 import type { HostEvent, HostRegistry, PluginHandle, PluginHost, PluginState, PluginWorker } from './plugin-host.ts'

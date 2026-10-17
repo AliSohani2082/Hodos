@@ -122,14 +122,14 @@ async function main() {
         liveCap()
         const tasksFlag = flag('tasks') ?? 'pilot'
         const samples = Number(flag('samples') ?? (tasksFlag === 'all' ? 3 : 1))
-        if ((tasksFlag === 'all' || samples > 1 || flag('run') === 'full') && !has('confirm-full'))
+        if ((tasksFlag === 'all' || tasksFlag === 'reduced-full' || samples > 1 || flag('run') === 'full') && !has('confirm-full'))
           die('This is the full-run shape (all tasks or >1 sample). It needs explicit budget approval: pass --confirm-full once the budget has been approved. Nothing was sent.')
         requireCredentials()
         client = new OpenRouterLlm()
       }
       const tasks = pickTasks()
       const samples = Number(flag('samples') ?? (flag('tasks') === 'all' ? 3 : 1))
-      const dir = runDir(stub ? '_stub' : flag('tasks') === 'all' ? 'full' : 'pilot')
+      const dir = runDir(stub ? '_stub' : flag('tasks') === 'all' || flag('tasks') === 'reduced-full' ? 'full' : 'pilot')
       const cap = stub ? 1e9 : liveCap()
       const spent = stub ? 0 : newSpend(RESULTS)
       const priorHere = stub ? 0 : readRecords(dir).reduce((n, r) => n + r.costUSD, 0)

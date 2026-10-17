@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .bkt_lite import BktParams, update, update_multi
+from .bkt_lite import P_EPS, BktParams, update, update_multi
 
 PATH = Path(__file__).resolve().parent.parent / "fixtures" / "bkt_golden.json"
 
@@ -47,7 +47,7 @@ def build() -> dict:
     p = BktParams()
     out: dict = {
         "params": {"p0": p.p0, "T": p.T, "s0": p.s0, "g0": p.g0, "max_hint_level": p.max_hint_level,
-                   "lambda": dict(p.lam), "p_eps": 1e-4},
+                   "lambda": dict(p.lam), "p_eps": P_EPS},
         "single": [],
         "multi": [],
     }

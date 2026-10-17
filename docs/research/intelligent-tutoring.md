@@ -26,7 +26,7 @@ Effect sizes are in standard deviations. For scale, the median education RCT eff
 
 | # | Technique | Evidence | Design hook |
 |---|---|---|---|
-| 1 | **Mastery gating** with a strict, calibrated threshold | Cognitive Tutor, ALEKS and MATHia all gate on mastery `[memory]`. The 0.95 BKT threshold holds up and 0.98 did better on later lessons (EDM 2025). In an ALEKS RCT, a higher threshold meant less forgetting `[paper]`. | **Gate service.** `gate(skill) = P(L) ≥ θ_profile ∧ ≥1 unassisted correct in the last checkpoint`. Default θ is 0.95 for BKT skills. The teacher sees "strictness: lenient / standard / strict" mapped to 0.90 / 0.95 / 0.98, not a raw probability. |
+| 1 | **Mastery gating** with a strict, calibrated threshold | Cognitive Tutor, ALEKS and MATHia all gate on mastery `[memory]`. The 0.95 BKT threshold holds up and 0.98 did better on later lessons (EDM 2025). In an ALEKS RCT, a higher threshold meant less forgetting `[paper]`. | **Gate service.** `gate(skill) = P(L) ≥ θ_profile ∧ unassisted checkpoint successes on distinct items ≥ n_ck` (3 for guessable formats, see §3.2). Default θ is 0.95 for BKT skills. The teacher sees "strictness: lenient / standard / strict" mapped to 0.90 / 0.95 / 0.98, not a raw probability. |
 | 2 | **Retrieval practice** as the default exercise form; testing beats re-reading | Roediger & Karpicke 2006, Dunlosky et al. 2013 rate it "high utility" `[memory]`. | **Lesson IR.** Every lesson ends with 2–4 retrieval items (`exercise mode=practice`). Optional pre-questions at the start. The generator's lint fails a lesson that has none. |
 | 3 | **Spacing**, made graph-aware | FSRS (open source, trained on large review sets). Math Academy's FIRe passes review credit down "encompassing" edges, so reviewing an advanced topic implicitly reviews its components `[paper: vendor description, not independently evaluated]`. | **Review scheduler.** FSRS state per skill. Add `encompasses: {skill: weight}` edges in `graph.yaml` next to `requires`. A review of X gives fractional credit (or blame) to the skills X encompasses (§3.5). |
 | 4 | **Interleaving**, especially of confusable categories | Overall g = 0.42, and it is largest for visual and perceptual discrimination such as painting styles (g = 0.67). The effect in math is small (Brunmair & Richter 2019) `[paper]`. | **Session builder.** Review and late-Practice sessions mix skills and prefer pairs tagged `confusableWith` (a node attribute) or that share misconception tags. Blocked practice stays the default for the first exposures to a skill. |
@@ -199,7 +199,8 @@ Gate (per BKT node):
 ```text
 gate_open(skill) =
      P(L) ≥ θ                                  # θ = 0.95 default (0.90 / 0.95 / 0.98)
-  ∧  exists checkpoint attempt in current gate window with e ≥ 0.8 and h = 0
+  ∧  unassisted checkpoint successes (e ≥ 0.8, h = 0) on distinct items in the current gate window ≥ n_ck
+                                               # n_ck = 3 for guessable formats (MCQ and similar), fewer only for validated guess-resistant items (ADR-0005)
   ∧  attempts_on_distinct_items ≥ 3           # floor: BKT alone can pass 0.95 after 3 lucky rights
 ```
 With these defaults, a learner starting at `p0 = 0.1` passes 0.95 after 3 clean correct answers on typical practice items (P reaches 0.98), or 2 from `p0 = 0.3` `[measured: arithmetic]`. That matches the "3 in a row" heuristic used in ASSISTments `[paper: summary]`. It is also why the distinct-item floor and the unassisted-checkpoint clause matter: BKT alone opens the gate quickly.
@@ -334,14 +335,14 @@ diagnose(learner, goal):
 
 ### 4.4 Simulation results `[sim]`
 
-The scripts are in `docs/research/sim-diagnostic/` (`python3 curve.py`, about 3 minutes). Setup: random layered DAGs with up to 3 parents per node, slip 0.10, guess 0.20, K = 3000 particles, 30 runs per row. "Noise 2.0" means the true state comes from a *noisier* process than the prior assumes, i.e. a misspecified prior.
+The scripts are in `docs/research/sim-diagnostic/` (`python3 curve.py`, about 3 minutes). Stopping follows the §4.3 rule: expected node error below 5% after at least 5 questions, capped at 25. Setup: random layered DAGs with up to 3 parents per node, slip 0.10, guess 0.20, K = 3000 particles, 30 runs per row. "Noise 2.0" means the true state comes from a *noisier* process than the prior assumes, i.e. a misspecified prior.
 
 | nodes | true-state noise | policy | node accuracy at q=0 / 5 / 10 / 15 / 20 / 30 | stop at expErr<5%: mean q (p90), accuracy |
 |---|---|---|---|---|
-| 30 | 1.0 | half-split | 0.74 / 0.88 / 0.93 / 0.94 / 0.95 / 0.97 | 15.3 (21), 0.957 |
-| 30 | 1.0 | random | 0.73 / 0.83 / 0.86 / 0.89 / 0.92 / 0.92 | 29.5 (30), 0.920 |
-| 60 | 2.0 | half-split | 0.72 / 0.87 / 0.91 / 0.93 / 0.94 / 0.95 | 14.9 (23), 0.935 |
-| 60 | 2.0 | random | 0.75 / 0.85 / 0.86 / 0.88 / 0.88 / 0.90 | 28.2 (30), 0.897 |
+| 30 | 1.0 | half-split | 0.74 / 0.88 / 0.93 / 0.94 / 0.95 / 0.97 | 15.2 (21), 0.957 |
+| 30 | 1.0 | random | 0.73 / 0.83 / 0.86 / 0.89 / 0.92 / 0.92 | 25.0 (25), 0.918 |
+| 60 | 2.0 | half-split | 0.72 / 0.87 / 0.91 / 0.93 / 0.94 / 0.95 | 14.9 (23), 0.934 |
+| 60 | 2.0 | random | 0.75 / 0.85 / 0.86 / 0.88 / 0.88 / 0.90 | 23.9 (25), 0.896 |
 | 120 | 1.0 | half-split | 0.76 / 0.89 / 0.92 / 0.94 / 0.95 / 0.96 | 14.9 (19), 0.942 |
 | 120 | 2.0 | half-split | 0.76 / 0.86 / 0.90 / 0.92 / 0.93 / 0.94 | 15.6 (20), 0.925 |
 

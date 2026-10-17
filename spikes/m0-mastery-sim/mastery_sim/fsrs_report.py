@@ -15,7 +15,7 @@ from .stats import wilson
 def write_csv(path: Path, rows: list[dict]) -> None:
     if not rows:
         return
-    with path.open("w", newline="") as f:
+    with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, rows[0].keys(), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)

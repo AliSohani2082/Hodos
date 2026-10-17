@@ -44,7 +44,7 @@ def _row(c: Cell, s: dict) -> dict:
 
 
 def write_csv(path: Path, res: dict[Cell, dict]) -> None:
-    with path.open("w", newline="") as fh:
+    with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=CSV_FIELDS, lineterminator="\n")
         w.writeheader()
         for c, s in res.items():
@@ -70,7 +70,7 @@ def hint_level_table() -> list[dict]:
 
 
 def write_hint_csv(path: Path, rows: list[dict]) -> None:
-    with path.open("w", newline="") as fh:
+    with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]), lineterminator="\n")
         w.writeheader()
         for r in rows:

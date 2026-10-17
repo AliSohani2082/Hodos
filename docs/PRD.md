@@ -335,7 +335,7 @@ The baseline is an internet-exposed instance: one teacher-admin and about a doze
 
 | Loop | Learning process | Kinds | Shape | Estimator | Gate | v1? |
 |---|---|---|---|---|---|---|
-| **Explain → Check** | Sense-making | concept, procedure | Lesson → worked example → practice (hints) → checkpoint → next or remedial | BKT-lite | P ≥ θ + an unassisted correct answer + ≥3 items | ✅ |
+| **Explain → Check** | Sense-making | concept, procedure | Lesson → worked example → practice (hints) → checkpoint → next or remedial | BKT-lite | P ≥ θ + unassisted checkpoint successes on distinct items (three for guessable formats, fewer only for validated guess-resistant items; MS-2) + attempts on ≥3 items | ✅ |
 | **Drill** | Memory and fluency | fact | Context card → recall → reveal → FSRS reschedules | FSRS per item | About 90% of items stable | ✅ |
 | **Recognize fast** | Induction (perceptual) | pattern, part of judgment | Contrasting examples → many fast, mixed, timed trials | Elo + latency | Rating ≥ target and fast enough | v1.x (chess) |
 | **Attempt → Critique** | Whole-task practice | performance, judgment | Brief + exemplars → attempt → critique → targeted drill → reattempt | Rubric-ordinal / oracle | Each required dimension at target across ≥2 distinct briefs | ✅ deterministic graders only; AI rubrics later |

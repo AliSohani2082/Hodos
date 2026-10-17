@@ -45,8 +45,9 @@ def run(n, layers, maxpar, slip, guess, K, qmax, lo, hi, rng, true_noise):
         marg = [0.0] * n
         for s, wi in zip(parts, w):
             for v in s: marg[v] += wi
-        unsure = [v for v in range(n) if lo < marg[v] < hi]
-        if not unsure: break
+        # intelligent-tutoring.md §4.2: stop at expected node error < 5% after at least 5 questions, or at the cap
+        if q >= 5 and sum(min(m, 1 - m) for m in marg) / n < 0.05: break
+        unsure = [v for v in range(n) if lo < marg[v] < hi] or list(range(n))
         # half-split: node whose marginal is closest to 0.5, penalise re-asking
         v = min(unsure, key=lambda x: abs(marg[x] - 0.5) + 0.15 * asked.get(x, 0))
         knows = v in truth
@@ -74,7 +75,7 @@ if __name__ == "__main__":
         for slip, guess, tn in [(0.1, 0.2, 1.0), (0.1, 0.25, 2.0)]:
             qs, accs = [], []
             for _ in range(40):
-                q, a = run(n, layers, 3, slip, guess, 3000, 30, 0.15, 0.85, rng, tn)
+                q, a = run(n, layers, 3, slip, guess, 3000, 25, 0.15, 0.85, rng, tn)
                 qs.append(q); accs.append(a)
             qs.sort(); accs.sort()
             print(f"{n:4d} {layers:3d} {slip:.2f} {guess:.2f} {tn:.1f} | {st.mean(qs):5.1f} ({qs[int(.9*len(qs))-1]:2d}) | {st.mean(accs):.3f} ({accs[int(.1*len(accs))]:.3f})")

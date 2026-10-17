@@ -38,7 +38,7 @@ done
   podman run --rm --pull=never --http-proxy=false --network ali39-app --entrypoint sh localhost/ali39-agent:dev -ec \
     'unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy; nc -z -w 2 ali39-postgres 5432 && echo postgres=reachable; curl -sS --max-time 3 -o /dev/null -w "runner_http=%{http_code}\\n" http://ali39-runner:7070/; curl -sS --max-time 3 -o /dev/null -w "lan_device_http=%{http_code}\\n" http://ali39-dummies:9999/'
   echo "--- dummy listener log summary ---"
-  if rg '"event":"connection".*"src":"10\\.139\\.0\\.' "$S/work/logs/dummies.jsonl" "$S/work/logs/lan-dummy.jsonl"; then
+  if rg '"event":"connection".*"src":"(::ffff:)?10\.139\.0\.' "$S/work/logs/dummies.jsonl" "$S/work/logs/lan-dummy.jsonl"; then
     echo "sandbox_source_connection=UNEXPECTED"
     exit 1
   else

@@ -8,7 +8,7 @@ Status: research, 2026-10-09. Scope: the intermediate representation between les
 
 ## 1. Recommendation
 
-**Use Markdoc as the authoring and validation surface. Make a typed JSON AST the stored canonical form. Make plugin-owned JSON Schema the contract for every block.**
+**Use Markdoc as the authoring and validation surface. Store lesson `.md` files as the canonical form (§7), with the typed JSON AST as a derived cache. Make plugin-owned JSON Schema the contract for every block.**
 
 In layers:
 
@@ -388,7 +388,7 @@ Primary source: Karpathy's `llm-wiki` gist (April 2026), read in full except a t
 | Wiki | LLM-written markdown (summaries, entity and concept pages, comparisons). "You read it; the LLM writes it." |
 | Schema | A `CLAUDE.md`/`AGENTS.md` that defines structure, conventions and workflows. |
 | `index.md` | Catalog of every page: link, one-line summary, category. The agent reads it first. Works at "~100 sources, ~hundreds of pages" without embeddings. |
-| `log.md` | Append-only, greppable prefixes like `## [2026-04-02] ingest | Title`. |
+| `log.md` | Append-only, greppable prefixes like `## [2026-04-02] ingest \| Title`. |
 | Operations | **Ingest** (one source can touch 10-15 pages), **query** (cited answers, good ones filed back as pages), **lint** (contradictions, stale claims, orphans, missing links, gaps). |
 | Tooling | Obsidian, Git, Marp, Dataview. For larger wikis, real search such as `qmd` (hybrid BM25/vector with re-ranking, CLI and MCP). |
 
@@ -455,7 +455,7 @@ A separate session ("its-research") is researching intelligent tutoring systems,
 
 ## 8. M0 eval spec: Markdoc vs directives (spec only, not run)
 
-Purpose: decide, with data, whether the provisional Markdoc lock holds. This is the first engineering spike of milestone M0. **Nothing here has been run, and running it spends real API money, so it needs the user's explicit go-ahead on the budget in §8.6.**
+Purpose: decide, with data, whether the provisional Markdoc lock holds. This is the first engineering spike of milestone M0. **The full 648-generation design has not been run, and running it spends real API money, so it needs the user's explicit go-ahead on the budget in §8.6. A reduced pilot and a funded reduced run have been completed; see [ADR 0001](../adr/0001-markdoc-lesson-ir.md) (inconclusive).**
 
 ### 8.1 Question and scope
 
