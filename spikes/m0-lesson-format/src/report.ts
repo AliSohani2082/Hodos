@@ -43,6 +43,15 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
   const full = taskIds.size === TASKS.length && samples >= 3 && ok.length >= TASKS.length * 2 * MODELS.length * 3
   const reducedPilot = run === 'pilot'
   const fundedRun = run === 'full'
+  const reducedFullOmit = new Set(['math-s1', 'programming-s2', 'chess-s3', 'language-s4', 'history-s5', 'science-s1'])
+  const plannedFullTasks = TASKS.filter((task) => !reducedFullOmit.has(task.id))
+  const finishedKeys = new Set(ok.map((r) => r.key))
+  const missingFullCells = fundedRun
+    ? plannedFullTasks.flatMap((task) => (['claude-opus-5-5', 'claude-sonnet-5-5'] as Model[])
+        .flatMap((model) => (['markdoc', 'directive'] as Arm[])
+          .map((arm) => `${model}|${arm}|${task.id}|1`)
+          .filter((key) => !finishedKeys.has(key))))
+    : []
   const judgments = readJudgments(dir)
   const quality = qualityOf(scored, judgments)
   if (quality && args.q2prefM !== undefined) quality.q2prefM = args.q2prefM
@@ -61,6 +70,14 @@ export function buildReport(args: { run: string; records: GenRecord[]; dir: stri
     `${ok.length} finished generations, ${records.length - ok.length} unsuccessful attempts (budget or API error, excluded; retries can succeed later). Spend so far: ${usd(spent)} on generation${judgments.length ? ` and ${usd(judgments.reduce((n, j) => n + j.costUSD, 0))} on judging` : ''}.`,
     ...(args.totalSpendUSD !== undefined ? [reducedPilot ? `Cumulative OpenRouter spend recorded across smoke and generation: $${args.totalSpendUSD.toFixed(8)} of the $4.50 pilot cap.` : `New OpenRouter spend recorded since the full-run approval: $${args.totalSpendUSD.toFixed(8)} of the $19.00 hard cap.`] : []),
     ...(reducedPilot ? ['[Ten-output manual scoring spot-check](spot-check.md).'] : []),
+    '',
+  )
+  if (fundedRun) L.push(
+    '## Completion and interpretation',
+    '',
+    `**INCONCLUSIVE.** ${ok.length} of ${plannedFullTasks.length * 4} planned reduced-run cells completed. ${missingFullCells.length} are missing: ${missingFullCells.length ? missingFullCells.map((key) => `\`${key}\``).join(', ') : 'none'}. The original 648-generation specification also included six more tasks, Haiku 5.5 and two further samples per cell. Q1 judging and the Q2 human blind check were not done. The user stopped paid work after the in-flight cell finished.`,
+    '',
+    'The K1-K6 thresholds below are unchanged. With one sample per task, incomplete paired coverage, and no Q1/Q2 quality evidence, the descriptive rule output is not a go/no-go on the provisional lesson IR.',
     '',
   )
 
