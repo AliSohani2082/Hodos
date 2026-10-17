@@ -195,7 +195,7 @@ async function main() {
       const records = readRecords(dir)
       if (!records.length) die(`no records in ${dir}`)
       const q2 = existsSync(`${dir}/q2-score.json`) ? (JSON.parse(readFileSync(`${dir}/q2-score.json`, 'utf8')).prefM as number) : undefined
-      const md = buildReport({ run: dir.split('/').pop()!, records, dir, q2prefM: q2, iterationUsed: has('iteration-used'), totalSpendUSD: recordedSpend(RESULTS) })
+      const md = buildReport({ run: dir.split('/').pop()!, records, dir, q2prefM: q2, iterationUsed: has('iteration-used'), totalSpendUSD: dir.endsWith('/full') ? newSpend(RESULTS) : recordedSpend(RESULTS) })
       mkdirSync(dir, { recursive: true })
       writeFileSync(`${dir}/report.md`, md)
       writeResultsCsv(dir, records)
