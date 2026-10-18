@@ -36,7 +36,7 @@ def run(n, layers, slip, guess, tn, rng, policy, K=3000, qmax=30, stop_err=0.05,
         z = sum(w); w = [x/z for x in w]
         if 1/sum(x*x for x in w) < K/4:
             parts = rng.choices(parts, weights=w, k=K); w = [1.0/K]*K
-    if stopped_at is None: stopped_at, stopped_acc = q_cap, curve[q_cap]
+    if stopped_at is None: stopped_at, stopped_acc = qmax, curve[qmax]
     return curve, stopped_at, stopped_acc
 
 rng = random.Random(11)
