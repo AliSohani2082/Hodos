@@ -1,0 +1,88 @@
+{
+  "spike": "ALI-52",
+  "bun": "/home/ali2082/.local/share/mise/installs/bun/1.4.2/bin/bun",
+  "node": "/home/ali2082/.local/share/mise/installs/node/24.21.0/bin/node",
+  "bunVersion": "1.4.2",
+  "nodeVersion": "v24.21.0",
+  "options": {
+    "quickjs-emscripten": {
+      "onBun": {
+        "ok": true,
+        "status": 0,
+        "output": "eval -> 42"
+      },
+      "onNode": {
+        "ok": true,
+        "status": 0,
+        "output": "eval -> 42"
+      },
+      "facts": {
+        "version": "0.32.0",
+        "shipped": "pure JS + wasm; only @jitl/quickjs-wasmfile-release-sync + quickjs-emscripten-core are needed",
+        "releaseSyncWasmBytes": 503134,
+        "minimalPackageMB": 1.45,
+        "metaPackageMB": 8.05,
+        "native": false,
+        "installNeeds": "nothing (no compiler, no postinstall)"
+      }
+    },
+    "isolated-vm": {
+      "onBun": {
+        "ok": false,
+        "status": 1,
+        "output": "error: <spike>/node_modules/isolated-vm/prebuilds/linux-x64/isolated-vm.abi147.glibc.node: undefined symbol: _ZN2v815ValueSerializer8Delegate19HasCustomHostObjectEPNS_7IsolateE"
+      },
+      "onNode": {
+        "ok": true,
+        "status": 0,
+        "output": "eval -> 42"
+      },
+      "facts": {
+        "version": "7.0.1",
+        "shipped": "native V8 addon; prebuilds for linux x64/arm64, darwin-arm64, win32-x64 per Node ABI (137 = Node 24, 147 = Node 26) and glibc/musl",
+        "packageMB": 19.97,
+        "onePrebuildMB": 1.03,
+        "native": true,
+        "installNeeds": "prebuild matching the Node ABI, else node-gyp + C++ toolchain + Node headers (compile takes minutes); engines.node >= 24; must be rebuilt/re-resolved on every Node major"
+      }
+    },
+    "workerd": {
+      "onBun": {
+        "ok": true,
+        "status": 0,
+        "output": "binary -> workerd 2026-10-16"
+      },
+      "onNode": {
+        "ok": true,
+        "status": 0,
+        "output": "binary -> workerd 2026-10-16"
+      },
+      "facts": {
+        "version": "1.20261016.1",
+        "shipped": "one static-ish 130 MB binary per platform via optional dependency + postinstall",
+        "binaryMB": 133.15,
+        "packageMB": 133.15,
+        "native": true,
+        "installNeeds": "postinstall script (ran under Bun without a trust prompt); needs a CA bundle in the runtime image to start"
+      }
+    },
+    "cordis": {
+      "onBun": {
+        "ok": true,
+        "status": 0,
+        "output": "ctx -> function"
+      },
+      "onNode": {
+        "ok": true,
+        "status": 0,
+        "output": "ctx -> function"
+      },
+      "facts": {
+        "version": "4.0.0-rc.11",
+        "packageMB": 0.16,
+        "native": false,
+        "installNeeds": "nothing"
+      }
+    }
+  }
+}

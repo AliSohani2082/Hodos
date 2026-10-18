@@ -1,0 +1,18 @@
+ALI-56 upstream proxy chain probe (2026-10-16)
+
+Setup: one-off proxy container `ali39-chain-proxy` on ali39-agent and ali39-app with
+UPSTREAM_PROXY=http://ali39-test-user:ali39-test-pass@ali39-upstream:3128,
+ALLOW_CONNECT empty, provider keys set to mock-anthropic-provider-key and
+mock-openai-provider-key. The upstream is the local dummy Basic-auth proxy;
+no sandbox environment variable contains its address or credentials.
+
+Command inside the restricted job container:
+curl -sS --max-time 15 -w '\\nHTTP:%{http_code}\\n' -H 'authorization: Bearer sandbox-placeholder' http://ali39-chain-proxy:8081/openai/v1/models
+
+Observed: gateway returned 401 invalid_api_key from api.openai.com. The gateway
+log records an allowed /openai/v1/models request with `sandboxSentCredential=true`
+and `injected=true`; the dummy upstream log records CONNECT api.openai.com:443
+with decision=tunnel. The supplied key was a known invalid mock value, so the
+provider rejected the request and no authenticated API operation or spend was
+performed. This demonstrates chaining to the approved upstream proxy; it does
+not use the workstation's 127.0.0.1:10808 proxy.

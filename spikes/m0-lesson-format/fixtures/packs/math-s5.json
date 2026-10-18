@@ -1,0 +1,100 @@
+{
+ "id": "math-s5",
+ "chunks": [
+  {
+   "id": "src:wiki-bayes-theorem#c1",
+   "outlet": "src:wiki-bayes-theorem",
+   "title": "Bayes' theorem",
+   "text": "In probability theory, Bayes' theorem (alternatively Bayes' law or Bayes' rule), named after Thomas Bayes (), gives a mathematical rule for inverting conditional probabilities, allowing the probability of a cause to be found given its effect. For example, with Bayes' theorem, the probability that a patient has a disease given that they tested positive for that disease can be found using the probability that the test yields a positive result when the disease is present. The theorem was developed in the 18th century by Bayes and independently by Pierre-Simon Laplace. , the posterior probability)."
+  },
+  {
+   "id": "src:wiki-bayes-theorem#c2",
+   "outlet": "src:wiki-bayes-theorem",
+   "title": "Bayes' theorem",
+   "text": "By modern standards, we should refer to the Bayes–Price rule. Price discovered Bayes's work, recognized its importance, corrected it, contributed to the article, and found a use for it. The modern convention of employing Bayes's name alone is unfair but so entrenched that anything else makes little sense. The \"Bayes factor\" or \"likelihood\" that appears when writing Bayes' theorem in odds form appears in the early 1940s work of Alan Turing, who called it the \"factor in favour of a proposition\". In 1878, Charles Sanders Peirce used the logarithm of this factor as the \"weight of evidence\" for a proposition."
+  },
+  {
+   "id": "src:wiki-bayes-theorem#c3",
+   "outlet": "src:wiki-bayes-theorem",
+   "title": "Bayes' theorem",
+   "text": "The interpretation of Bayes' rule depends on the interpretation of probability ascribed to the terms. The two predominant classes of interpretation are described below. In Bayesian (or epistemological) interpretations, probability measures a rational \"degree of belief\". Bayes' theorem links the degree of belief in a proposition before and after rationally accounting for evidence. For example, in a medical testing scenario, if a patient tests positive for a disease, the doctor will find it more plausible that the patient has that disease. In the frequentist interpretations, probability measures a \"proportion of outcomes\". For example, suppose an experiment is performed many times. P(A) is the proportion of outcomes with property A (the prior) and P(B) is the proportion with property B. P(B|A) is the proportion of outcomes with property B out of outcomes with property A, and P(A|B) is the proportion of those with A out of those with B (the posterior)."
+  },
+  {
+   "id": "src:wiki-bayes-theorem#c4",
+   "outlet": "src:wiki-bayes-theorem",
+   "title": "Bayes' theorem",
+   "text": "In many applications, for instance in Bayesian inference, the event B is fixed in the discussion and we wish to consider the effect of its having been observed on our belief in various possible events A. In such situations the denominator of the last expression, the probability of the given evidence B, is fixed; what we want to vary is A. Bayes' theorem shows that the posterior probabilities are proportional to the numerator, so the last equation becomes: For two continuous random variables X and Y, Bayes' theorem may be analogously derived from the definition of conditional density: Existence and uniqueness of the needed conditional expectation is a consequence of the Radon–Nikodym theorem. Andrey Kolmogorov formulated this in 1933. He underlined the importance of conditional probability, writing, \"I wish to call attention to ... the theory of conditional probabilities and conditional expectations\". Bayes' theorem determines the posterior distribution from the prior distribution. Uniqueness requires continuity assumptions. Bayes' theorem can be generalized to include improper prior distributions such as the uniform distribution on the real line. Modern Markov chain Monte Carlo methods have boosted the importance of Bayes' theorem, including in cases with improper priors."
+  },
+  {
+   "id": "src:wiki-probability#c1",
+   "outlet": "src:wiki-probability",
+   "title": "Probability",
+   "text": "Probability concerns events and numerical descriptions of how likely they are to occur. The probability of an event is a number between 0 and 1; the larger the probability, the more likely an event is to occur. This number is often expressed as a percentage (%), ranging from 0% to 100%. A simple example is the tossing of a fair (unbiased) coin. 5 or 50%). These concepts have been given an axiomatic mathematical formalization in probability theory, which is used widely in areas of study such as statistics, mathematics, science, finance, gambling, artificial intelligence, machine learning, computer science, game theory, and philosophy to, for example, draw inferences about the expected frequency of events. Probability theory is also used to describe the underlying mechanics and regularities of complex systems."
+  },
+  {
+   "id": "src:wiki-probability#c2",
+   "outlet": "src:wiki-probability",
+   "title": "Probability",
+   "text": "The word probability derives from the Latin probabilitas, which can also mean \"probity\", a measure of the authority of a witness in a legal case in Europe, and often correlated with the witness's nobility. In a sense, this differs much from the modern meaning of probability, which in contrast is a measure of the weight of empirical evidence, and is arrived at from inductive reasoning and statistical inference. , experiments that are random and well-defined – in a purely theoretical setting (like tossing a coin), probabilities can be numerically described by the number of desired outcomes, divided by the total number of all outcomes. This is referred to as theoretical probability (in contrast to empirical probability, dealing with probabilities in the context of real experiments). The probability is a number between 0 and 1; the larger the probability, the more likely the desired outcome is to occur. For example, tossing a coin twice will yield \"head-head\", \"head-tail\", \"tail-head\", and \"tail-tail\" outcomes. 25 or 25%. 75, and this event is more likely to occur. However, when it comes to practical application, there are two major competing categories of probability interpretations, whose adherents hold different views about the fundamental nature of probability:"
+  },
+  {
+   "id": "src:wiki-probability#c3",
+   "outlet": "src:wiki-probability",
+   "title": "Probability",
+   "text": "Objectivists assign numbers to describe some objective or physical state of affairs. The most popular version of objective probability is frequentist probability, which claims that the probability of a random event denotes the relative frequency of occurrence of an experiment's outcome when the experiment is repeated indefinitely. This interpretation considers probability to be the relative frequency \"in the long run\" of outcomes. A modification of this is propensity probability, which interprets probability as the tendency of some experiment to yield a certain outcome, even if it is performed only once. Subjectivists assign numbers per subjective probability, that is, as a degree of belief. The degree of belief has been interpreted as \"the price at which you would buy or sell a bet that pays 1 unit of utility if E, 0 if not E\", although that interpretation is not universally agreed upon. The most popular version of subjective probability is Bayesian probability, which includes expert knowledge as well as experimental data to produce probabilities. The expert knowledge is represented by some (subjective) prior probability distribution. These data are incorporated in a likelihood function."
+  },
+  {
+   "id": "src:wiki-probability#c4",
+   "outlet": "src:wiki-probability",
+   "title": "Probability",
+   "text": "The product of the prior and the likelihood, when normalized, results in a posterior probability distribution that incorporates all the information known to date. By Aumann's agreement theorem, Bayesian agents whose prior beliefs are similar will end up with similar posterior beliefs. However, sufficiently different priors can lead to different conclusions, regardless of how much information the agents share. The scientific study of probability is a modern development of mathematics. Gambling shows that there has been an interest in quantifying the ideas of probability throughout history, but exact mathematical descriptions arose much later. There are reasons for the slow development of the mathematics of probability. Whereas games of chance provided the motivation for the mathematical study of probability, fundamental issues  are still obscured by superstitions. According to Richard Jeffrey, \"Before the middle of the seventeenth century, the term 'probable' (Latin probabilis) meant approvable, and was applied in that sense, univocally, to opinion and to action. \" However, in legal contexts especially, 'probable' could also apply to propositions for which there was good evidence."
+  },
+  {
+   "id": "src:wiki-conditional-probability#c1",
+   "outlet": "src:wiki-conditional-probability",
+   "title": "Conditional probability",
+   "text": "In probability theory, conditional probability is a measure of the probability of an event occurring, given that another event (by assumption, presumption, assertion, or evidence) is already known to have occurred. This particular method relies on event A occurring with some sort of relationship with another event B. In this situation, the event A can be analyzed by a conditional probability with respect to B. If the event of interest is A and the event B is known or assumed to have occurred, \"the conditional probability of A given B\", or \"the probability of A under the condition B\", is usually written as P(A|B) or occasionally PB(A). This can also be understood as the fraction of probability B that intersects with A, or the ratio of the probabilities of both events happening to the \"given\" one happening (how many times A occurs rather than not assuming B has occurred):"
+  },
+  {
+   "id": "src:wiki-conditional-probability#c2",
+   "outlet": "src:wiki-conditional-probability",
+   "title": "Conditional probability",
+   "text": "Suppose that somebody secretly rolls two fair six-sided dice, and we wish to compute the probability that the face-up value of the first one is 2, given the information that their sum is no greater than 5. Table 3 shows that for 3 of these 10 outcomes, D1 = 2. 3: In statistical inference, the conditional probability is an update of the probability of an event based on new information. The new information can be incorporated as follows: The concepts of conditional probability and statistical independence can be understood through the idea of how new information changes an individual's uncertainty about an event."
+  },
+  {
+   "id": "src:wiki-conditional-probability#c3",
+   "outlet": "src:wiki-conditional-probability",
+   "title": "Conditional probability",
+   "text": "In this sense, independence implies that observing one event provides no additional information about the occurrence of the other event. Events A and B are defined to be statistically independent if the probability of the intersection of A and B is equal to the product of the probabilities of A and B: is also equivalent. Although the derived forms may seem more intuitive, they are not the preferred definition as the conditional probabilities may be undefined, and the preferred definition is symmetrical in A and B. Independence does not refer to a disjoint event. It should also be noted that given the independent event pair [A,B] and an event C, the pair is defined to be conditionally independent if"
+  },
+  {
+   "id": "src:wiki-conditional-probability#c4",
+   "outlet": "src:wiki-conditional-probability",
+   "title": "Conditional probability",
+   "text": "In fact, mutually exclusive events cannot be statistically independent (unless both of them are impossible), since knowing that one occurs gives information about the other (in particular, that the latter will certainly not occur). Independent vs. Positive association vs. Negative association of events These fallacies should not be confused with Robert K. Shope's 1978 \"conditional fallacy\", which deals with counterfactual examples that beg the question. In general, it cannot be assumed that P(A|B) ≈ P(B|A). This can be an insidious error, even for those who are highly conversant with statistics. The relationship between P(A|B) and P(B|A) is given by Bayes' theorem:"
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-bayes-theorem",
+   "title": "Bayes' theorem",
+   "url": "https://en.wikipedia.org/wiki/Bayes'_theorem",
+   "revid": 1380204666,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-probability",
+   "title": "Probability",
+   "url": "https://en.wikipedia.org/wiki/Probability",
+   "revid": 1378066471,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-conditional-probability",
+   "title": "Conditional probability",
+   "url": "https://en.wikipedia.org/wiki/Conditional_probability",
+   "revid": 1377896814,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

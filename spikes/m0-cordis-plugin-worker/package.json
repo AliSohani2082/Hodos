@@ -1,0 +1,35 @@
+{
+  "name": "ali38-m0-cordis-plugin-worker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Throwaway M0 spike (b): cordis on Bun and plugin-worker isolation. Not imported by the app.",
+  "engines": {
+    "bun": ">=1.4.0",
+    "node": ">=24"
+  },
+  "scripts": {
+    "cordis:bun": "bun run src/cordis/lifecycle.ts",
+    "cordis:node": "node --expose-gc src/cordis/lifecycle.ts",
+    "cordis:diff": "bun run scripts/diff-cordis.ts",
+    "cordis:decorators": "bun run src/cordis/decorators-bun.ts",
+    "bench:latency": "bun run src/bench/latency.ts",
+    "bench:render": "bun run scripts/render-latency.ts",
+    "bench:compute": "bun run src/bench/compute.ts",
+    "bench:footprint": "bun run src/bench/footprint.ts",
+    "hostile": "bun run src/hostile/run.ts",
+    "hostile:render": "bun run scripts/render-hostile.ts",
+    "compat:bun": "bun run scripts/compat-bun.ts",
+    "adapter:test": "bun run src/host/conformance.ts",
+    "adapter:noleak": "bun run scripts/check-no-leak.ts"
+  },
+  "dependencies": {
+    "cordis": "4.0.0-rc.11",
+    "isolated-vm": "7.0.1",
+    "quickjs-emscripten": "0.32.0",
+    "workerd": "1.20261016.1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

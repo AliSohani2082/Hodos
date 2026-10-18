@@ -1,0 +1,9 @@
+ALI-58 configuration discovery probe, 2026-10-16
+Claude isolated: settingSources=[], strictMcpConfig=true; explicit ACP mcpServers only.
+ALI39_MOCK_OKclaude_isolated=CLAUDE.md canary absent; rogue MCP not connected; hook marker absent
+Claude positive control: project/local setting sources enabled and strict MCP disabled.
+ALI39_MOCK_OKclaude_control=CLAUDE.md canary visible; planted hook ran
+Codex isolated: fresh CODEX_HOME trust_level=untrusted, CODEX_CONFIG project_doc_max_bytes=0, empty read-only /workspace/.codex tmpfs.
+ALI39_MOCK_OKcodex_isolated=AGENTS.md canary absent; planted .codex MCP route not contacted
+Codex positive control: project config test override enables trusted project discovery and removes the mask.
+ALI39_MOCK_OKcodex_control=AGENTS.md canary visible; planted .codex MCP route attempted and denied

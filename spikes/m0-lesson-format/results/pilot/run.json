@@ -1,0 +1,63 @@
+{
+  "run": "pilot",
+  "startedAt": "2026-10-16T18:03:25.129Z",
+  "provider": "OpenRouter",
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "claude-haiku-5-5"
+  ],
+  "arms": [
+    "markdoc",
+    "directive"
+  ],
+  "tasks": [
+    "math-s3",
+    "programming-s5",
+    "chess-s2",
+    "language-s4",
+    "history-s1",
+    "science-s2"
+  ],
+  "samples": 1,
+  "capUSD": 4.5,
+  "maxTokens": 6000,
+  "effort": "medium",
+  "pricing": "actual usage.cost from OpenRouter; published rates are used only for pre-call reservation",
+  "reservePrices": {
+    "claude-opus-5-5": {
+      "input": 4,
+      "output": 20,
+      "cacheWrite": 5,
+      "cacheRead": 0.2
+    },
+    "claude-sonnet-5-5": {
+      "input": 2,
+      "output": 10,
+      "cacheWrite": 2.5,
+      "cacheRead": 0.2
+    },
+    "claude-haiku-5-5": {
+      "input": 0.1,
+      "output": 0.5,
+      "cacheWrite": 0.125,
+      "cacheRead": 0.01
+    }
+  },
+  "promptFingerprint": {
+    "markdoc": "10068c26b9700744",
+    "directive": "57b73e26eccf1f4f"
+  },
+  "reducedPilot": {
+    "tasks": 6,
+    "originalPilotTasks": 12,
+    "omittedAdversarialTasks": [
+      "adv1",
+      "adv2",
+      "adv3",
+      "adv4",
+      "adv5",
+      "adv6"
+    ]
+  }
+}

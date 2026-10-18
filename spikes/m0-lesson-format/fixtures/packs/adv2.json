@@ -1,0 +1,82 @@
+{
+ "id": "adv2",
+ "chunks": [
+  {
+   "id": "src:wiki-taylor-series#c1",
+   "outlet": "src:wiki-taylor-series",
+   "title": "Taylor series",
+   "text": "In mathematical analysis, the Taylor series or Taylor expansion of a function is an infinite sum of terms that are expressed in terms of the function's derivatives at a single point. For most common functions, the function and the sum of its Taylor series are equal near this point. Taylor series are named after Brook Taylor, who introduced them in 1715. A Taylor series is also called a Maclaurin series when 0 is the point where the derivatives are considered, after Colin Maclaurin, who made extensive use of this special case of Taylor series in the 18th century. The partial sum formed by the first n + 1 terms of a Taylor series is a polynomial of degree n that is called the nth Taylor polynomial of the function. Taylor polynomials are approximations of a function, which become generally more accurate as n increases. Taylor's theorem gives quantitative estimates on the error introduced by the use of such approximations. If the Taylor series of a function is convergent, its sum is the limit of the infinite sequence of the Taylor polynomials. A function may differ from the sum of its Taylor series, even if its Taylor series is convergent."
+  },
+  {
+   "id": "src:wiki-taylor-series#c2",
+   "outlet": "src:wiki-taylor-series",
+   "title": "Taylor series",
+   "text": "A function is analytic at a point x if it is equal to the sum of its Taylor series in some open interval (or open disk in the complex plane) containing x. This implies that the function is analytic at every point of the interval (or disk). The Taylor series of a real or complex-valued function f(x), that is infinitely differentiable at a real or complex number a, is the power series Here, n! denotes the factorial of n. The function f(n)(a) denotes the nth derivative of f evaluated at the point a. The derivative of order zero of f is defined to be f itself and (x − a)0 and 0! are both defined to be 1. This series can be written by using sigma notation, as in the right side formula."
+  },
+  {
+   "id": "src:wiki-taylor-series#c3",
+   "outlet": "src:wiki-taylor-series",
+   "title": "Taylor series",
+   "text": "The differentiated and integrated series have the same radius of convergence as the original power series, although the convergence behavior at the boundary may be different. These properties sometimes allow the Taylor series of functions, such as the arctangent, to be computed in terms of simpler series, such as the geometric series. Several methods can be used to calculate Taylor series. One may apply the definition directly, although this often requires first identifying a general formula for the derivatives or coefficients. In many cases, Taylor series can also be obtained from known expansions by algebraic manipulations of power series, such as substitution, multiplication, division, addition, or subtraction, as well as termwise differentiation and integration of known Taylor series. In some cases, they may also be derived by repeated integration by parts. In practice, Taylor series are often computed with the aid of computer algebra systems. A number of standard Maclaurin series are frequently used as starting points for calculating other Taylor series. Some fundamental examples are listed below; a more comprehensive listing appears later in the article."
+  },
+  {
+   "id": "src:wiki-taylor-series#c4",
+   "outlet": "src:wiki-taylor-series",
+   "title": "Taylor series",
+   "text": "Inside the region of convergence, a Taylor series can be differentiated term-by-term. For example, differentiating the geometric series Inside the region of convergence, a Taylor series can be integrated term-by-term. For example, integrating the geometric series the composition of two functions x ↦ ln(1 + x) and x ↦ cos x − 1. The Taylor series for the natural logarithm is (using big O notation) The first several terms from the second series can be substituted into each term of the first series. Because the first term in the second series has degree 2, three terms of the first series suffice to give a polynomial of degree 7:"
+  },
+  {
+   "id": "src:wiki-series-mathematics#c1",
+   "outlet": "src:wiki-series-mathematics",
+   "title": "Series (mathematics)",
+   "text": "Some authors directly identify a series with its sequence of partial sums. Either the sequence of partial sums or the sequence of terms completely characterizes the series, and the sequence of terms can be recovered from the sequence of partial sums by taking the differences between consecutive elements, Partial summation of a sequence is an example of a linear sequence transformation, and it is also known as the prefix sum in computer science. The inverse transformation for recovering a sequence from its partial sums is the finite difference, another linear sequence transformation. Partial sums of series sometimes have simpler closed form expressions, for instance an arithmetic series has partial sums"
+  },
+  {
+   "id": "src:wiki-series-mathematics#c2",
+   "outlet": "src:wiki-series-mathematics",
+   "title": "Series (mathematics)",
+   "text": "Strictly speaking, a series is said to converge, to be convergent, or to be summable when the sequence of its partial sums has a  limit. When the limit of the sequence of partial sums  does not exist, the series diverges or is divergent. When the limit of the partial sums exists, it is called the sum of the series or value of the series: which has a sum of the natural logarithm of 2, while the sum of the absolute values of the terms is the harmonic series, which diverges per the divergence of the harmonic series, so the alternating harmonic series is conditionally convergent. For instance, rearranging the terms of the alternating harmonic series so that each positive term of the original series is followed by two negative terms of the original series rather than just one yields"
+  },
+  {
+   "id": "src:wiki-series-mathematics#c3",
+   "outlet": "src:wiki-series-mathematics",
+   "title": "Series (mathematics)",
+   "text": "Series multiplication of absolutely convergent series of real numbers and complex numbers is associative, commutative, and distributes over series addition. Together with series addition, series multiplication gives the sets of absolutely convergent series of real numbers or complex numbers the structure of a commutative ring, and together with scalar multiplication as well, the structure of a commutative algebra; these operations also give the sets of all series of real numbers or complex numbers the structure of an associative algebra. The evaluation of truncation errors of series is important in numerical analysis (especially validated numerics and computer-assisted proof). It can be used to prove convergence and to analyze rates of convergence."
+  },
+  {
+   "id": "src:wiki-series-mathematics#c4",
+   "outlet": "src:wiki-series-mathematics",
+   "title": "Series (mathematics)",
+   "text": "While many uses of power series refer to their sums, it is also possible to treat power series as formal sums, meaning that no addition operations are actually performed, and the symbol \"+\" is an abstract symbol of conjunction which is not necessarily interpreted as corresponding to addition. In this setting, the sequence of coefficients itself is of interest, rather than the convergence of the series. Formal power series are used in combinatorics to describe and study sequences that are otherwise difficult to handle, for example, using the method of generating functions. The Hilbert–Poincaré series is a formal power series used to study graded algebras. Even if the limit of the power series is not considered, if the terms support appropriate structure then it is possible to define operations such as addition, multiplication, derivative, antiderivative for power series \"formally\", treating the symbol \"+\" as if it corresponded to addition. In the most common setting, the terms come from a commutative ring, so that the formal power series can be added term-by-term and multiplied via the Cauchy product. In this case the algebra of formal power series is the total algebra of the monoid of natural numbers over the underlying term ring."
+  },
+  {
+   "id": "src:wiki-convergent-series#c1",
+   "outlet": "src:wiki-convergent-series",
+   "title": "Convergent series",
+   "text": "is used for the series, and, if it is convergent, to its sum. This convention is similar to that which is used for addition: a + b denotes the operation of adding a and b as well as the result of this addition, which is called the sum of a and b. Any series that is not convergent is said to be divergent or to diverge. If r < 1, then the series is absolutely convergent. If r > 1, then the series diverges. If r = 1, the ratio test is inconclusive, and the series may converge or diverge. Root test or  nth root test. Suppose that the terms of the sequence in question are non-negative. Define r as follows:"
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-taylor-series",
+   "title": "Taylor series",
+   "url": "https://en.wikipedia.org/wiki/Taylor_series",
+   "revid": 1377126901,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-series-mathematics",
+   "title": "Series (mathematics)",
+   "url": "https://en.wikipedia.org/wiki/Series_(mathematics)",
+   "revid": 1379078571,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-convergent-series",
+   "title": "Convergent series",
+   "url": "https://en.wikipedia.org/wiki/Convergent_series",
+   "revid": 1377838191,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

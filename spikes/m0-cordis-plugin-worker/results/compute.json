@@ -1,0 +1,61 @@
+{
+  "spike": "ALI-53",
+  "work": "fib(27) recursive, in block validate()",
+  "bun": "1.4.2",
+  "rows": [
+    {
+      "id": "proc-bun",
+      "fib27Ms": {
+        "p50": 3.5,
+        "min": 3.4,
+        "max": 4.6
+      },
+      "slowdownVsBun": 1
+    },
+    {
+      "id": "proc-node",
+      "fib27Ms": {
+        "p50": 4.6,
+        "min": 4.1,
+        "max": 5
+      },
+      "slowdownVsBun": 1.3
+    },
+    {
+      "id": "quickjs-inproc",
+      "fib27Ms": {
+        "p50": 57.7,
+        "min": 49.6,
+        "max": 63.9
+      },
+      "slowdownVsBun": 16.5
+    },
+    {
+      "id": "quickjs-bun",
+      "fib27Ms": {
+        "p50": 64.8,
+        "min": 60.3,
+        "max": 77.9
+      },
+      "slowdownVsBun": 18.5
+    },
+    {
+      "id": "ivm-node",
+      "fib27Ms": {
+        "p50": 5.8,
+        "min": 4.4,
+        "max": 12.4
+      },
+      "slowdownVsBun": 1.7
+    },
+    {
+      "id": "workerd",
+      "fib27Ms": {
+        "p50": 4.9,
+        "min": 4.5,
+        "max": 20.1
+      },
+      "slowdownVsBun": 1.4
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+uid=10001(agent) gid=10001(agent) groups=10001(agent)
+CapEff:	0000000000000000
+NoNewPrivs:	1
+cpu.max=100000 100000
+memory.max=1073741824
+pids.max=256
+10.139.0.0/24 dev eth0 proto kernel scope link src 10.139.0.18 
+HOME=/home/agent
+HOSTNAME=ali39-sandbox
+NODE_VERSION=24.22.0
+PATH=/opt/agent/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PWD=/workspace
+YARN_VERSION=1.22.22
+container=podman
+checkout_writable=yes
+rootfs_writable=no
+other_checkout_visible=no
+app_secret_visible=no
+host_socket_visible=no
+10.139.0.8      ali39-proxy.dns.podman
+10.139.0.8      ali39-proxy.dns.podman
+external_dns_visible=no
+time_limit_exit=255

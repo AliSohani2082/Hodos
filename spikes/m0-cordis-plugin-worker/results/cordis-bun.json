@@ -1,0 +1,169 @@
+{
+  "spike": "ALI-50",
+  "runtime": "bun 1.4.2",
+  "cordis": "4.0.0-rc.11",
+  "platform": "linux-x64",
+  "passed": 14,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "C00",
+      "title": "negative control: a registration made WITHOUT ctx.effect is detected as a leak (proves the checks can fail)",
+      "ok": true,
+      "ms": 10.13,
+      "detail": {
+        "leakedAfterDispose": 1
+      }
+    },
+    {
+      "id": "C01",
+      "title": "toy plugin registers a block, a layout, an exercise kind and a preset through typed registries",
+      "ok": true,
+      "ms": 3.42,
+      "detail": {
+        "effects": [
+          "lesson.layout(toy-reader)",
+          "lesson.block(position)",
+          "exercise.kind(toy-quiz)",
+          "pedagogy.preset(toy-drill)"
+        ]
+      }
+    },
+    {
+      "id": "C02",
+      "title": "unload leaves nothing behind (registries, event listeners, timers)",
+      "ok": true,
+      "ms": 34.89,
+      "detail": {
+        "timerRanWhileLoaded": true,
+        "hooksBefore": 3,
+        "hooksAfter": 3
+      }
+    },
+    {
+      "id": "C03",
+      "title": "duplicate registration fails the second plugin, rolls back its partial work, leaves the first intact",
+      "ok": true,
+      "ms": 4.3,
+      "detail": {
+        "clashState": 3
+      }
+    },
+    {
+      "id": "C04",
+      "title": "plugin waiting on a service stays inactive, activates when the service appears, and is torn down/re-activated when the service is removed/restored",
+      "ok": true,
+      "ms": 19.88,
+      "detail": {
+        "log": [
+          "dep:apply",
+          "dep:dispose",
+          "dep:apply"
+        ]
+      }
+    },
+    {
+      "id": "C05",
+      "title": "restart / config update re-runs apply with no duplicate registrations and no leaked effects",
+      "ok": true,
+      "ms": 3.33,
+      "detail": {
+        "applies": 3,
+        "disposes": 3
+      }
+    },
+    {
+      "id": "C06",
+      "title": "async apply and async disposers: dispose() waits for them, in reverse registration order",
+      "ok": true,
+      "ms": 32.61,
+      "detail": {
+        "order": [
+          "second-registered",
+          "first-registered"
+        ]
+      }
+    },
+    {
+      "id": "C07",
+      "title": "Config schema (Standard Schema) rejects bad config and fails only that plugin",
+      "ok": true,
+      "ms": 2.04,
+      "detail": {
+        "badState": 3
+      }
+    },
+    {
+      "id": "C08",
+      "title": "per-course scoping: ctx.isolate() gives each course its own lesson registry",
+      "ok": true,
+      "ms": 1.32,
+      "detail": {
+        "a": [
+          "x"
+        ],
+        "b": []
+      }
+    },
+    {
+      "id": "C09",
+      "title": "plugin that throws in apply: FAILED state, message and plugin frame survive, process stays up, no unhandled rejection",
+      "ok": true,
+      "ms": 11.69,
+      "detail": {
+        "stackHead": [
+          "Error: kaboom-from-plugin",
+          "    at apply (<spike>/src/cordis/lifecycle.ts:180:72)",
+          "    at <anonymous> (<spike>/node_modules/cordis/lib/index.js:444:37)",
+          "    at <anonymous> (<spike>/src/cordis/lifecycle.ts:181:17)"
+        ]
+      }
+    },
+    {
+      "id": "C10",
+      "title": "events: emit/parallel/serial/bail/waterfall dispatch; listeners die with their plugin",
+      "ok": true,
+      "ms": 3.5,
+      "detail": {
+        "bail": 2,
+        "waterfallResultType": "string",
+        "ser": 2
+      }
+    },
+    {
+      "id": "C11",
+      "title": "plugin forms: function, object with apply, class, ES module namespace",
+      "ok": true,
+      "ms": 2.44,
+      "detail": [
+        "from-fn",
+        "from-class",
+        "from-object",
+        "toy-drill"
+      ]
+    },
+    {
+      "id": "C12",
+      "title": "concurrent load of 100 plugins, then concurrent dispose",
+      "ok": true,
+      "ms": 42.73,
+      "detail": {
+        "loadMs": 22.2,
+        "disposeMs": 11.4
+      }
+    },
+    {
+      "id": "C13",
+      "title": "churn: 2000 load/unload cycles of the toy plugin leave registries, fibers and heap flat",
+      "ok": true,
+      "ms": 824.98,
+      "detail": {
+        "cycles": 2000,
+        "msPerLoadUnload": 0.344,
+        "heapGrowthMB": 0.09,
+        "gcExposed": true,
+        "registrySize": 3
+      }
+    }
+  ]
+}

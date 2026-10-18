@@ -1,0 +1,100 @@
+{
+ "id": "programming-s1",
+ "chunks": [
+  {
+   "id": "src:wiki-recursion-computer-science#c1",
+   "outlet": "src:wiki-recursion-computer-science",
+   "title": "Recursion (computer science)",
+   "text": "In computer science, recursion is a method of solving a computational problem where the solution depends on solutions to smaller instances of the same problem. Recursion solves such recursive problems by using functions that call themselves from within their own code. The approach can be applied to many types of problems, and recursion is one of the central ideas of computer science. The definition of a recursive function is typically divided into two parts: one or more base case(s) and one or more recursive case(s). This structure mirrors the logic of mathematical induction, which is a proof technique where proving the base case(s) and the inductive step ensures that a given theorem holds for all valid inputs."
+  },
+  {
+   "id": "src:wiki-recursion-computer-science#c2",
+   "outlet": "src:wiki-recursion-computer-science",
+   "title": "Recursion (computer science)",
+   "text": "The recursive case describes how to break down a problem into smaller sub-problems of the same form. Each recursive step transforms the input so that it approaches a base case, ensuring progress toward termination. If the reduction step fails to progress toward a base case, the algorithm can get trapped in an infinite loop. In the factorial example, the recursive case is defined as: There are several practical applications of recursion that follow the base case and recursive case structure. These are widely used to solve complex problems in computer science. Many computer programs must process or generate an arbitrarily large quantity of data. Recursion is a technique for representing data whose exact size is unknown to the programmer: the programmer can specify this data with a self-referential definition. There are two types of self-referential definitions: inductive and coinductive definitions."
+  },
+  {
+   "id": "src:wiki-recursion-computer-science#c3",
+   "outlet": "src:wiki-recursion-computer-science",
+   "title": "Recursion (computer science)",
+   "text": "An inductively defined recursive data definition is one that specifies how to construct instances of the data. For example, linked lists can be defined inductively (here, using Haskell syntax): The code above specifies a list of strings to be either empty, or a structure that contains a string and a list of strings. The self-reference in the definition permits the construction of lists of any (finite) number of strings. Another example of inductive definition is the natural numbers (or positive integers): A natural number is either 1 or n+1, where n is a natural number. Similarly recursive definitions are often used to model the structure of expressions and statements in programming languages. Language designers often express grammars in a syntax such as Backus–Naur form; here is such a grammar, for a simple language of arithmetic expressions with multiplication and addition:"
+  },
+  {
+   "id": "src:wiki-recursion-computer-science#c4",
+   "outlet": "src:wiki-recursion-computer-science",
+   "title": "Recursion (computer science)",
+   "text": "This says that an expression is either a number, a product of two expressions, or a sum of two expressions. By recursively referring to expressions in the second and third lines, the grammar permits arbitrarily complicated arithmetic expressions such as (5 * ((3 * 6) + 8)), with more than one product or sum operation in a single expression. A coinductive data definition is one that specifies the operations that may be performed on a piece of data; typically, self-referential coinductive definitions are used for data structures of infinite size. A coinductive definition of infinite streams of strings, given informally, might look like this:"
+  },
+  {
+   "id": "src:wiki-tail-call#c1",
+   "outlet": "src:wiki-tail-call",
+   "title": "Tail call",
+   "text": "Here, both a(data) and b(data) are calls, but b is the last thing the procedure executes before returning and is thus in tail position. However, not all tail calls are necessarily located at the syntactical end of a subroutine: Here, both calls to b and c are in tail position. This is because each of them lies in the end of if-branch respectively, even though the first one is not syntactically at the end of bar's body. Consider this example: The call to a(data) is in tail position in foo2, but it is not in tail position either in foo1 or in foo3, because control must return to the caller to allow it to inspect or modify the return value before returning it."
+  },
+  {
+   "id": "src:wiki-tail-call#c2",
+   "outlet": "src:wiki-tail-call",
+   "title": "Tail call",
+   "text": "This is not written in a tail-recursive style, because the multiplication function (\"*\") is in the tail position. This can be compared to: This program assumes applicative-order evaluation. The inner procedure fact-iter calls itself last in the control flow. This allows an interpreter or compiler to reorganize the execution which would ordinarily look like this: This reorganization saves space because no state except for the calling function's address needs to be saved, either on the stack or on the heap, and the call stack frame for fact-iter is reused for the intermediate results storage. This also means that the programmer need not worry about running out of stack or heap space for extremely deep recursions. In typical implementations, the tail-recursive variant will be substantially faster than the other variant, but only by a constant factor. Some programmers working in functional languages will rewrite recursive code to be tail recursive so they can take advantage of this feature. This often requires addition of an \"accumulator\" argument (product in the above example) to the function."
+  },
+  {
+   "id": "src:wiki-tail-call#c3",
+   "outlet": "src:wiki-tail-call",
+   "title": "Tail call",
+   "text": "Tail recursion modulo cons is a generalization of tail-recursion optimization introduced by David H. D. Warren in the context of compilation of Prolog, seen as an explicitly set once language. It was described (though not named) by Daniel P. Friedman and David S. Wise in 1974 as a LISP compilation technique. As the name suggests, it applies when the only operation left to perform after a recursive call is to prepend a known value in front of the list returned from it (or to perform a constant number of simple data-constructing operations, in general). This call would thus be a tail call save for (\"modulo\") the said cons operation. But prefixing a value at the start of a list on exit from a recursive call is the same as appending this value at the end of the growing list on entry into the recursive call, thus building the list as a side effect, as if in an implicit accumulator parameter. The following Prolog fragment illustrates the concept:"
+  },
+  {
+   "id": "src:wiki-tail-call#c4",
+   "outlet": "src:wiki-tail-call",
+   "title": "Tail call",
+   "text": "Thus in tail-recursive translation such a call is transformed into first creating a new list node and setting its first field, and then making the tail call with the pointer to the node's rest field as argument, to be filled recursively. The same effect is achieved when the recursion is guarded under a lazily evaluated data constructor, which is automatically achieved in lazy programming languages like Haskell. The following fragment defines a recursive function in C that duplicates a linked list (with some equivalent Scheme and Prolog code as comments, for comparison): In this form the function is not tail recursive, because control returns to the caller after the recursive call duplicates the rest of the input list. Even if it were to allocate the head node before duplicating the rest, it would still need to plug in the result of the recursive call into the next field after the call. So the function is almost tail recursive. Warren's method pushes the responsibility of filling the next field into the recursive call itself, which thus becomes tail call. Using  sentinel head node to simplify the code,"
+  },
+  {
+   "id": "src:wiki-recursion#c1",
+   "outlet": "src:wiki-recursion",
+   "title": "Recursion",
+   "text": "Recursion occurs when the definition of a concept or process depends on a simpler or previous version of itself. Recursion is used in a variety of disciplines ranging from linguistics to logic. The most common application of recursion is in mathematics and computer science, where a function being defined is applied within its own definition. While this apparently defines an infinite number of instances (function values), it is often done in such a way that no infinite loop or infinite chain of references can occur. A process that exhibits recursion is recursive. Video feedback displays recursive images, as does an infinity mirror."
+  },
+  {
+   "id": "src:wiki-recursion#c2",
+   "outlet": "src:wiki-recursion",
+   "title": "Recursion",
+   "text": "In mathematics and computer science, a class of objects or methods exhibits recursive behavior when it can be defined by two properties: Recursion is sometimes used humorously in computer science, programming, philosophy, or mathematics textbooks, generally by giving a circular definition or self-reference, in which the putative recursive step does not get closer to a base case, but instead leads to an infinite regress. It is not unusual for such books to include a joke entry in their glossary along the lines of: Recursion, see Recursion. A variation is found on page 269 in the index  of some editions of Brian Kernighan and Dennis Ritchie's book The C Programming Language; the index entry recursively refers to itself (\"recursion 86, 139, 141, 182, 202, 269\"). Early versions of this joke can be found in Let's talk Lisp by Laurent Siklóssy (published by Prentice Hall PTR on December 1, 1975, with a copyright date of 1976) and in Software Tools by Kernighan and Plauger (published by Addison-Wesley Professional on January 11, 1976). The joke also appears in The UNIX Programming Environment by Kernighan and Pike. It did not appear in the first edition of The C Programming Language."
+  },
+  {
+   "id": "src:wiki-recursion#c3",
+   "outlet": "src:wiki-recursion",
+   "title": "Recursion",
+   "text": "The joke is part of the functional programming folklore and was already widespread in the functional programming community before the publication of the aforementioned books. \" An alternative form is the following, from Andrew Plotkin: \"If you already know what recursion is, just remember the answer. \" Recursive acronyms are other examples of recursive humor. PHP, for example, stands for \"PHP Hypertext Preprocessor\", WINE stands for \"WINE Is Not an Emulator\", RPM stands for \"RPM Package manager\", GNU stands for \"GNU's not Unix\", and SPARQL denotes the \"SPARQL Protocol and RDF Query Language\". The set of natural numbers is the smallest set satisfying the previous two properties. In mathematical logic, the Peano axioms (or Peano postulates or Dedekind–Peano axioms), are axioms for the natural numbers presented in the 19th century by the German mathematician Richard Dedekind and by the Italian mathematician Giuseppe Peano. The Peano Axioms define the natural numbers referring to a recursive successor function and addition and multiplication as recursive functions."
+  },
+  {
+   "id": "src:wiki-recursion#c4",
+   "outlet": "src:wiki-recursion",
+   "title": "Recursion",
+   "text": "Example: Proof procedure Another interesting example is the set of all \"provable\" propositions in an axiomatic system that are defined in terms of a proof procedure which is inductively (or recursively) defined as follows: Finite subdivision rules are a geometric form of recursion, which can be used to create fractal-like images. A subdivision rule starts with a collection of polygons labelled by finitely many labels, and then each polygon is subdivided into smaller labelled polygons in a way that depends only on the labels of the original polygon. This process can be iterated. The standard 'middle thirds' technique for creating the Cantor set is a subdivision rule, as is barycentric subdivision."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-recursion-computer-science",
+   "title": "Recursion (computer science)",
+   "url": "https://en.wikipedia.org/wiki/Recursion_(computer_science)",
+   "revid": 1361825212,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-tail-call",
+   "title": "Tail call",
+   "url": "https://en.wikipedia.org/wiki/Tail_call",
+   "revid": 1375331405,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-recursion",
+   "title": "Recursion",
+   "url": "https://en.wikipedia.org/wiki/Recursion",
+   "revid": 1378327061,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}

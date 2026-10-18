@@ -1,0 +1,51 @@
+[
+ {
+  "id": "F-LEAK-U1",
+  "claim": "leak detector fires output_contains_test_source when the learner's output contains the hidden canary",
+  "expected": "flag present",
+  "actual": "flags=['output_contains_test_source']",
+  "ok": true
+ },
+ {
+  "id": "F-LEAK-U2",
+  "claim": "leak detector fires on an echoed >=24-char line of the hidden source",
+  "expected": "flag present",
+  "actual": "flags=['output_contains_test_source']",
+  "ok": true
+ },
+ {
+  "id": "F-LEAK-U3",
+  "claim": "benign output raises no leak flag (true negative)",
+  "expected": "no flags",
+  "actual": "flags=[]",
+  "ok": true
+ },
+ {
+  "id": "F-LEAK-E1",
+  "claim": "end-to-end: a run whose captured output contains the hidden canary is flagged (teacher-only)",
+  "expected": "output_contains_test_source in teacher.flags",
+  "actual": "verdict=passed flags=['output_contains_test_source']",
+  "ok": true
+ },
+ {
+  "id": "F-ZERO-1",
+  "claim": "a passing submit with no prior passing practice run is flagged pass_after_zero_passing_runs",
+  "expected": "flag present, verdict passed",
+  "actual": "verdict=passed flags=['pass_after_zero_passing_runs']",
+  "ok": true
+ },
+ {
+  "id": "F-ZERO-2",
+  "claim": "a passing submit AFTER a passing run is NOT flagged (true negative)",
+  "expected": "pass_after_zero_passing_runs absent",
+  "actual": "verdict=passed flags=[]",
+  "ok": true
+ },
+ {
+  "id": "F-RES-1",
+  "claim": "an output flood raises the resource_limit_hit / output_flood teacher signals and never passes",
+  "expected": "resource_limit_hit present, verdict != passed",
+  "actual": "verdict=failed flags=['resource_limit_hit', 'output_flood']",
+  "ok": true
+ }
+]

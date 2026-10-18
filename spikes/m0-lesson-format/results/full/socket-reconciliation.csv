@@ -1,0 +1,4 @@
+key,prior_recorded_usd,successful_rounds_usd,corrected_reserved_usd
+claude-opus-5-5|markdoc|chess-s5|1,0.22140374999999998,0.300004,0.52140775
+claude-opus-5-5|directive|language-s5|1,0.248354,0.3066576,0.5550115999999999
+claude-opus-5-5|markdoc|science-s5|1,0.22219724999999999,0.173476,0.39567325

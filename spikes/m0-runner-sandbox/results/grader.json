@@ -1,0 +1,93 @@
+[
+ {
+  "id": "G-ISO-1",
+  "claim": "the grader runs as a DIFFERENT uid (10001) from the learner (10002), in a separate process",
+  "expected": "learner my_uid=10002 and a live process with uid 10001 (the grader) is present",
+  "actual": "my_uid=10002 grader_pid=2",
+  "ok": true
+ },
+ {
+  "id": "G-ISO-2",
+  "claim": "the learner cannot read the grader's memory/env/maps/fds (different uid), so the hidden tests and nonce stay unreadable",
+  "expected": "/proc/<grader>/{environ,mem,maps,fd} all EACCES/EPERM; no canary or answer-key found in /proc or the sandbox fs",
+  "actual": "grader_slots={'environ': 'EACCES', 'mem': 'EACCES', 'maps': 'EACCES', 'fd': 'EACCES'} canary_hits=[]",
+  "ok": true
+ },
+ {
+  "id": "G-IMG-1",
+  "claim": "the baked image contains no hidden-test source or canary; the hidden tests exist only at run time, in the grader's memory",
+  "expected": "grep over /opt,/etc,/usr/local/bin in the image finds nothing (rc=1, no output)",
+  "actual": "rc=1 stdout='' stderr=''",
+  "ok": true
+ },
+ {
+  "id": "G-CALL-1",
+  "claim": "a correct solution passes the hidden tests; a wrong one fails (graded by the isolated grader)",
+  "expected": "correct submit -> passed 7/7; wrong submit -> failed",
+  "actual": "good=passed {'passed': 7, 'total': 7} bad=failed {'passed': 2, 'total': 7}",
+  "ok": true
+ },
+ {
+  "id": "G-CALL-2",
+  "claim": "a learner that exits early or hangs CANNOT forge a pass: the grader reports failure/death, never a pass",
+  "expected": "early os._exit(0) -> not passed; 30 s hang -> not passed (timeout)",
+  "actual": "early=failed/None hang=failed/None",
+  "ok": true
+ },
+ {
+  "id": "G-FORGE-1",
+  "claim": "a learner printing a fake ALI40-RESULT pass frame on its own stdout does NOT forge a pass",
+  "expected": "verdict != passed; the fake frame appears only in the captured learner stdout, never as the runner's frame",
+  "actual": "verdict=failed fake_in_learner_stdout=True job_frame_nonce_ok=True",
+  "ok": true
+ },
+ {
+  "id": "G-NONCE-1",
+  "claim": "a frame carrying the wrong nonce is rejected (the learner cannot guess the 128-bit per-run nonce)",
+  "expected": "parse_frame -> (None, nonce_mismatch)",
+  "actual": "frame=None problem=nonce_mismatch",
+  "ok": true
+ },
+ {
+  "id": "G-NONCE-2",
+  "claim": "a nonce is single-use: replaying a previously valid frame is rejected",
+  "expected": "first parse ok; replay -> (None, nonce_replayed)",
+  "actual": "first_ok=True replay_problem=nonce_replayed",
+  "ok": true
+ },
+ {
+  "id": "G-NONCE-3",
+  "claim": "validate_call_frame rejects a non-bool 'ok' (a truthy/lying object cannot pass a test)",
+  "expected": "(None, result_not_bool)",
+  "actual": "res=None problem=result_not_bool",
+  "ok": true
+ },
+ {
+  "id": "G-REF-1",
+  "claim": "tier-1: the learner's container job carries ONLY inputs (stdin); the reference solution and expected outputs never enter it",
+  "expected": "job cases have key set {'stdin'} only; reference source not present in the learner job",
+  "actual": "case_keys=['stdin'] reference_in_job=False",
+  "ok": true
+ },
+ {
+  "id": "G-REF-2",
+  "claim": "tier-1 submit grades correctly with expected compared OUTSIDE, and runs the reference in a SEPARATE container (2 per submit)",
+  "expected": "correct submit -> passed; wrong -> failed; every sum-two submit logs containers=2",
+  "actual": "ok=passed/{'passed': 6, 'total': 6} bad=failed/{'passed': 0, 'total': 6} containers=[2, 2]",
+  "ok": true
+ },
+ {
+  "id": "G-REF-3",
+  "claim": "tier-2 (call) submit uses a single container (grader + learner co-located, isolated by uid)",
+  "expected": "every sort-list submit logs containers=1",
+  "actual": "containers=[1, 1, 1, 1, 1]",
+  "ok": true
+ },
+ {
+  "id": "G-CLEAN-1",
+  "claim": "no containers or supervisor processes are left behind by the suite",
+  "expected": "none",
+  "actual": "{\"ali40_containers\": [], \"sandbox_init_procs\": 0}",
+  "ok": true
+ }
+]

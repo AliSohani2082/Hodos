@@ -1,0 +1,1115 @@
+{
+  "spike": "ALI-52",
+  "host": "bun 1.4.2",
+  "node": "24.21.0",
+  "calls": 300,
+  "cpu": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+  "cores": 8,
+  "loadavgAtEnd": [
+    4.36,
+    6.88,
+    6.48
+  ],
+  "note": "other spikes share this workstation; absolute numbers are noisy, ratios are the signal",
+  "date": "2026-10-16",
+  "rows": [
+    {
+      "id": "proc-bun",
+      "note": "plain Bun child process, empty env, no confinement",
+      "runtime": "bun 1.4.2 / native",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 41.399,
+        "p95": 91.915,
+        "p99": 91.915,
+        "mean": 54.766,
+        "min": 37.188,
+        "first": 37.398,
+        "restMedian": 65.93,
+        "runs": [
+          37.398,
+          37.188,
+          65.93,
+          41.399,
+          91.915
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.079,
+          "p95": 0.155,
+          "p99": 0.18,
+          "mean": 0.09,
+          "min": 0.053
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.088,
+          "p95": 0.133,
+          "p99": 0.172,
+          "mean": 0.093,
+          "min": 0.056
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.093,
+          "p95": 0.148,
+          "p99": 0.223,
+          "mean": 0.102,
+          "min": 0.058
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 1.521,
+          "p95": 3.013,
+          "p99": 5.343,
+          "mean": 1.6,
+          "min": 0.886
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 13.237,
+          "p95": 19.548,
+          "p99": 19.548,
+          "mean": 13.266,
+          "min": 10.156
+        }
+      },
+      "rssMBAfterWarm": 71.023
+    },
+    {
+      "id": "proc-node",
+      "note": "plain Node child process, empty env, no confinement",
+      "runtime": "node 24.21.0 / native",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 76.807,
+        "p95": 162.629,
+        "p99": 162.629,
+        "mean": 96.143,
+        "min": 66.966,
+        "first": 98.348,
+        "restMedian": 76.807,
+        "runs": [
+          98.348,
+          76.807,
+          162.629,
+          66.966,
+          75.966
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.096,
+          "p95": 0.185,
+          "p99": 0.243,
+          "mean": 0.114,
+          "min": 0.073
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.129,
+          "p95": 0.22,
+          "p99": 0.616,
+          "mean": 0.141,
+          "min": 0.07
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.11,
+          "p95": 0.215,
+          "p99": 0.446,
+          "mean": 0.126,
+          "min": 0.073
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 1.397,
+          "p95": 2.788,
+          "p99": 9.347,
+          "mean": 1.684,
+          "min": 1.237
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 12.606,
+          "p95": 16.478,
+          "p99": 16.478,
+          "mean": 12.974,
+          "min": 11.072
+        }
+      },
+      "rssMBAfterWarm": 102.504
+    },
+    {
+      "id": "proc-node-perm",
+      "note": "Node child with --permission (fs read limited to the spike dir)",
+      "runtime": "node 24.21.0 / native",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 63.977,
+        "p95": 91.193,
+        "p99": 91.193,
+        "mean": 69.785,
+        "min": 55.097,
+        "first": 60.577,
+        "restMedian": 78.08,
+        "runs": [
+          60.577,
+          63.977,
+          78.08,
+          91.193,
+          55.097
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.122,
+          "p95": 0.225,
+          "p99": 0.502,
+          "mean": 0.138,
+          "min": 0.084
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.139,
+          "p95": 0.258,
+          "p99": 0.42,
+          "mean": 0.157,
+          "min": 0.077
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.132,
+          "p95": 0.204,
+          "p99": 0.49,
+          "mean": 0.14,
+          "min": 0.077
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 1.204,
+          "p95": 1.974,
+          "p99": 2.173,
+          "mean": 1.284,
+          "min": 1.033
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 12.722,
+          "p95": 16.908,
+          "p99": 16.908,
+          "mean": 12.747,
+          "min": 10.847
+        }
+      },
+      "rssMBAfterWarm": 108.395
+    },
+    {
+      "id": "proc-bun-cgroup",
+      "note": "Bun child in a systemd user cgroup scope (MemoryMax, TasksMax, CPUQuota)",
+      "runtime": "bun 1.4.2 / native",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 64.105,
+        "p95": 91.98,
+        "p99": 91.98,
+        "mean": 69.153,
+        "min": 54.261,
+        "first": 91.98,
+        "restMedian": 64.105,
+        "runs": [
+          91.98,
+          74.278,
+          61.142,
+          64.105,
+          54.261
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.068,
+          "p95": 0.133,
+          "p99": 0.163,
+          "mean": 0.075,
+          "min": 0.046
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.088,
+          "p95": 0.135,
+          "p99": 0.161,
+          "mean": 0.09,
+          "min": 0.054
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.078,
+          "p95": 0.161,
+          "p99": 0.387,
+          "mean": 0.097,
+          "min": 0.057
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 0.933,
+          "p95": 2.717,
+          "p99": 2.832,
+          "mean": 1.26,
+          "min": 0.748
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 15.449,
+          "p95": 20.442,
+          "p99": 20.442,
+          "mean": 15.779,
+          "min": 11.599
+        }
+      },
+      "rssMBAfterWarm": 60.18
+    },
+    {
+      "id": "proc-bun-bwrap",
+      "note": "Bun child in bubblewrap (all namespaces unshared, ro mounts) inside a cgroup scope",
+      "runtime": "bun 1.4.2 / native",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 77.142,
+        "p95": 87.449,
+        "p99": 87.449,
+        "mean": 73.275,
+        "min": 55.446,
+        "first": 87.449,
+        "restMedian": 77.142,
+        "runs": [
+          87.449,
+          77.142,
+          85.055,
+          61.285,
+          55.446
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.081,
+          "p95": 0.126,
+          "p99": 0.181,
+          "mean": 0.085,
+          "min": 0.048
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.086,
+          "p95": 0.138,
+          "p99": 0.171,
+          "mean": 0.095,
+          "min": 0.051
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.107,
+          "p95": 0.187,
+          "p99": 0.379,
+          "mean": 0.123,
+          "min": 0.076
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 0.921,
+          "p95": 2.268,
+          "p99": 2.794,
+          "mean": 1.101,
+          "min": 0.765
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 16.004,
+          "p95": 23.314,
+          "p99": 23.314,
+          "mean": 15.776,
+          "min": 9.853
+        }
+      },
+      "rssMBAfterWarm": 74.621
+    },
+    {
+      "id": "proc-bun-podman",
+      "note": "Bun child in a rootless podman container: --network none, read-only, cap-drop all, memory/pids/cpu limits",
+      "runtime": "bun 1.4.2 / native",
+      "coldStartMs": {
+        "n": 3,
+        "p50": 333.326,
+        "p95": 531.705,
+        "p99": 531.705,
+        "mean": 386.286,
+        "min": 293.828,
+        "first": 531.705,
+        "restMedian": 333.326,
+        "runs": [
+          531.705,
+          293.828,
+          333.326
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.205,
+          "p95": 0.489,
+          "p99": 1.33,
+          "mean": 0.249,
+          "min": 0.139
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.172,
+          "p95": 0.247,
+          "p99": 0.383,
+          "mean": 0.183,
+          "min": 0.13
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.194,
+          "p95": 0.343,
+          "p99": 1.025,
+          "mean": 0.22,
+          "min": 0.131
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 1.677,
+          "p95": 2.804,
+          "p99": 4.294,
+          "mean": 1.787,
+          "min": 1.041
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 20.516,
+          "p95": 238.997,
+          "p99": 238.997,
+          "mean": 31.97,
+          "min": 14.602
+        }
+      },
+      "rssMBAfterWarm": 52.32
+    },
+    {
+      "id": "quickjs-inproc",
+      "note": "QuickJS-wasm inside the Bun host process",
+      "runtime": "in-process bun 1.4.2 / quickjs",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 5.169,
+        "p95": 200.772,
+        "p99": 200.772,
+        "mean": 44.868,
+        "min": 3.763,
+        "first": 200.772,
+        "restMedian": 5.169,
+        "runs": [
+          200.772,
+          9.699,
+          5.169,
+          3.763,
+          4.939
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.21,
+          "p95": 0.359,
+          "p99": 0.563,
+          "mean": 0.232,
+          "min": 0.135
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.091,
+          "p95": 0.205,
+          "p99": 0.331,
+          "mean": 0.11,
+          "min": 0.076
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.105,
+          "p95": 0.195,
+          "p99": 0.213,
+          "mean": 0.119,
+          "min": 0.085
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 2.456,
+          "p95": 2.838,
+          "p99": 3.389,
+          "mean": 2.479,
+          "min": 2.259
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 27.18,
+          "p95": 48.731,
+          "p99": 48.731,
+          "mean": 28.908,
+          "min": 22.617
+        }
+      },
+      "rssMBAfterWarm": 64.473
+    },
+    {
+      "id": "quickjs-bun",
+      "note": "QuickJS-wasm inside a plain Bun child process",
+      "runtime": "bun 1.4.2 / quickjs",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 93.872,
+        "p95": 191.107,
+        "p99": 191.107,
+        "mean": 104.325,
+        "min": 67.764,
+        "first": 93.872,
+        "restMedian": 94.971,
+        "runs": [
+          93.872,
+          94.971,
+          73.911,
+          67.764,
+          191.107
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.362,
+          "p95": 0.597,
+          "p99": 1.397,
+          "mean": 0.396,
+          "min": 0.227
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.244,
+          "p95": 0.36,
+          "p99": 0.484,
+          "mean": 0.253,
+          "min": 0.159
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.26,
+          "p95": 0.486,
+          "p99": 0.818,
+          "mean": 0.299,
+          "min": 0.158
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 4.714,
+          "p95": 9.512,
+          "p99": 14.524,
+          "mean": 5.151,
+          "min": 3.125
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 27.832,
+          "p95": 33.811,
+          "p99": 33.811,
+          "mean": 28.331,
+          "min": 26.549
+        }
+      },
+      "rssMBAfterWarm": 120.824
+    },
+    {
+      "id": "quickjs-bun-podman",
+      "note": "QuickJS-wasm in a Bun child inside the rootless podman container",
+      "runtime": "bun 1.4.2 / quickjs",
+      "coldStartMs": {
+        "n": 3,
+        "p50": 283.471,
+        "p95": 319.543,
+        "p99": 319.543,
+        "mean": 291.914,
+        "min": 272.727,
+        "first": 272.727,
+        "restMedian": 319.543,
+        "runs": [
+          272.727,
+          283.471,
+          319.543
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.941,
+          "p95": 2.774,
+          "p99": 50.631,
+          "mean": 2.584,
+          "min": 0.378
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.439,
+          "p95": 0.578,
+          "p99": 1.646,
+          "mean": 0.557,
+          "min": 0.279
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.458,
+          "p95": 0.697,
+          "p99": 1.021,
+          "mean": 0.488,
+          "min": 0.297
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 3.655,
+          "p95": 6.281,
+          "p99": 9.099,
+          "mean": 4.063,
+          "min": 3.063
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 36.381,
+          "p95": 73.632,
+          "p99": 73.632,
+          "mean": 41.174,
+          "min": 31.712
+        }
+      },
+      "rssMBAfterWarm": 67.691
+    },
+    {
+      "id": "ivm-node",
+      "note": "isolated-vm inside a plain Node child process (Bun cannot load the addon)",
+      "runtime": "node 24.21.0 / ivm",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 86.305,
+        "p95": 96.491,
+        "p99": 96.491,
+        "mean": 80.422,
+        "min": 65.792,
+        "first": 86.305,
+        "restMedian": 86.547,
+        "runs": [
+          86.305,
+          65.792,
+          96.491,
+          86.547,
+          66.977
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.279,
+          "p95": 0.403,
+          "p99": 0.499,
+          "mean": 0.285,
+          "min": 0.157
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.215,
+          "p95": 0.339,
+          "p99": 0.65,
+          "mean": 0.239,
+          "min": 0.132
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.201,
+          "p95": 0.346,
+          "p99": 0.416,
+          "mean": 0.218,
+          "min": 0.123
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 1.695,
+          "p95": 2.029,
+          "p99": 2.414,
+          "mean": 1.716,
+          "min": 1.345
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 13.313,
+          "p95": 14.418,
+          "p99": 14.418,
+          "mean": 13.332,
+          "min": 12.203
+        }
+      },
+      "rssMBAfterWarm": 133.516
+    },
+    {
+      "id": "ivm-node-podman",
+      "note": "isolated-vm in a Node child inside the rootless podman container",
+      "runtime": "node 24.21.0 / ivm",
+      "coldStartMs": {
+        "n": 3,
+        "p50": 255.971,
+        "p95": 261.109,
+        "p99": 261.109,
+        "mean": 248.269,
+        "min": 227.727,
+        "first": 255.971,
+        "restMedian": 261.109,
+        "runs": [
+          255.971,
+          261.109,
+          227.727
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.338,
+          "p95": 0.537,
+          "p99": 0.661,
+          "mean": 0.354,
+          "min": 0.223
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.295,
+          "p95": 0.473,
+          "p99": 0.628,
+          "mean": 0.316,
+          "min": 0.199
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.272,
+          "p95": 0.44,
+          "p99": 0.556,
+          "mean": 0.289,
+          "min": 0.179
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 1.969,
+          "p95": 2.642,
+          "p99": 3.625,
+          "mean": 2.036,
+          "min": 1.579
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 32.483,
+          "p95": 132.282,
+          "p99": 132.282,
+          "mean": 40.756,
+          "min": 24.455
+        }
+      },
+      "rssMBAfterWarm": 91.973
+    },
+    {
+      "id": "workerd",
+      "note": "workerd child process, globalOutbound = deny worker, unix socket RPC",
+      "runtime": "workerd workerd 2026-10-16",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 39.975,
+        "p95": 464.587,
+        "p99": 464.587,
+        "mean": 126.135,
+        "min": 35.604,
+        "first": 464.587,
+        "restMedian": 39.975,
+        "runs": [
+          464.587,
+          53.756,
+          35.604,
+          36.752,
+          39.975
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.486,
+          "p95": 0.818,
+          "p99": 1.349,
+          "mean": 0.519,
+          "min": 0.304
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.452,
+          "p95": 0.699,
+          "p99": 1.06,
+          "mean": 0.475,
+          "min": 0.314
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.448,
+          "p95": 0.572,
+          "p99": 1.128,
+          "mean": 0.456,
+          "min": 0.319
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 1.059,
+          "p95": 1.394,
+          "p99": 2.904,
+          "mean": 1.061,
+          "min": 0.722
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 5.615,
+          "p95": 9.633,
+          "p99": 9.633,
+          "mean": 5.852,
+          "min": 3.718
+        }
+      },
+      "rssMBAfterWarm": 84.059
+    },
+    {
+      "id": "workerd-cgroup",
+      "note": "workerd in a systemd user cgroup scope",
+      "runtime": "workerd workerd 2026-10-16 in cgroup",
+      "coldStartMs": {
+        "n": 5,
+        "p50": 70.942,
+        "p95": 107.048,
+        "p99": 107.048,
+        "mean": 78.962,
+        "min": 56.657,
+        "first": 107.048,
+        "restMedian": 70.942,
+        "runs": [
+          107.048,
+          70.942,
+          100.768,
+          59.392,
+          56.657
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.649,
+          "p95": 3.155,
+          "p99": 6.227,
+          "mean": 1.064,
+          "min": 0.336
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.367,
+          "p95": 0.697,
+          "p99": 1.264,
+          "mean": 0.419,
+          "min": 0.229
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.327,
+          "p95": 0.454,
+          "p99": 0.982,
+          "mean": 0.347,
+          "min": 0.211
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 0.867,
+          "p95": 1.166,
+          "p99": 2.712,
+          "mean": 0.901,
+          "min": 0.599
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 6.136,
+          "p95": 9.117,
+          "p99": 9.117,
+          "mean": 6.459,
+          "min": 4.769
+        }
+      },
+      "rssMBAfterWarm": 83.113
+    },
+    {
+      "id": "workerd-podman",
+      "note": "workerd in the rootless podman container",
+      "runtime": "workerd workerd 2026-10-16 in podman",
+      "coldStartMs": {
+        "n": 3,
+        "p50": 513.052,
+        "p95": 2302.503,
+        "p99": 2302.503,
+        "mean": 1045.121,
+        "min": 319.807,
+        "first": 513.052,
+        "restMedian": 2302.503,
+        "runs": [
+          513.052,
+          2302.503,
+          319.807
+        ]
+      },
+      "manifest": {
+        "blocks": [
+          "block:position"
+        ],
+        "exerciseKinds": [
+          "exercise:toy-quiz"
+        ],
+        "presets": 1,
+        "layouts": 1
+      },
+      "correctness": {
+        "cases": 16,
+        "mismatches": []
+      },
+      "latencyMs": {
+        "validate (position, ~100 B)": {
+          "n": 300,
+          "p50": 0.528,
+          "p95": 1.301,
+          "p99": 2.107,
+          "mean": 0.629,
+          "min": 0.337
+        },
+        "grade (mcq, ~1 KB)": {
+          "n": 300,
+          "p50": 0.583,
+          "p95": 1.223,
+          "p99": 2.089,
+          "mean": 0.665,
+          "min": 0.299
+        },
+        "validateItem (~1 KB)": {
+          "n": 300,
+          "p50": 0.525,
+          "p95": 1.037,
+          "p99": 1.555,
+          "mean": 0.588,
+          "min": 0.326
+        },
+        "validateItem (~100 KB)": {
+          "n": 60,
+          "p50": 2.504,
+          "p95": 6.11,
+          "p99": 12.941,
+          "mean": 3.06,
+          "min": 1.192
+        },
+        "validateItem (~1 MB)": {
+          "n": 20,
+          "p50": 5.912,
+          "p95": 7.378,
+          "p99": 7.378,
+          "mean": 5.548,
+          "min": 3.938
+        }
+      },
+      "rssMBAfterWarm": 52.867
+    }
+  ]
+}

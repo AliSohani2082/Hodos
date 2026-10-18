@@ -1,0 +1,7 @@
+{
+  "name": "@ali38/hostile",
+  "version": "6.6.6",
+  "type": "module",
+  "description": "Hostile test plugin for spike (b). Declares nothing dangerous in its manifest, then does everything. For use only against local canaries and dummy listeners.",
+  "hodos": { "server": "server.mjs", "trust": "first-party", "capabilities": [] }
+}

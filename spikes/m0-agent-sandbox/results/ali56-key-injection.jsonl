@@ -1,0 +1,2 @@
+{"ts":"2026-10-16T17:57:04.232Z","component":"mock-llm","event":"request","method":"POST","url":"/v1/messages","x-api-key":"mock…-key","authorization":null,"injectedAnthropicKey":true,"injectedOpenaiKey":false,"bytes":45}
+{"ts":"2026-10-16T17:57:04.250Z","component":"mock-llm","event":"request","method":"POST","url":"/v1/responses","x-api-key":null,"authorization":"Bearer mock…-key","injectedAnthropicKey":false,"injectedOpenaiKey":true,"bytes":42}

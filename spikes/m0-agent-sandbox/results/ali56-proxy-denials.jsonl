@@ -1,0 +1,12 @@
+{"ts":"2026-10-16T17:56:01.208Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"example.com:443","src":"10.139.0.3"}
+{"ts":"2026-10-16T17:56:01.222Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"127.0.0.1:443","src":"10.139.0.3"}
+{"ts":"2026-10-16T17:56:01.233Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"169.254.169.254:443","src":"10.139.0.3"}
+{"ts":"2026-10-16T17:56:01.244Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"ali39-postgres:5432","src":"10.139.0.3"}
+{"ts":"2026-10-16T17:57:04.263Z","component":"proxy","event":"egress","decision":"deny","reason":"no_such_route","status":403,"kind":"gateway","method":"GET","path":"/admin/jobs","src":"10.139.0.6"}
+{"ts":"2026-10-16T17:57:04.274Z","component":"proxy","event":"egress","decision":"deny","reason":"path_not_allowed","status":403,"kind":"gateway","route":"/anthropic","method":"POST","path":"/v2/messages","src":"10.139.0.6"}
+{"ts":"2026-10-16T17:57:04.286Z","component":"proxy","event":"egress","decision":"deny","reason":"no_such_route","status":403,"kind":"gateway","method":"GET","path":"/rogue","src":"10.139.0.6"}
+{"ts":"2026-10-16T17:57:04.296Z","component":"proxy","event":"egress","decision":"deny","reason":"plain_http_forwarding_disabled","status":403,"kind":"forward","method":"GET","target":"http://example.com/","src":"10.139.0.6"}
+{"ts":"2026-10-16T17:57:04.307Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"example.com:443","src":"10.139.0.6"}
+{"ts":"2026-10-16T17:57:04.317Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"127.0.0.1:443","src":"10.139.0.6"}
+{"ts":"2026-10-16T17:57:04.327Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"169.254.169.254:443","src":"10.139.0.6"}
+{"ts":"2026-10-16T17:57:04.336Z","component":"proxy","event":"egress","decision":"deny","reason":"not_in_allowlist","kind":"connect","target":"ali39-postgres:5432","src":"10.139.0.6"}

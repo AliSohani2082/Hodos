@@ -1,0 +1,100 @@
+{
+ "id": "math-s1",
+ "chunks": [
+  {
+   "id": "src:wiki-pythagorean-theorem#c1",
+   "outlet": "src:wiki-pythagorean-theorem",
+   "title": "Pythagorean theorem",
+   "text": "In mathematics, the Pythagorean theorem or Pythagoras's theorem is a fundamental relation in Euclidean geometry between the three sides of a right triangle. It states that the area of the square whose side is the hypotenuse (the side opposite the right angle) is equal to the sum of the areas of the squares on the other two sides. The theorem can be written as an equation relating the lengths of the sides a, b and the hypotenuse c, sometimes called the Pythagorean equation: Byzantine Neoplatonic philosopher and mathematician Proclus, writing in the fifth century AD, states two arithmetic rules, \"one of them attributed to Plato, the other to Pythagoras\", for generating special Pythagorean triples. The rule attributed to Pythagoras (c. 570 – c. 495 BC) starts from an odd number and produces a triple with leg and hypotenuse differing by one unit; the rule attributed to Plato (428/427 or 424/423 – 348/347 BC) starts from an even number and produces a triple with leg and hypotenuse differing by two units. According to Thomas L. Heath (1861–1940), no specific attribution of the theorem to Pythagoras exists in the surviving Greek literature from the five centuries after Pythagoras lived."
+  },
+  {
+   "id": "src:wiki-pythagorean-theorem#c2",
+   "outlet": "src:wiki-pythagorean-theorem",
+   "title": "Pythagorean theorem",
+   "text": "However, when authors such as Plutarch and Cicero attributed the theorem to Pythagoras, they did so in a way which suggests that the attribution was widely known and undoubted. Classicist Kurt von Fritz wrote, \"Whether this formula is rightly attributed to Pythagoras personally ... \" Around 300 BC, in Euclid's Elements, the oldest extant axiomatic proof of the theorem is presented, along with Euclid's formula for generating all primitive Pythagorean triples. With contents known much earlier, but in surviving texts dating from roughly the 1st century BC, the Chinese text Zhoubi Suanjing (周髀算经), (The Arithmetical Classic of the Gnomon and the Circular Paths of Heaven) gives a reasoning for the Pythagorean theorem for the (3, 4, 5) triangle — in China it is called the \"Gougu theorem\" (勾股定理). During the Han Dynasty (202 BC to 220 AD), Pythagorean triples appear in The Nine Chapters on the Mathematical Art, together with a mention of right triangles. Some believe the theorem arose first in China in the 11th century BC, where it is alternatively known as the \"Shang Gao theorem\" (商高定理), named after the Duke of Zhou's astronomer and mathematician, whose reasoning composed most of what was in the Zhoubi Suanjing."
+  },
+  {
+   "id": "src:wiki-pythagorean-theorem#c3",
+   "outlet": "src:wiki-pythagorean-theorem",
+   "title": "Pythagorean theorem",
+   "text": "The theorem can be proved algebraically using four copies of the same triangle arranged symmetrically around a square with side c, as shown in the lower part of the diagram. This results in a larger square, with side a + b and area (a + b)2. The four triangles and the square side c must have the same area as the larger square, A similar proof uses four copies of a right triangle with sides a, b and c, arranged inside a square with side c as in the top half of the diagram. The triangles are similar with area ⁠1/2⁠ab, while the small square has side b − a and area (b − a)2. The area of the large square is therefore"
+  },
+  {
+   "id": "src:wiki-pythagorean-theorem#c4",
+   "outlet": "src:wiki-pythagorean-theorem",
+   "title": "Pythagorean theorem",
+   "text": "This theorem may have more known proofs than any other (the law of quadratic reciprocity being another contender for that distinction); the book The Pythagorean Proposition contains 370 proofs. This proof is based on the proportionality of the sides of three similar triangles, that is, upon the fact that the ratio of any two corresponding sides of similar triangles is the same regardless of the size of the triangles. Let ABC represent a right triangle, with the right angle located at C, as shown on the figure. Draw the altitude from point C, and call H its intersection with the side AB. Point H divides the length of the hypotenuse c into parts d and e. The new triangle, ACH, is similar to triangle ABC, because they both have a right angle (by definition of the altitude), and they share the angle at A, meaning that the third angle will be the same in both triangles as well, marked as θ in the figure. By a similar reasoning, the triangle CBH is also similar to ABC. The proof of similarity of the triangles requires the triangle postulate: The sum of the angles in a triangle is two right angles, and is equivalent to the parallel postulate. Similarity of the triangles leads to the equality of ratios of corresponding sides:"
+  },
+  {
+   "id": "src:wiki-pythagorean-triple#c1",
+   "outlet": "src:wiki-pythagorean-triple",
+   "title": "Pythagorean triple",
+   "text": "Euclid's formula is a fundamental formula for generating Pythagorean triples given an arbitrary pair of integers m and n with m > n > 0. The formula states that the integers That satisfaction of Euclid's formula by a, b, c is sufficient for the triangle to be Pythagorean is apparent from the fact that for positive integers m and n, m > n, the a, b, and c given by the formula are all positive integers, and from the fact that The following variant of Euclid's formula is sometimes more convenient, as being more symmetric in m and n (same parity condition on m and n). are three integers that form a Pythagorean triple, which is primitive if and only if m and n are coprime. Conversely, every primitive Pythagorean triple arises (after the exchange of a and b, if a is even) from a unique pair m > n > 0 of coprime odd integers."
+  },
+  {
+   "id": "src:wiki-pythagorean-triple#c2",
+   "outlet": "src:wiki-pythagorean-triple",
+   "title": "Pythagorean triple",
+   "text": "In the presentation above, it is said that all Pythagorean triples are uniquely obtained from Euclid's formula \"after the exchange of a and b, if a is even\". Euclid's formula and the variant above can be merged as follows to avoid this exchange, leading to the following result. The properties of a primitive Pythagorean triple (a, b, c) with a < b < c (without specifying which of a or b is even and which is odd) include: can be understood in terms of the geometry of rational points on the unit circle (Trautman 1998). In fact, a point in the Cartesian plane with coordinates (x, y) belongs to the unit circle if x2 + y2 = 1. The point is rational if x and y are rational numbers, that is, if there are coprime integers a, b, c such that"
+  },
+  {
+   "id": "src:wiki-pythagorean-triple#c3",
+   "outlet": "src:wiki-pythagorean-triple",
+   "title": "Pythagorean triple",
+   "text": "By multiplying both members by c2, one can see that the rational points on the circle are in one-to-one correspondence with the primitive Pythagorean triples. Euclid's formula for Pythagorean triples and the inverse relationship t = y / (1 + x) mean that, except for (−1, 0), a point (x, y) on the circle is rational if and only if the corresponding value of t is a rational number. Note that t = y / (1 + x) = b / (c + a) = n / m is also the tangent of half of the angle that is opposite the triangle side of length b, and rational values of this half-angle tangent can be used to generate all primitive Pythagorean triples; see Generating all primitive Pythagorean triples using half-angle tangents."
+  },
+  {
+   "id": "src:wiki-pythagorean-triple#c4",
+   "outlet": "src:wiki-pythagorean-triple",
+   "title": "Pythagorean triple",
+   "text": "There is a correspondence between points on the unit circle with rational coordinates and primitive Pythagorean triples. At this point, Euclid's formulae can be derived either by methods of trigonometry or equivalently by using the stereographic projection. For the stereographic approach, suppose that P′ is a point on the x-axis with rational coordinates This establishes that each rational point of the x-axis goes over to a rational point of the unit circle. The converse, that every rational point of the unit circle comes from such a point of the x-axis, follows by applying the inverse stereographic projection. Suppose that P(x, y) is a point of the unit circle with x and y rational numbers. Then the point P′ obtained by stereographic projection onto the x-axis has coordinates"
+  },
+  {
+   "id": "src:wiki-euclid-s-elements#c1",
+   "outlet": "src:wiki-euclid-s-elements",
+   "title": "Euclid's Elements",
+   "text": "The Elements does not exclusively discuss geometry as is sometimes believed. It is traditionally divided into three topics: plane geometry (books I–VI), basic number theory (books VII–X) and solid geometry (books XI–XIII)—though book V (on proportions) and X (on incommensurability) do not exactly fit this scheme. The heart of the text is the theorems scattered throughout. Using Aristotle's terminology, these may be generally separated into two categories: \"first principles\" and \"second principles\". The first group includes statements labeled as a \"definition\" (Ancient Greek: ὅρος or ὁρισμός), \"postulate\" (αἴτημα), or a \"common notion\" (κοινὴ ἔννοια). The postulates (that is, axioms) and common notions occur only in book I. Close study of Proclus suggests that older versions of the Elements may have followed the same distinctions but with different terminology, instead calling each definition a \"hypothesis\" (ὑπόθεσις) and each common notion an \"axiom\" (ἀξίωμα). The second group consists of propositions, presented alongside mathematical proofs and diagrams. It is unknown whether Euclid intended the Elements as a textbook, despite its wide subsequent use as one. As a whole, the authorial voice remains general and impersonal."
+  },
+  {
+   "id": "src:wiki-euclid-s-elements#c2",
+   "outlet": "src:wiki-euclid-s-elements",
+   "title": "Euclid's Elements",
+   "text": "The second book focuses on area, measured through quadrature, meaning the construction of a square of equal area to a given figure. It includes a geometric precursor of the law of cosines, and culminates in the quadrature of arbitrary rectangles. In the late 19th and 20th centuries, Book II was interpreted by some mathematical historians to establish a \"geometric algebra\", an expression of algebraic manipulation of linear and quadratic equations in terms of geometric concepts of length and area, centered on the quadratic case of the binomial theorem. This interpretation has been heavily debated since the 1970s; critics describe the characterization as anachronistic, since the foundations of even nascent algebra occurred many centuries later. Nevertheless, taken as statements about geometry, many of the propositions in this book are superfluous to modern mathematics, as they can be subsumed by the use of algebra. Proposition 11 of Book II subdivides a given line segment into extreme and mean proportions, now called the golden ratio."
+  },
+  {
+   "id": "src:wiki-euclid-s-elements#c3",
+   "outlet": "src:wiki-euclid-s-elements",
+   "title": "Euclid's Elements",
+   "text": "It is the first of several propositions involving this ratio: It is later used in Book IV to construct a golden triangle and regular pentagon and in Book XIII to construct the regular dodecahedron and regular icosahedron, and studied as a ratio in Book VI Proposition 30. Book III begins with a list of 11 definitions, and follows with 37 propositions that deal with circles and their properties. Proposition 1 is on finding the center of a circle. Propositions 2 through 15 concern chords, and intersecting and tangent circles. Tangent lines to circles are the subjects of propositions 16 through 19. Next are propositions on inscribed angles (20 through 22), and on chords, arcs, and angles (23 through 30), including the inscribed angle theorem relating inscribed to central angles as proposition 20. Propositions 31 through 34 concern angles in circles, including Thales's theorem that an angle inscribed in a semicircle is a right angle (part of proposition 31). The remaining propositions, 35 through 37, concern intersecting chords and tangents; proposition 35 is the intersecting chords theorem, and proposition 36 is the tangent–secant theorem."
+  },
+  {
+   "id": "src:wiki-euclid-s-elements#c4",
+   "outlet": "src:wiki-euclid-s-elements",
+   "title": "Euclid's Elements",
+   "text": "Book IV treats four problems systematically for different polygons: inscribing a polygon within a circle, circumscribing a polygon about a circle, inscribing a circle within a polygon, and circumscribing a circle about a polygon. , those that have a straightedge and compass construction) with 4, 5, 6, and 15 sides. Book VI uses the theory of ratios from Book V in the context of plane geometry,  especially the construction and recognition of similar figures. It is built almost entirely of its first proposition: \"Triangles and parallelograms which are under the same height are to one another as their bases\". That is, if two triangles have the same height, the ratio of their areas is the same as the ratio of lengths of their two base segments (and analogously for two parallelograms of the same height). This proposition provides a connection between ratios of lengths and ratios of areas. Proposition 25 constructs, from any two polygons, a third polygon similar to the first and with the same area as the second. Plutarch attributes this construction to Pythagoras, calling it \"more subtle and more scientific\" than the Pythagorean theorem."
+  }
+ ],
+ "sources": [
+  {
+   "outlet": "src:wiki-pythagorean-theorem",
+   "title": "Pythagorean theorem",
+   "url": "https://en.wikipedia.org/wiki/Pythagorean_theorem",
+   "revid": 1379898070,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-pythagorean-triple",
+   "title": "Pythagorean triple",
+   "url": "https://en.wikipedia.org/wiki/Pythagorean_triple",
+   "revid": 1377202765,
+   "license": "CC BY-SA 4.0"
+  },
+  {
+   "outlet": "src:wiki-euclid-s-elements",
+   "title": "Euclid's Elements",
+   "url": "https://en.wikipedia.org/wiki/Euclid's_Elements",
+   "revid": 1376985469,
+   "license": "CC BY-SA 4.0"
+  }
+ ]
+}
