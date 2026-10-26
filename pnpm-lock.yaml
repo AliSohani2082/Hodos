@@ -66,6 +66,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@24.19.2)(supports-color@7.2.0)
 
+  examples/binary-numbers: {}
+
   packages/core:
     dependencies:
       '@hodos/plugin-sdk':

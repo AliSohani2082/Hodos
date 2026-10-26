@@ -35,11 +35,12 @@ export interface RendererHost {
 
 /**
  * Serve a built renderer directory.
- * @param root - the renderer's dist directory.
+ * @param root - the renderer's directory (a built dist/ for bundled renderers).
  * @param path - URL path it is served under, e.g. /hodos/env/hodos-math/math-view/.
+ * @param script - the renderer's script, which must exist.
  */
-export async function startRendererHost(root: string, path: string): Promise<RendererHost> {
-  if (!existsSync(join(root, 'renderer.js'))) throw new Error(`build the renderer first (pnpm build): ${root}`)
+export async function startRendererHost(root: string, path: string, script = 'renderer.js'): Promise<RendererHost> {
+  if (!existsSync(join(root, script))) throw new Error(`build the renderer first (pnpm build): ${root}`)
   const server: Server = createServer((req, res) => {
     const url = new URL(req.url ?? '/', 'http://localhost')
     if (url.pathname === '/') {
@@ -71,8 +72,8 @@ export async function received(page: Page): Promise<Array<Readonly<Record<string
   return Array.isArray(parsed) ? parsed.filter((m): m is Readonly<Record<string, unknown>> => typeof m === 'object' && m !== null) : []
 }
 
-/** Send a host message to the renderer. */
-export async function post(page: Page, message: object): Promise<void> {
+/** Send a host message to the renderer (anything JSON, to test malformed messages too). */
+export async function post(page: Page, message: unknown): Promise<void> {
   await page.evaluate(`window.hostPost(${JSON.stringify(message)})`)
 }
 
