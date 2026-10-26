@@ -4,9 +4,7 @@
  * @module @hodos/dsh/config
  */
 import Schema from '@deepseek-ai/schemastery'
-
-/** Environment plugins whose in-process hooks Hodos runs (the shipped, reviewed packages). */
-export const BUILT_IN_ENVIRONMENTS: readonly string[] = ['hodos-chess', 'hodos-language', 'hodos-code', 'hodos-math']
+import { BUILT_IN_ENVIRONMENTS } from './trust.js'
 
 /** The DSH principal every authenticated browser and agent maps to (DSH has one owner principal). */
 export const OWNER_PRINCIPAL = 'dsh:owner'

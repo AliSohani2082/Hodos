@@ -3,9 +3,11 @@
  * `hodos course` CLI prints the guide, validates and submits a course file,
  * and the host's inbox turns it into a draft awaiting the learner's approval.
  */
-import { mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import ts from 'typescript'
 import { afterAll, describe, expect, it } from 'vitest'
 import { createChessPlugin, tacticsCourse } from '@hodos/chess'
 import { HodosEngine, HodosStore, PluginRegistry, SandboxRunner, type Actor } from '@hodos/core'
@@ -17,6 +19,31 @@ afterAll(() => sandbox.dispose())
 const silent = { info: () => undefined, warn: () => undefined, error: () => undefined }
 
 interface Run { readonly code: number; readonly out: string; readonly err: string }
+
+/**
+ * The packages a module and the local modules it imports load at run time.
+ * Type-only imports and exports are erased (verbatimModuleSyntax), so they do not count.
+ */
+function runtimePackages(entry: string): Set<string> {
+  const packages = new Set<string>()
+  const seen = new Set<string>()
+  const visit = (file: string): void => {
+    if (seen.has(file)) return
+    seen.add(file)
+    const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest)
+    for (const statement of source.statements) {
+      const declaration = ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly !== true ? statement
+        : ts.isExportDeclaration(statement) && !statement.isTypeOnly ? statement
+          : undefined
+      const specifier = declaration?.moduleSpecifier
+      if (specifier === undefined || !ts.isStringLiteral(specifier)) continue
+      if (specifier.text.startsWith('.')) visit(resolve(dirname(file), specifier.text.replace(/\.js$/u, '.ts')))
+      else packages.add(specifier.text)
+    }
+  }
+  visit(entry)
+  return packages
+}
 
 async function hodos(args: readonly string[], env: Record<string, string> = {}): Promise<Run> {
   const out: string[] = []
@@ -103,6 +130,12 @@ describe('hodos course CLI', () => {
     expect(resolveDataDir(undefined, { DSH_HOME: '/z' }, '/cwd')).toBe('/z/hodos')
     expect(resolveDataDir(undefined, { DSH_HOME: '  ' }, '/cwd')).toBe(join(homedir(), '.dsh', 'hodos'))
     expect(resolveDataDir('rel', {}, '/cwd')).toBe('/cwd/rel')
+  })
+
+  it('runs outside DeepSeek Harness: it loads none of the Harness packages', () => {
+    const loaded = runtimePackages(fileURLToPath(new URL('../../packages/dsh-adapter/src/cli.ts', import.meta.url)))
+    expect(loaded).toContain('@hodos/core')
+    expect([...loaded].filter(name => name.startsWith('@deepseek-ai/'))).toEqual([])
   })
 
   it('explains its usage', async () => {

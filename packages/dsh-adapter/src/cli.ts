@@ -19,7 +19,7 @@ import { join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { loadDeclarativePlugin, PluginRegistry, SandboxRunner, authoringGuide, validateCourse } from '@hodos/core'
 import { isCourse, validateCourseShape, type CourseSpec, type Diagnostic, type HodosEnvironmentPlugin } from '@hodos/plugin-sdk'
-import { BUILT_IN_ENVIRONMENTS } from './config.js'
+import { BUILT_IN_ENVIRONMENTS } from './trust.js'
 import { INBOX_DIR, MAX_INBOX_FILE_BYTES } from './inbox.js'
 
 /** Environment packages loaded when installed (the reviewed built-ins). */
