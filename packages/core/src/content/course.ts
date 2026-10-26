@@ -45,6 +45,9 @@ export interface CourseValidationOptions {
 /** Minimum practice items per skill before coverage stops warning. */
 export const MIN_PRACTICE_ITEMS = 3
 
+/** Items a checkpoint draws by default (the engine's `checkpointSize`). */
+export const DEFAULT_CHECKPOINT_SIZE = 3
+
 /**
  * Validate a course against the installed plugins.
  * @param course - the course (untrusted; its structure is checked first).

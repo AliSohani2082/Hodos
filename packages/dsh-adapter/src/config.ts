@@ -39,6 +39,11 @@ export interface HodosConfig {
   notices: NoticePolicy
   /** Subagent provider for course drafting; empty picks the first provider with structured output. */
   delegateProvider: string
+  /**
+   * Import course files from `<dataDir>/inbox` (written by `hodos course
+   * submit`) as drafts that wait for the learner's approval.
+   */
+  courseInbox: boolean
   /** Mastery gate strictness (θ = 0.90 / 0.95 / 0.98). */
   strictness: 'lenient' | 'standard' | 'strict'
 }
@@ -58,5 +63,6 @@ export const Config = Schema.object({
   notices: Schema.union(['off', 'quiet', 'proactive'] as const).default('quiet')
     .description('How the tutor hears about workspace activity.'),
   delegateProvider: Schema.string().default('').description('Subagent provider used to draft courses.'),
+  courseInbox: Schema.boolean().default(true).description('Import course files from <dataDir>/inbox as drafts awaiting approval.'),
   strictness: Schema.union(['lenient', 'standard', 'strict'] as const).default('standard').description('Mastery gate strictness.'),
 })

@@ -16,15 +16,18 @@ import {
   type ExerciseItem,
   type ExerciseMode,
   type GradeResult,
+  type ItemProvenance,
   type JsonObject,
   type JsonValue,
   type LearningLoop,
   type LessonNode,
   type SkillSpec,
+  isCourse,
   validateCourseShape,
 } from '@hodos/plugin-sdk'
 import { systemClock, type Clock } from '../clock.js'
-import { blockLookup, validateCourse } from '../content/course.js'
+import { blockLookup, DEFAULT_CHECKPOINT_SIZE, validateCourse } from '../content/course.js'
+import { authoringGuide } from '../content/guide.js'
 import { lessonChecks, lessonPlainText, lessonServerFragments, parseLesson, projectLessonForStudent, stampBlockIds } from '../content/lesson.js'
 import { chooseStrategy, DEFAULT_DIAGNOSTIC_CONFIG, Diagnostic, type DiagnosticConfig, type DiagnosticNode } from '../diagnostic/diagnostic.js'
 import { HodosError } from '../errors.js'
@@ -75,7 +78,7 @@ export const DEFAULT_ENGINE_CONFIG: EngineConfig = {
   mastery: DEFAULT_MASTERY_CONFIG,
   hintPacing: DEFAULT_HINT_PACING,
   limits: DEFAULT_LIMITS,
-  checkpointSize: 3,
+  checkpointSize: DEFAULT_CHECKPOINT_SIZE,
   checkpointCooldownSec: 60,
   maxAdaptationsPerSkillPerDay: 3,
   interleaveProbability: 0.25,
@@ -1605,23 +1608,38 @@ export class HodosEngine {
   // ---------------------------------------------------------------- course authoring
 
   /**
-   * Validate and store a course proposed by the tutor agent (or a subagent).
-   * Proposed courses are drafts until the learner approves them in the workspace.
+   * The course authoring guide for the installed environments.
+   * @param options - detail level.
+   * @returns Markdown text.
+   */
+  authoringGuide(options: { schemas?: boolean } = {}): string {
+    return authoringGuide(this.registry, { ...options, checkpointSize: this.config.checkpointSize })
+  }
+
+  /**
+   * Validate and store a proposed course: from the tutor agent or a subagent
+   * (`agent`), or from a file in the host's course inbox (`import`, for
+   * example a course written with Claude Code). Proposed courses are drafts
+   * until the learner approves them in the workspace, and their provenance is
+   * set here: claims inside a proposal ("verified by …") are not taken over.
    * @param actor - proposer.
-   * @param proposal - the proposed course (untrusted model output).
+   * @param proposal - the proposed course (untrusted).
+   * @param options - where it came from; `source` names it for the learner (e.g. the inbox file).
    * @returns validation findings and whether it was stored as a draft.
    */
-  async proposeCourse(actor: Actor, proposal: unknown): Promise<{ stored: boolean; courseId: string; version: string; errors: string[]; warnings: string[] }> {
-    this.limiter.take(actor.learnerId, 'generate')
-    const shape = validateCourseShape(proposal)
-    if (shape.length > 0) {
+  async proposeCourse(actor: Actor, proposal: unknown, options: { origin?: 'agent' | 'import'; source?: string } = {}): Promise<{ stored: boolean; courseId: string; version: string; errors: string[]; warnings: string[] }> {
+    const origin = options.origin ?? 'agent'
+    // Model-written proposals are rate-limited; inbox imports need a local file and the learner's approval.
+    if (origin === 'agent') this.limiter.take(actor.learnerId, 'generate')
+    if (!isCourse(proposal)) {
+      const shape = validateCourseShape(proposal)
       const field = (name: string): string => {
-        const v = typeof proposal === 'object' && proposal !== null && !Array.isArray(proposal) ? (proposal as Record<string, unknown>)[name] : undefined
+        const v: unknown = typeof proposal === 'object' && proposal !== null && name in proposal ? Object.getOwnPropertyDescriptor(proposal, name)?.value : undefined
         return typeof v === 'string' ? v.slice(0, 64) : ''
       }
       return { stored: false, courseId: field('id'), version: field('version'), errors: shape.slice(0, 20).map(d => `${d.code}: ${d.message}`), warnings: [] }
     }
-    const course = proposal as CourseSpec // structure checked by validateCourseShape above
+    const course = proposal
     const findings = await validateCourse(course, this.registry, { requireCoverage: false })
     const errors = findings.filter(f => f.severity === 'error').map(f => `${f.code}: ${f.message}`)
     const warnings = findings.filter(f => f.severity === 'warning').map(f => `${f.code}: ${f.message}`)
@@ -1629,10 +1647,15 @@ export class HodosEngine {
     if (this.store.course(course.id, course.version)?.status === 'approved') {
       return { stored: false, courseId: course.id, version: course.version, errors: ['course/version-exists: this course version is already approved; bump the version'], warnings }
     }
+    const provenance: ItemProvenance = { source: origin === 'import' ? 'imported' : 'generated' }
     this.store.upsertCourse({
-      id: course.id, version: course.version, status: 'draft', origin: 'agent', pluginId: null, title: course.title,
-      spec: { ...course, lessons: course.lessons.map(l => ({ ...l, source: stampBlockIds(l.source, l.id) })) },
-      proposedBy: actor.channel, createdAt: this.now().toISOString(), approvedAt: null,
+      id: course.id, version: course.version, status: 'draft', origin, pluginId: null, title: course.title,
+      spec: {
+        ...course,
+        lessons: course.lessons.map(l => ({ ...l, source: stampBlockIds(l.source, l.id) })),
+        items: course.items.map(item => ({ ...item, provenance })),
+      },
+      proposedBy: options.source === undefined ? actor.channel : options.source.slice(0, 200), createdAt: this.now().toISOString(), approvedAt: null,
     })
     this.courseCache.delete(`${course.id}@${course.version}`)
     return { stored: true, courseId: course.id, version: course.version, errors, warnings }
@@ -1642,9 +1665,10 @@ export class HodosEngine {
    * Draft courses awaiting approval.
    * @returns drafts with their skill graphs (no answer keys).
    */
-  drafts(): Array<{ id: string; version: string; title: string; description: string; skills: Array<{ id: string; title: string; kind: string; requires: string[] }>; lessons: number; items: number }> {
+  drafts(): Array<{ id: string; version: string; title: string; description: string; origin: 'agent' | 'import'; proposedBy: string; skills: Array<{ id: string; title: string; kind: string; requires: string[] }>; lessons: number; items: number }> {
     return this.store.courses('draft').map(c => ({
       id: c.id, version: c.version, title: c.title, description: c.spec.description,
+      origin: c.origin === 'import' ? 'import' as const : 'agent' as const, proposedBy: c.proposedBy ?? '',
       skills: c.spec.skills.map(s => ({ id: s.id, title: s.title, kind: s.kind, requires: [...(s.requires ?? [])] })),
       lessons: c.spec.lessons.length, items: c.spec.items.length,
     }))

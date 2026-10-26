@@ -107,6 +107,20 @@ export type InteractionStyle = 'single' | 'stepwise'
 /** What a learner response looks like, for renderers and the plain-text fallback. */
 export type ResponseKind = 'choice' | 'text' | 'moves' | 'code' | 'number' | 'expression' | 'structured'
 
+/** Authoring guidance for an exercise kind, shown to course authors (people or models). */
+export interface KindGuidance {
+  /** When to use the kind. */
+  readonly when: string
+  /** Rules beyond the schemas, e.g. "the FEN must be a legal position". */
+  readonly rules?: readonly string[]
+  /** One valid example item body. */
+  readonly example?: {
+    readonly payload: JsonValue
+    readonly key: JsonValue
+    readonly hints?: readonly ItemHint[]
+  }
+}
+
 /**
  * An exercise kind contributed by a plugin.
  * @typeParam P - payload type.
@@ -130,6 +144,8 @@ export interface ExerciseKindSpec<P extends JsonValue = JsonValue, K extends Jso
   readonly keySchema: JsonSchema
   /** Schema of one learner response (or one step of a stepwise response). */
   readonly responseSchema: JsonSchema
+  /** Authoring guidance and an example for course authors. */
+  readonly guidance?: KindGuidance
   /**
    * Semantic item checks beyond JSON Schema (legal FEN, consistent answer
    * key). Runs only for trusted plugins; untrusted plugins ship a sandboxed

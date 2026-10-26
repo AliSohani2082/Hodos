@@ -71,8 +71,9 @@ async function waitFor(condition: () => boolean, what: string): Promise<void> {
   throw new Error(`timed out waiting for ${what}`)
 }
 
-async function harness(config: Record<string, unknown> = {}): Promise<Harness> {
+async function harness(config: Record<string, unknown> = {}, services: Record<string, unknown> = {}): Promise<Harness> {
   const root = new Context()
+  for (const [name, service] of Object.entries(services)) root.provide(name, service)
   const globals = new Map<string, ToolDefinition>()
   const agents: FakeAgent[] = []
   const contexts: Harness['contexts'] = []
@@ -138,7 +139,36 @@ async function api(h: Harness, method: 'GET' | 'POST', path: string, body?: unkn
   return { status: response.status, json, headers: response.headers }
 }
 
+interface FakeActivationSpec {
+  readonly provider: string
+  readonly request: { readonly prompt: ReadonlyArray<{ readonly type: string; readonly text: string }> }
+}
+
 describe('Hodos DSH plugin', () => {
+  it('drafts a course through the configured subagent provider, as a draft with generated provenance', async () => {
+    const requests: FakeActivationSpec[] = []
+    const drafted = { ...quizCourse(), id: 'quiz-drafted', version: '0.1.0', items: quizCourse().items.map(i => ({ ...i, provenance: { source: 'authored', verifiedBy: ['human'] } })) }
+    const subagents = {
+      list: () => ['codex', 'claude-code'],
+      startActivation: (spec: FakeActivationSpec) => {
+        requests.push(spec)
+        return Promise.resolve({
+          result: Promise.resolve({ output: [{ type: 'text', text: `Here it is.\n\`\`\`json\n${JSON.stringify(drafted)}\n\`\`\`` }], stopReason: 'end_turn' }),
+          dispose: () => Promise.resolve(),
+        })
+      },
+    }
+    const h = await harness({ delegateProvider: 'claude-code' }, { subagents })
+    await waitFor(() => h.globals.has('hodos_draft_course'), 'the drafting tool')
+    h.agents.push(fakeAgent('sess-1'))
+    const result = await call(h, 'hodos_draft_course', { topic: 'arithmetic for beginners' })
+    expect(result.text).toContain('Draft quiz-drafted@0.1.0 is ready for the learner to review')
+    expect(requests.map(r => r.provider)).toEqual(['claude-code'])
+    expect(requests[0]?.request.prompt[0]?.text).toContain('# Hodos course authoring guide')
+    expect(h.hodos.engine.drafts()).toEqual([expect.objectContaining({ id: 'quiz-drafted', origin: 'agent' })])
+    for (const item of h.hodos.store.course('quiz-drafted', '0.1.0')?.spec.items ?? []) expect(item.provenance).toEqual({ source: 'generated' })
+  })
+
   it('registers the global tools, the prompt section and the learner context', async () => {
     const h = await harness()
     expect([...h.globals.keys()].sort()).toEqual([...GLOBAL_TOOL_NAMES].sort())

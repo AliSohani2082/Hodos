@@ -106,6 +106,25 @@ export const puzzleKind: ExerciseKindSpec = {
     required: ['move'],
     properties: { move: { type: 'string', minLength: 1, maxLength: 12 } },
   },
+  guidance: {
+    when: 'The learner finds the move (or a short line) on the board.',
+    rules: [
+      'The FEN must be a legal position with the learner to move; `orientation` is the learner\'s colour.',
+      '`goal`: `best` (judged by the solution line: learner move, opponent reply, learner move…), `mate` (any checkmate), `check` (any check) or `capture` (any capture of an undefended piece).',
+      '`plies` is the number of learner moves in the line: ceil(line length / 2).',
+      'For `best`, the key move must be clearly the strongest move (no other move nearly as good), and for fork or double-attack themes it must attack two valuable pieces. Hodos checks legality and the theme with chess.js; it cannot check that a line is the best one, so test lines with an engine if you can.',
+      'Moves are SAN, e.g. `Nc7+`, `Qxe5`, `e8=Q`.',
+      'The prompt must not name the solution or its squares.',
+    ],
+    example: {
+      payload: { fen: '6k1/3q1p1p/8/8/4N3/8/5PPP/6K1 w - - 0 1', orientation: 'white', prompt: 'White to move and win material.', goal: 'best', plies: 2 },
+      key: { line: ['Nf6+', 'Kf8', 'Nxd7'], theme: 'fork' },
+      hints: [
+        { level: 1, text: 'Look for a move that gives check and attacks something else.' },
+        { level: 5, text: 'Nf6+ forks the king and the queen on d7; after the king moves, Nxd7.' },
+      ],
+    },
+  },
   validateItem: validatePuzzleItem,
   fallbackText: payload => {
     const p = readPayload(payload)
@@ -142,6 +161,20 @@ export const identifyKind: ExerciseKindSpec = {
   },
   keySchema: { type: 'object', additionalProperties: false, required: ['correct'], properties: { correct: { type: 'string' } } },
   responseSchema: { type: 'object', additionalProperties: false, required: ['choice'], properties: { choice: { type: 'string', maxLength: 32 } } },
+  guidance: {
+    when: 'The learner names the tactic available in a position (recognition before calculation).',
+    rules: [
+      'The FEN must be a legal position; the key\'s `correct` must be one of the option ids.',
+      'Offer 3-4 options; option texts must not hint at the answer.',
+    ],
+    example: {
+      payload: {
+        fen: '4k3/8/8/1q3r2/8/2N5/8/6K1 w - - 0 1', orientation: 'white', prompt: 'White to move. Which tactic wins material?',
+        options: [{ id: 'fork', text: 'A fork' }, { id: 'pin', text: 'A pin' }, { id: 'skewer', text: 'A skewer' }, { id: 'mate', text: 'Mate in one' }],
+      },
+      key: { correct: 'fork' },
+    },
+  },
   validateItem: item => {
     const payload = obj(item.payload)
     const problems = positionProblems(typeof payload.fen === 'string' ? payload.fen : '').map(p => error(p.code, p.message))
@@ -177,7 +210,7 @@ export const positionBlock: LessonBlockSpec = {
   },
   guidance: {
     when: 'Show a chess position (a worked example or a pattern) inside a lesson.',
-    syntax: '{% chess-position fen="r3k3/8/8/3N4/8/8/8/6K1 w - - 0 1" arrows=["d5c7"] caption="Nc7+ forks king and rook." /%}',
+    syntax: '{% chess-position fen="4k3/8/8/1q3r2/8/2N5/8/6K1 w - - 0 1" arrows=["c3d4", "d4b5", "d4f5"] caption="Nd4 attacks the queen and the rook." /%}',
     rules: ['The FEN must be a legal position.', 'Arrows use from-to squares like "d5c7".', 'Do not reveal answers to the learner\'s current exercises.'],
   },
   validate: (node: LessonNode) => {

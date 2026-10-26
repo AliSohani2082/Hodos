@@ -5,7 +5,7 @@ import type { ExerciseItem, JsonObject, StepInput, StepResult } from '@hodos/plu
 import { engineVerifiedIds, expandPuzzles, mirrorFen, mirrorSan, PUZZLES, tacticsCourse, UciEngine } from '../src/index.js'
 import { parseInfo, scoreCp } from '../src/engine.js'
 import { stepPuzzle } from '../src/grader.js'
-import { validatePuzzleItem } from '../src/kinds.js'
+import { identifyKind, puzzleKind, validatePuzzleItem } from '../src/kinds.js'
 import { keyFacts } from '../src/puzzles.js'
 
 // Engine tests run when HODOS_STOCKFISH names a UCI engine binary.
@@ -37,6 +37,16 @@ describe('puzzle set', () => {
     expect([...engineVerifiedIds()].sort()).toEqual(checked)
     const engineItems = tacticsCourse(engineVerifiedIds()).items.filter(i => i.provenance?.verifiedBy?.includes('stockfish'))
     expect(engineItems.map(i => i.id).sort()).toEqual(checked)
+  })
+
+  it('gives authors valid examples in its kind guidance', () => {
+    const example = puzzleKind.guidance?.example
+    if (example === undefined) throw new Error('the puzzle kind has no example')
+    const item: ExerciseItem = { id: 'example', kind: 'chess.puzzle', skills: [{ skillId: 'x', weight: 1 }], difficulty: 0, modes: ['practice'], payload: example.payload, key: example.key }
+    expect(validatePuzzleItem(item).filter(d => d.severity === 'error')).toEqual([])
+    const identify = identifyKind.guidance?.example
+    if (identify === undefined) throw new Error('the identify kind has no example')
+    expect(identifyKind.validateItem?.({ ...item, kind: 'chess.identify', payload: identify.payload, key: identify.key })).toEqual([])
   })
 
   it('passes the plugin\'s semantic validation for every item', () => {

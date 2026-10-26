@@ -116,10 +116,13 @@ function Drafts(props: { drafts: readonly DraftEntry[]; onDecide: (d: DraftEntry
   return (
     <section className="drafts" aria-label="Proposed courses">
       <h2>Proposed courses</h2>
-      <p className="provenance">Written by your tutor or a subagent. Hodos checked their structure; their content is not independently verified.</p>
+      <p className="provenance">Hodos checked their structure and what each environment can check (for example chess positions and moves). The content itself is not independently verified: review it before you approve.</p>
       {props.drafts.map(d => (
         <article key={`${d.id}@${d.version}`}>
           <h3>{d.title} <small>{d.id}@{d.version}</small></h3>
+          <p className="provenance">{d.origin === 'import'
+            ? `From the course inbox (${d.proposedBy.replace(/^inbox:/, '')}): written outside Hodos, for example with Claude Code.`
+            : 'Proposed by your tutor.'}</p>
           <p>{d.description}</p>
           <ol>{d.skills.map(s => <li key={s.id}>{s.title} <small>({s.kind}{s.requires.length > 0 ? `; after ${s.requires.join(', ')}` : ''})</small></li>)}</ol>
           <p>{d.lessons} lesson(s), {d.items} exercise(s).</p>

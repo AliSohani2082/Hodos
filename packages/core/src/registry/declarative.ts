@@ -62,6 +62,21 @@ const DECLARATIVE_SCHEMA: JsonSchema = {
           keySchema: { type: 'object' },
           responseSchema: { type: 'object' },
           fallbackTemplate: { type: 'string', maxLength: 500 },
+          guidance: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['when'],
+            properties: {
+              when: { type: 'string', maxLength: 500 },
+              rules: { type: 'array', maxItems: 20, items: { type: 'string', maxLength: 300 } },
+              example: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['payload', 'key'],
+                properties: { payload: {}, key: {}, hints: { type: 'array', maxItems: 5 } },
+              },
+            },
+          },
         },
       },
     },

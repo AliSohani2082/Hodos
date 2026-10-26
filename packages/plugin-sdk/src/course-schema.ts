@@ -5,6 +5,7 @@
  * yields findings instead of failures deeper in the pipeline.
  * @module @hodos/plugin-sdk/course-schema
  */
+import type { CourseSpec } from './content.js'
 import type { Diagnostic } from './errors.js'
 import { EXERCISE_MODES } from './exercise.js'
 import type { JsonSchema } from './json.js'
@@ -140,6 +141,15 @@ const packValidator = compileSchema(CONTENT_PACK_SCHEMA, 'content-pack/shape')
  */
 export function validateCourseShape(value: unknown): readonly Diagnostic[] {
   return courseValidator(value)
+}
+
+/**
+ * Whether an untrusted value has the shape of a course (see {@link validateCourseShape}).
+ * @param value - candidate course.
+ * @returns true when there are no structural findings.
+ */
+export function isCourse(value: unknown): value is CourseSpec {
+  return courseValidator(value).length === 0
 }
 
 /**

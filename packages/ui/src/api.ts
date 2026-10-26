@@ -34,6 +34,10 @@ export interface DraftEntry {
   readonly version: string
   readonly title: string
   readonly description: string
+  /** `agent`: proposed by the tutor or a subagent; `import`: a file from the course inbox. */
+  readonly origin: 'agent' | 'import'
+  /** The proposing channel, or `inbox:<file name>` for imports. */
+  readonly proposedBy: string
   readonly skills: ReadonlyArray<{ readonly id: string; readonly title: string; readonly kind: string; readonly requires: readonly string[] }>
   readonly lessons: number
   readonly items: number

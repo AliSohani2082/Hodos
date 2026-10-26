@@ -19,6 +19,10 @@ import {
 } from '@hodos/core'
 import type { HodosEnvironmentHost, HodosEnvironmentPlugin } from '@hodos/plugin-sdk'
 import { OWNER_PRINCIPAL, type HodosConfig } from './config.js'
+import { CourseInbox, INBOX_DIR } from './inbox.js'
+
+/** How often the course inbox is checked for new files. */
+export const INBOX_POLL_MS = 3000
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -79,6 +83,29 @@ export class HodosService extends Service implements HodosEnvironmentHost {
       }
     }
     await this.syncContent()
+    if (this.config.courseInbox) await this.startInbox()
+  }
+
+  /** Import inbox files now and every few seconds while the service runs. */
+  private async startInbox(): Promise<void> {
+    const inbox = new CourseInbox({
+      dir: join(this.config.dataDir, INBOX_DIR),
+      propose: (proposal, source) => this.engine.proposeCourse(this.uiActor(undefined), proposal, { origin: 'import', source }),
+      logger: this.logger,
+    })
+    try {
+      await inbox.prepare()
+    } catch (error) {
+      this.logger.error(`course inbox is unavailable: ${error instanceof Error ? error.message : String(error)}`)
+      return
+    }
+    const scan = (): void => {
+      inbox.scan().catch((error: unknown) => this.logger.warn(`course inbox scan failed: ${error instanceof Error ? error.message : String(error)}`))
+    }
+    scan()
+    const timer = setInterval(scan, INBOX_POLL_MS)
+    timer.unref()
+    this.ctx.effect(() => () => clearInterval(timer), 'hodos course inbox')
   }
 
   private async syncContent(): Promise<void> {

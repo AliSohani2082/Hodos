@@ -8,6 +8,8 @@ import type { HodosEnvironmentHost } from '@hodos/plugin-sdk'
 import { createChessPlugin } from './plugin.js'
 
 export { createChessPlugin, engineVerifiedIds, puzzleSetHash, rendererRoot, type ChessOptions } from './plugin.js'
+/** Host-neutral factory every Hodos environment package exports. */
+export { createChessPlugin as createPlugin } from './plugin.js'
 export { chessPack, tacticsCourse } from './content.js'
 export { expandPuzzles, PUZZLES, SKILL, type Puzzle, type PuzzleSpec } from './puzzles.js'
 export { UciEngine, scoreCp, type EngineAnalysis } from './engine.js'

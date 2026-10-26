@@ -12,14 +12,19 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
 import type { HodosService } from './service.js'
 
-/** Prompt for the drafting subagent. */
-export function draftingPrompt(topic: string, environments: readonly string[], kinds: readonly string[], notes: string): string {
+/**
+ * Prompt for the drafting subagent.
+ * @param topic - the learning goal.
+ * @param guide - the authoring guide for the installed environments.
+ * @param notes - what the learner already knows or wants to focus on.
+ */
+export function draftingPrompt(topic: string, guide: string, notes: string): string {
   return [
     `Draft a Hodos course for this learning goal: ${topic}`,
     notes === '' ? '' : `Learner notes: ${notes}`,
-    `Installed environments: ${environments.join(', ') || 'none'}. Installed exercise kinds: ${kinds.join(', ') || 'none'}.`,
-    'Answer with exactly one JSON object in a ```json code block and nothing else. Format: { id, version: "0.1.0", title, description, keywords[], goal, environments[], skills[] { id, title, kind: fact|concept|procedure|pattern|performance|judgment, requires?[], objectives?[] }, lessons[] { id, skillId, title, source (Markdoc, no HTML or images) }, items[] { id, kind, skills[] { skillId, weight }, difficulty (-4..4), modes[] (practice, checkpoint, review, diagnostic), payload, key, hints?[] { level 1-5, text }, explanation? } }.',
-    'Use only installed environments and exercise kinds. Give every skill at least three practice items and one checkpoint item. Lowercase dotted ids. Do not claim the material was verified.',
+    'Follow the authoring guide below. Use only the environments and exercise kinds it lists, check every answer key carefully, and do not claim the material was verified.',
+    'Answer with exactly one JSON object (the course, version "0.1.0") in a ```json code block and nothing else.',
+    guide,
   ].filter(Boolean).join('\n\n')
 }
 
@@ -75,14 +80,13 @@ export function draftCourseTool(hodos: HodosService, subagents: SubagentRuntime)
       }
       const provider = hodos.config.delegateProvider !== '' ? hodos.config.delegateProvider : subagents.list()[0]
       if (provider === undefined) return { text: 'No subagent provider is configured in this harness; propose the course yourself with hodos_propose_course.' }
-      const kinds = hodos.registry.kindIds()
       const activation = await subagents.startActivation({
         provider,
         label: 'Hodos course draft',
         signal: exec.signal,
         delivery: 'caller',
         request: {
-          prompt: [{ type: 'text', text: draftingPrompt(args.topic, hodos.registry.environments(), kinds, args.notes ?? '') }],
+          prompt: [{ type: 'text', text: draftingPrompt(args.topic, hodos.engine.authoringGuide(), args.notes ?? '') }],
           parent: agent,
         },
       })
