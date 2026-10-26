@@ -1,0 +1,32 @@
+{
+  "name": "@hodos/core",
+  "version": "0.1.0",
+  "description": "Hodos core: host-independent pedagogical engine (learning protocol, skill graph, mastery, diagnostics, practice, review, evidence, plugin registry)",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "hodos-source": "./src/index.ts",
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./sandbox-worker": {
+      "hodos-source": "./src/registry/sandbox/worker.ts",
+      "types": "./lib/registry/sandbox/worker.d.ts",
+      "default": "./lib/registry/sandbox/worker.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["lib", "src", "README.md"],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "@hodos/plugin-sdk": "workspace:*",
+    "@markdoc/markdoc": "^0.5.4",
+    "quickjs-emscripten": "^0.32.0",
+    "ts-fsrs": "5.4.2"
+  }
+}

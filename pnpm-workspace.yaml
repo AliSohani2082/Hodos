@@ -1,0 +1,9 @@
+packages:
+  - packages/*
+  - packages/environments/*
+  - examples/*
+
+# Spikes under spikes/ are self-contained throwaway projects and are not workspace members.
+
+allowBuilds:
+  esbuild: true

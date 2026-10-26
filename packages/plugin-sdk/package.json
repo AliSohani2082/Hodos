@@ -1,0 +1,45 @@
+{
+  "name": "@hodos/plugin-sdk",
+  "version": "0.1.0",
+  "description": "Contracts, JSON Schemas and helpers for writing Hodos learning-environment plugins",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "hodos-source": "./src/index.ts",
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./protocol": {
+      "hodos-source": "./src/protocol.ts",
+      "types": "./lib/protocol.d.ts",
+      "default": "./lib/protocol.js"
+    },
+    "./renderer": {
+      "hodos-source": "./src/renderer.ts",
+      "types": "./lib/renderer.d.ts",
+      "default": "./lib/renderer.js"
+    },
+    "./host": {
+      "hodos-source": "./src/host.ts",
+      "types": "./lib/host.d.ts",
+      "default": "./lib/host.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "semver": "^7.7.2"
+  },
+  "devDependencies": {
+    "@types/semver": "^7.7.1"
+  }
+}
