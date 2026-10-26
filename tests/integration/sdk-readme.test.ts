@@ -5,9 +5,14 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { PluginRegistry, SandboxRunner } from '@hodos/core'
+import type { GradeInput } from '@hodos/plugin-sdk'
 import { apply, createPlugin, inject, name } from './fixtures/sdk-readme-plugin.js'
 
 const silent = { info: () => undefined, warn: () => undefined, error: () => undefined }
+
+function input(text: string): GradeInput {
+  return { kind: 'capitals.name', payload: { country: 'Peru' }, key: { answer: 'Lima' }, response: { text }, mode: 'practice', skills: [{ skillId: 'geo.capitals', weight: 1 }], attempt: 1 }
+}
 
 describe('SDK README example', () => {
   it('is the code the README shows', () => {
@@ -21,7 +26,6 @@ describe('SDK README example', () => {
     try {
       const registry = new PluginRegistry({ sandbox, logger: silent })
       await registry.register(createPlugin(), { trusted: true })
-      const input = (text: string) => ({ kind: 'capitals.name', payload: { country: 'Peru' }, key: { answer: 'Lima' }, response: { text }, mode: 'practice' as const, skills: [{ skillId: 'geo.capitals', weight: 1 }], attempt: 1 })
       expect(await registry.grade(input(' lima '))).toMatchObject({ correct: true, score: 1 })
       expect(await registry.grade(input('Cusco'))).toMatchObject({ correct: false, feedback: 'Not quite.' })
       expect(registry.fallbackText('capitals.name', { country: 'Peru' })).toBe('What is the capital of Peru?')

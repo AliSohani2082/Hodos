@@ -24,6 +24,7 @@ import {
   type SkillSpec,
   isCourse,
   validateCourseShape,
+  unreachable,
 } from '@hodos/plugin-sdk'
 import { systemClock, type Clock } from '../clock.js'
 import { blockLookup, DEFAULT_CHECKPOINT_SIZE, validateCourse } from '../content/course.js'
@@ -429,7 +430,7 @@ export class HodosEngine {
       if (!s.gateOpen || s.card === null || new Date(s.card.due) > now) continue
       out.push({ skillId: s.skillId, title: s.skillId, dueAt: s.card.due, retrievability: round(this.scheduler.retrievability(s.card, now)) })
     }
-    return out.sort((a, b) => a.retrievability - b.retrievability)
+    return out.toSorted((a, b) => a.retrievability - b.retrievability)
   }
 
   private readyForCheckpoint(learnerId: string, course: LoadedCourse, skillId: string): boolean {
@@ -470,8 +471,10 @@ export class HodosEngine {
             return resting ? { type: 'rest', reason: 'take a break from this skill today; reviews and the remedial step will be waiting' } : { type: 'remedial', skillId }
           }
           case null: return { type: 'complete' }
+          default: return unreachable(st.stage, 'journey stage')
         }
       }
+      default: return unreachable(st.phase, 'journey phase')
     }
   }
 
@@ -750,7 +753,7 @@ export class HodosEngine {
         let text = `[${node.type}]`
         try {
           text = def?.fallbackText(node) ?? text
-        } catch (_error) {
+        } catch {
           // A failing projection degrades to the block name.
         }
         const renderer = block.spec.renderer === undefined ? undefined : this.registry.renderer(block.spec.renderer)
@@ -909,7 +912,7 @@ export class HodosEngine {
       renderer: renderer === undefined ? null : { pluginId: renderer.pluginId, rendererId: renderer.spec.id, entry: renderer.spec.entry },
       responseKind: kind.spec.responseKind,
       attemptsAllowed: policy.attemptsPerItem,
-      hints: (item.hints ?? []).filter(h => h.level <= p.hintLevel).sort((a, b) => a.level - b.level).map(h => ({ level: h.level, text: h.text })),
+      hints: (item.hints ?? []).filter(h => h.level <= p.hintLevel).toSorted((a, b) => a.level - b.level).map(h => ({ level: h.level, text: h.text })),
       ...(checkpoint === undefined ? {} : { checkpoint }),
       ...(diagnostic === undefined ? {} : { diagnostic }),
     }
@@ -1006,6 +1009,7 @@ export class HodosEngine {
       }
       case null:
         return null
+      default: return unreachable(modeNow, 'exercise mode')
     }
   }
 
@@ -1547,7 +1551,7 @@ export class HodosEngine {
     const mode = exercise?.mode ?? (view.stage === 'checkpoint' ? 'checkpoint' : view.phase === 'diagnostic' ? 'diagnostic' : null)
     const policy = mode === null ? null : MODE_POLICY[mode]
     const misconceptions = view.activeSkill === null ? [] : Object.entries(this.stateOf(actor.learnerId, course, view.activeSkill.id).misconceptions)
-      .sort((a, b) => b[1].count - a[1].count).slice(0, 5).map(([id, m]) => `${id} (${m.count}x)`)
+      .toSorted((a, b) => b[1].count - a[1].count).slice(0, 5).map(([id, m]) => `${id} (${m.count}x)`)
     const lines = [
       `Hodos learning context — goal: "${view.goalText}" (course ${view.course.title}).`,
       `Phase: ${view.phase}${view.stage === null ? '' : `, stage: ${view.stage}`}. Progress: ${view.progress.mastered}/${view.progress.total} skills mastered (${view.progress.percent}%).`,
@@ -1565,7 +1569,7 @@ export class HodosEngine {
     const data: JsonObject = {
       journey: { id: view.id, phase: view.phase, stage: view.stage, goal: view.goalText, course: view.course.id, progress: view.progress.percent },
       activeSkill: view.activeSkill === null ? null : { id: view.activeSkill.id, title: view.activeSkill.title, pMastered: view.activeSkill.pMastered, unmet: [...view.activeSkill.unmet] },
-      nextAction: view.nextAction as unknown as JsonObject,
+      nextAction: view.nextAction,
       exercise: exercise === null ? null : { id: exercise.id, mode: exercise.mode, title: exercise.title, text: exercise.fallbackText, hintsRevealed: exercise.hints.length },
       tutorMayHelp: policy?.tutorMayHelp ?? true,
     }
@@ -1764,6 +1768,7 @@ function describeAction(action: NextAction): string {
     case 'review': return `review ${action.due} due skill(s)`
     case 'rest': return action.reason
     case 'complete': return 'goal reached; reviews will be scheduled'
+    default: return unreachable(action, 'next action')
   }
 }
 

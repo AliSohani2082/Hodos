@@ -55,9 +55,9 @@ const ARTICLE_SWAP: Readonly<Record<string, string>> = {
  * @param accepted - accepted answers.
  */
 export function wrongArticleGender(response: string, accepted: readonly string[]): boolean {
-  const words = canonical(response).split(' ')
-  const swapped = words.map(w => ARTICLE_SWAP[w] ?? w).join(' ')
-  return words.some(w => ARTICLE_SWAP[w] !== undefined) && accepted.some(a => canonical(a) === swapped)
+  const given = canonical(response).split(' ')
+  const swapped = given.map(w => ARTICLE_SWAP[w] ?? w).join(' ')
+  return given.some(w => ARTICLE_SWAP[w] !== undefined) && accepted.some(a => canonical(a) === swapped)
 }
 
 /**
@@ -66,9 +66,13 @@ export function wrongArticleGender(response: string, accepted: readonly string[]
  * @param accepted - accepted answers.
  */
 export function wrongWordOrder(response: string, accepted: readonly string[]): boolean {
-  const sorted = (text: string): string => canonical(text).split(' ').sort().join(' ')
-  const given = sorted(response)
-  return accepted.some(a => sorted(a) === given && canonical(a) !== canonical(response))
+  const given = wordsInOrder(response)
+  return accepted.some(a => wordsInOrder(a) === given && canonical(a) !== canonical(response))
+}
+
+/** The canonical words of a text, sorted: equal for the same words in any order. */
+function wordsInOrder(text: string): string {
+  return canonical(text).split(' ').toSorted().join(' ')
 }
 
 /**

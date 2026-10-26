@@ -117,7 +117,7 @@ function exec(sessionId: string | undefined): ToolRunContext {
 async function call(h: Harness, name: string, args: Record<string, unknown>, sessionId: string | undefined = 'sess-1'): Promise<{ text: string; ref?: string }> {
   const agent = h.agents.find(a => a.id === sessionId)
   const tool = agent?.scoped.get(name) ?? h.globals.get(name)
-  if (tool === undefined) throw new Error(`tool ${name} is not visible in ${String(sessionId)}`)
+  if (tool === undefined) throw new Error(`tool ${name} is not visible in ${sessionId ?? 'a session-less call'}`)
   const value = await tool.execute(args, exec(sessionId))
   return value as { text: string; ref?: string }
 }
@@ -133,10 +133,16 @@ async function api(h: Harness, method: 'GET' | 'POST', path: string, body?: unkn
   let json: { data?: unknown; error?: { code: string; message: string } } | null = null
   try {
     json = JSON.parse(text) as typeof json
-  } catch (_notJson) {
+  } catch {
     json = null
   }
   return { status: response.status, json, headers: response.headers }
+}
+
+/** The `data` of a successful API response (fails the test when the body is not JSON). */
+function dataOf(response: { json: { data?: unknown } | null }): unknown {
+  if (response.json === null) throw new Error('the response body is not JSON')
+  return response.json.data
 }
 
 interface FakeActivationSpec {
@@ -171,7 +177,7 @@ describe('Hodos DSH plugin', () => {
 
   it('registers the global tools, the prompt section and the learner context', async () => {
     const h = await harness()
-    expect([...h.globals.keys()].sort()).toEqual([...GLOBAL_TOOL_NAMES].sort())
+    expect([...h.globals.keys()].toSorted()).toEqual([...GLOBAL_TOOL_NAMES].toSorted())
     expect(h.sections.map(s => s.name)).toEqual(['hodos'])
     expect(h.sections[0]?.text).toContain('never state the answer')
     expect(h.contexts.map(c => c.name)).toEqual(['hodos-learner'])
@@ -184,7 +190,7 @@ describe('Hodos DSH plugin', () => {
     const started = await call(h, 'hodos_start_learning', { goal: 'Teach me arithmetic, I struggle with multiplication', self_report: [{ skill: 'addition', level: 'used-it' }] })
     expect(started.text).toContain('Quiz arithmetic')
     expect(started.text).toContain('Hodos learning')
-    expect([...agent.scoped.keys()].sort()).toEqual([...SESSION_TOOL_NAMES].sort())
+    expect([...agent.scoped.keys()].toSorted()).toEqual([...SESSION_TOOL_NAMES].toSorted())
     expect(agent.restrictions).toEqual([{ allow: expect.arrayContaining([...GLOBAL_TOOL_NAMES]) as unknown as string[] }])
     expect(h.hodos.isTutorSession('sess-1')).toBe(true)
     // The learner context now appears in the prompt of this session only.
@@ -228,7 +234,7 @@ describe('Hodos DSH plugin', () => {
     await h.hodos.registry.unregister('hodos-quiz')
     const missing = await api(h, 'GET', 'state')
     expect(missing.status).toBe(200)
-    const data = missing.json?.data as { journey: { environments: unknown[] } | null; exercise: unknown }
+    const data = dataOf(missing) as { journey: { environments: unknown[] } | null; exercise: unknown }
     expect(data.journey?.environments).toEqual([{ id: 'quiz.card', available: false }])
     expect(data.exercise).toBeNull()
     const next = await api(h, 'POST', 'exercise/next', {})
@@ -250,7 +256,7 @@ describe('Hodos DSH plugin', () => {
     const exercise = await call(h, 'hodos_next_exercise', {})
     const presentationId = exercise.ref ?? ''
     expect(exercise.text).toContain('What is')
-    const item = quizCourse().items.find(i => exercise.text.includes(String((i.payload as { prompt?: string }).prompt ?? '\u0000')))
+    const item = quizCourse().items.find(i => exercise.text.includes((i.payload as { prompt?: string }).prompt ?? '\u0000'))
     if (item === undefined) throw new Error('item not found')
     const relayed = await call(h, 'hodos_submit_answer', { presentation_id: presentationId, response: correctResponse(item) })
     expect(relayed.text).toMatch(/Result: correct/)
@@ -307,7 +313,7 @@ describe('Hodos DSH plugin', () => {
     for (let i = 0; i < 10; i++) {
       const ex = h.hodos.engine.nextExercise(ui)
       if (ex === null) break
-      const item = quizCourse().items.find(it => it.id === ex.itemId)
+      const item = quizCourse().items.find(entry => entry.id === ex.itemId)
       if (item === undefined) break
       await h.hodos.engine.submitAttempt(ui, { presentationId: ex.id, response: correctResponse(item) })
     }
@@ -347,22 +353,22 @@ describe('Hodos workspace API', () => {
     expect(agent.scoped.size).toBe(SESSION_TOOL_NAMES.length)
     expect((await api(h, 'POST', 'journey/approve', {}, { session: 'sess-9' })).status).toBe(200)
     const lesson = await api(h, 'GET', 'lesson', undefined, { session: 'sess-9' })
-    const lessons = (lesson.json?.data as { lessons: Array<{ id: string; checks: Array<{ id: string }> }> }).lessons
+    const lessons = (dataOf(lesson) as { lessons: Array<{ id: string; checks: Array<{ id: string }> }> }).lessons
     expect(JSON.stringify(lesson.json)).not.toContain('because that is the rule')
     for (const l of lessons) for (const c of l.checks) await api(h, 'POST', 'lesson/check', { lessonId: l.id, checkId: c.id, optionId: 'a' }, { session: 'sess-9' })
     expect((await api(h, 'POST', 'lesson/complete', {}, { session: 'sess-9' })).status).toBe(200)
     const next = await api(h, 'POST', 'exercise/next', {}, { session: 'sess-9' })
-    const exercise = next.json?.data as { id: string; itemId: string; payload: unknown }
+    const exercise = dataOf(next) as { id: string; itemId: string; payload: unknown }
     expect(JSON.stringify(exercise)).not.toContain('"key"')
     expect(JSON.stringify(exercise)).not.toContain('internal-note')
     const item = quizCourse().items.find(i => i.id === exercise.itemId)
     if (item === undefined) throw new Error('item')
     const hint = await api(h, 'POST', 'exercise/hint', { presentationId: exercise.id }, { session: 'sess-9' })
-    expect((hint.json?.data as { level: number }).level).toBe(1)
+    expect((dataOf(hint) as { level: number }).level).toBe(1)
     const wrong = await api(h, 'POST', 'exercise/submit', { presentationId: exercise.id, response: wrongResponse(item), latencyMs: 3000 }, { session: 'sess-9' })
-    expect((wrong.json?.data as { status: string }).status).toBe('incorrect')
+    expect((dataOf(wrong) as { status: string }).status).toBe('incorrect')
     const state = await api(h, 'GET', 'state', undefined, { session: 'sess-9' })
-    expect((state.json?.data as { exercise: { id: string } }).exercise.id).toBe(exercise.id)
+    expect((dataOf(state) as { exercise: { id: string } }).exercise.id).toBe(exercise.id)
     expect(state.headers.get('cache-control')).toBe('no-store')
   })
 
@@ -374,7 +380,7 @@ describe('Hodos workspace API', () => {
     expect(proposed.text).toContain('Stored as a draft')
     expect(proposed.text).toContain('not independently verified')
     const drafts = await api(h, 'GET', 'drafts')
-    expect((drafts.json?.data as Array<{ id: string }>).map(d => d.id)).toEqual(['quiz-proposed'])
+    expect((dataOf(drafts) as Array<{ id: string }>).map(d => d.id)).toEqual(['quiz-proposed'])
     expect((await api(h, 'POST', 'drafts/decide', { courseId: 'quiz-proposed', version: '1.0.0', approve: true })).status).toBe(200)
     expect(h.hodos.engine.catalog().map(c => c.id)).toContain('quiz-proposed')
   })

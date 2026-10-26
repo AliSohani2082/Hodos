@@ -160,7 +160,7 @@ export function importedModules(tokens: readonly Token[]): string[] {
     const token = list[k]
     if (token?.type !== 'keyword' || (token.text !== 'import' && token.text !== 'from')) continue
     // `from x import y`: only x is a module; skip the `import` that follows it.
-    if (token.text === 'import' && list.slice(0, k).reverse().find(t => t.type === 'newline' || (t.type === 'keyword' && t.text === 'from'))?.text === 'from') continue
+    if (token.text === 'import' && list.slice(0, k).findLast(t => t.type === 'newline' || (t.type === 'keyword' && t.text === 'from'))?.text === 'from') continue
     let expectName = true
     for (let j = k + 1; j < list.length; j += 1) {
       const t = list[j]

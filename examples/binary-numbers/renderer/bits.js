@@ -94,7 +94,8 @@
     var m = event.data
     if (!isObject(m) || m.type !== 'hodos:connect' || m.protocol !== PROTOCOL || event.ports.length !== 1) return
     port = event.ports[0]
-    port.onmessage = onHostMessage
+    port.addEventListener('message', onHostMessage)
+    port.start()
     port.postMessage({ type: 'hodos:ready', protocol: PROTOCOL })
   })
   new ResizeObserver(resize).observe(document.body)

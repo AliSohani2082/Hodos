@@ -159,7 +159,7 @@ export class SandboxRunner {
     }
     try {
       return JSON.parse(output) as unknown
-    } catch (_invalidJson) {
+    } catch {
       // The guest returned text that is not JSON; treat it as a malformed result.
       throw new HodosError('INVALID_INPUT', 'sandboxed hook returned invalid JSON')
     }

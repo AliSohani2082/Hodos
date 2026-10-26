@@ -117,7 +117,7 @@ export function eloFromPrior(prior: number, params: EloParams = DEFAULT_ELO_PARA
  * @returns the median in milliseconds, or null when empty.
  */
 export function recentMedian(latenciesMs: readonly number[], window = 10): number | null {
-  const recent = latenciesMs.slice(-window).filter(v => Number.isFinite(v) && v >= 0).sort((a, b) => a - b)
+  const recent = latenciesMs.slice(-window).filter(v => Number.isFinite(v) && v >= 0).toSorted((a, b) => a - b)
   if (recent.length === 0) return null
   const mid = Math.floor(recent.length / 2)
   return recent.length % 2 === 1 ? recent[mid] ?? null : ((recent[mid - 1] ?? 0) + (recent[mid] ?? 0)) / 2

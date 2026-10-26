@@ -5,7 +5,7 @@
  */
 import { afterAll, describe, expect, it } from 'vitest'
 import { createLanguagePlugin, KIND, SKILL, spanishCourse } from '@hodos/language'
-import { HodosEngine, HodosStore, manualClock, PluginRegistry, SandboxRunner, validateCourse, type Actor, type ExerciseView } from '@hodos/core'
+import { HodosEngine, HodosStore, manualClock, PluginRegistry, SandboxRunner, validateCourse, type Actor, type AttemptView, type ExerciseView } from '@hodos/core'
 import type { JsonObject, JsonValue } from '@hodos/plugin-sdk'
 
 const sandbox = new SandboxRunner()
@@ -17,7 +17,9 @@ function correct(exercise: ExerciseView): JsonValue {
   const entry = course.items.find(i => i.id === exercise.itemId)
   if (entry === undefined) throw new Error(`unknown item ${exercise.itemId}`)
   const key = entry.key as JsonObject
-  return entry.kind === KIND.choice ? { choice: String(key.correct) } : { text: String((key.accepted as string[])[0]) }
+  const answer = entry.kind === KIND.choice ? key.correct : Array.isArray(key.accepted) ? key.accepted[0] : undefined
+  if (typeof answer !== 'string') throw new Error(`item ${entry.id} has no answer in its key`)
+  return entry.kind === KIND.choice ? { choice: answer } : { text: answer }
 }
 
 async function setup(): Promise<{ engine: HodosEngine; ui: Actor; agent: Actor; clock: ReturnType<typeof manualClock> }> {
@@ -52,25 +54,23 @@ describe('Spanish basics on the Hodos engine', () => {
     engine.completeLesson(ui)
 
     // Practice until Hodos recommends the checkpoint; one answer with a missing accent on the way.
-    let missedAccent = false
+    let almost: AttemptView | undefined
     for (let n = 0; n < 20; n++) {
       const view = engine.journey(ui)
       if (view.nextAction.type === 'practice' && view.nextAction.readyForCheckpoint) break
       const exercise = engine.nextExercise(ui)
       if (exercise === null) throw new Error('no practice exercise')
       const answer = correct(exercise)
-      if (!missedAccent && typeof answer === 'object' && answer !== null && !Array.isArray(answer) && typeof answer.text === 'string' && /[áéíóú]/u.test(answer.text)) {
-        missedAccent = true
-        const almost = await engine.submitAttempt(ui, { presentationId: exercise.id, response: { text: answer.text.normalize('NFD').replace(/́/gu, '') } })
-        expect(almost.status).toBe('partial')
-        expect(almost.misconceptionFeedback?.[0]).toContain('accents')
+      if (almost === undefined && typeof answer === 'object' && answer !== null && !Array.isArray(answer) && typeof answer.text === 'string' && /[áéíóú]/u.test(answer.text)) {
+        almost = await engine.submitAttempt(ui, { presentationId: exercise.id, response: { text: answer.text.normalize('NFD').replace(/́/gu, '') } })
         if (almost.canRetry) await engine.submitAttempt(ui, { presentationId: exercise.id, response: answer })
         continue
       }
       await engine.submitAttempt(ui, { presentationId: exercise.id, response: answer })
       clock.advance(30_000)
     }
-    expect(missedAccent).toBe(true)
+    expect(almost?.status).toBe('partial')
+    expect(almost?.misconceptionFeedback?.[0]).toContain('accents')
     expect(engine.journey(ui).nextAction).toMatchObject({ type: 'practice', readyForCheckpoint: true })
 
     // The checkpoint, unassisted.

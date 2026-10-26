@@ -90,9 +90,9 @@ function Check(props: { lesson: Lesson; node: LessonNode; onAnswered: () => void
       <button type="submit" disabled={choice === ''}>Check</button>
       {status?.answered === true && answer === null && <p className="check-status">{status.correct ? 'Answered correctly.' : 'Answered — try again if you like.'}</p>}
       {answer !== null && (
-        <p className={answer.correct ? 'check-status correct' : 'check-status incorrect'} role="status">
+        <output className={answer.correct ? 'check-status correct' : 'check-status incorrect'} aria-live="polite">
           <strong>{answer.correct ? 'Right.' : 'Not quite.'}</strong> {answer.explanation}
-        </p>
+        </output>
       )}
       {error !== null && <p className="error" role="alert">{error}</p>}
     </form>

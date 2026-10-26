@@ -14,8 +14,8 @@ const kind = (id: string) => {
   if (found === undefined) throw new Error(`no kind ${id}`)
   return found
 }
-const input = (it: ExerciseItem, response: JsonObject): GradeInput => ({ kind: it.kind, payload: it.payload, key: it.key, response, mode: 'practice', skills: it.skills, attempt: 1 })
-const errors = (it: ExerciseItem): string[] => (kind(it.kind).validateItem?.(it) ?? []).filter(d => d.severity === 'error').map(d => d.code)
+const input = (entry: ExerciseItem, response: JsonObject): GradeInput => ({ kind: entry.kind, payload: entry.payload, key: entry.key, response, mode: 'practice', skills: entry.skills, attempt: 1 })
+const errors = (entry: ExerciseItem): string[] => (kind(entry.kind).validateItem?.(entry) ?? []).filter(d => d.severity === 'error').map(d => d.code)
 
 describe('comparing answers', () => {
   it('ignores case, spacing and punctuation, including ¿ and ¡', () => {
@@ -59,19 +59,22 @@ describe('grading', () => {
   })
 
   it('never puts an accepted answer in its feedback', () => {
-    for (const it of course.items.filter(i => i.kind !== KIND.choice)) {
-      const accepted = (it.key as { accepted: string[] }).accepted
-      for (const response of [{ text: 'xyz' }, { text: '' }, { text: accepted[0]?.toUpperCase() ?? '' }]) {
-        const feedback = gradeLanguage(input(it, response)).feedback ?? ''
-        for (const a of accepted) if (canonical(a).length >= 3) expect(canonical(feedback).includes(canonical(a)), `${it.id}: ${feedback}`).toBe(false)
-      }
-    }
+    // Answers of three letters or more are specific enough to search for.
+    const cases = course.items.filter(i => i.kind !== KIND.choice).flatMap(entry => {
+      const accepted = (entry.key as { accepted: string[] }).accepted
+      return [{ text: 'xyz' }, { text: '' }, { text: accepted[0]?.toUpperCase() ?? '' }].flatMap(response => {
+        const feedback = gradeLanguage(input(entry, response)).feedback ?? ''
+        return accepted.filter(a => canonical(a).length >= 3).map(answer => ({ id: entry.id, feedback, answer }))
+      })
+    })
+    expect(cases.length).toBeGreaterThan(0)
+    for (const c of cases) expect(canonical(c.feedback).includes(canonical(c.answer)), `${c.id}: ${c.feedback}`).toBe(false)
   })
 })
 
 describe('items and validation', () => {
   it('has only valid items, with practice, checkpoint and diagnostic items for every skill', () => {
-    for (const it of course.items) expect(errors(it), it.id).toEqual([])
+    for (const entry of course.items) expect(errors(entry), entry.id).toEqual([])
     for (const skill of course.skills) {
       const of = (mode: string): number => course.items.filter(i => i.skills.some(s => s.skillId === skill.id) && i.modes.some(m => m === mode)).length
       expect(of('practice'), skill.id).toBeGreaterThanOrEqual(3)
@@ -95,13 +98,14 @@ describe('items and validation', () => {
   })
 
   it('shows every exercise as plain text without its answer', () => {
-    for (const it of course.items) {
-      const text = kind(it.kind).fallbackText(it.payload)
-      expect(text.length, it.id).toBeGreaterThan(5)
-      if (it.kind === KIND.choice) continue
-      for (const a of (it.key as { accepted: string[] }).accepted) {
-        if (it.kind !== KIND.order && canonical(a).length >= 3) expect(` ${canonical(text)} `.includes(` ${canonical(a)} `), `${it.id}: ${text}`).toBe(false)
-      }
+    for (const entry of course.items) expect(kind(entry.kind).fallbackText(entry.payload).length, entry.id).toBeGreaterThan(5)
+    // Choice items have no typed answer, and order items show their words by design.
+    const typed = course.items.filter(i => i.kind !== KIND.choice && i.kind !== KIND.order)
+      .flatMap(entry => (entry.key as { accepted: string[] }).accepted.filter(a => canonical(a).length >= 3).map(answer => ({ entry, answer })))
+    expect(typed.length).toBeGreaterThan(0)
+    for (const { entry, answer } of typed) {
+      const text = kind(entry.kind).fallbackText(entry.payload)
+      expect(` ${canonical(text)} `.includes(` ${canonical(answer)} `), `${entry.id}: ${text}`).toBe(false)
     }
   })
 })

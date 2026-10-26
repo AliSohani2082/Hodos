@@ -15,6 +15,7 @@ import { createUserMessage, type ContextFormed } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
 import type { EngineEvent, LearnerId } from '@hodos/core'
+import { unreachable } from '@hodos/plugin-sdk'
 import type { HodosService } from './service.js'
 
 declare module '@deepseek-ai/dsh-llm' {
@@ -60,11 +61,11 @@ export class TutorSessions {
       // Only Hodos's own global tools stay visible; scoped session tools are always visible.
       if (this.hodos.config.tutorTools === 'restricted') disposers.push(agent.ctx.tools.restrict({ allow: this.hodos.globalTools() }))
     } catch (error) {
-      for (const dispose of disposers.reverse()) dispose()
+      for (const dispose of disposers.toReversed()) dispose()
       this.hodos.logger.error(`could not set up tutor session ${sessionId}: ${error instanceof Error ? error.message : String(error)}`)
       return
     }
-    this.active.set(sessionId, () => { for (const dispose of disposers.reverse()) dispose() })
+    this.active.set(sessionId, () => { for (const dispose of disposers.toReversed()) dispose() })
   }
 
   /** Whether a session is an active tutor session in this process. */
@@ -152,5 +153,6 @@ export function noticeFor(event: EngineEvent): { learnerId: LearnerId; journeyId
     case 'hint':
     case 'security':
       return null
+    default: return unreachable(event, 'engine event')
   }
 }

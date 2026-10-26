@@ -40,7 +40,13 @@ export function toText(expr: Expr): string {
       if (expr.op === '/') return `${wrap(expr.left, 2)}/${wrap(expr.right, 3)}`
       return `${wrap(expr.left, 5)}^${wrap(expr.right, 5)}`
     }
+    default: return unknownNode(expr)
   }
+}
+
+/** Close an exhaustive switch over expression nodes (this module also runs in the renderer, so it has its own). */
+function unknownNode(node: never): never {
+  throw new Error(`unknown expression node ${JSON.stringify(node)}`)
 }
 
 /** A MathML element: a tag with children, or a token element with text. */
@@ -76,7 +82,9 @@ function mathNode(expr: Expr): MathNode {
         }
         case '/': return { tag: 'mfrac', children: [mathNode(expr.left), mathNode(expr.right)] }
         case '^': return { tag: 'msup', children: [wrap(expr.left, 5), mathNode(expr.right)] }
+        default: return unknownNode(expr.op)
       }
+    default: return unknownNode(expr)
   }
 }
 
@@ -90,9 +98,12 @@ export function toMathTree(expr: Expr, display: 'inline' | 'block' = 'inline'): 
   return { tag: 'math', attributes: { display }, children: [mathNode(expr)] }
 }
 
+function escape(s: string): string {
+  return s.replace(/&/gu, '&amp;').replace(/</gu, '&lt;').replace(/>/gu, '&gt;').replace(/"/gu, '&quot;')
+}
+
 /** Serialize a MathML tree (for tests and server-side checks; the renderer builds DOM nodes). */
 export function serializeMath(node: MathNode): string {
-  const escape = (s: string): string => s.replace(/&/gu, '&amp;').replace(/</gu, '&lt;').replace(/>/gu, '&gt;').replace(/"/gu, '&quot;')
   const attrs = Object.entries(node.attributes ?? {}).map(([k, v]) => ` ${k}="${escape(v)}"`).join('')
   const inner = node.text === undefined ? (node.children ?? []).map(serializeMath).join('') : escape(node.text)
   return `<${node.tag}${attrs}>${inner}</${node.tag}>`

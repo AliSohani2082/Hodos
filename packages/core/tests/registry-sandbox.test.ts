@@ -67,7 +67,7 @@ describe('plugin registry', () => {
 
   it('is atomic: an undeclared contribution registers nothing and runs cleanup', async () => {
     const { registry: r } = registry()
-    const disposed = vi.fn()
+    const disposed = vi.fn<() => void>()
     const plugin = createQuizPlugin()
     const sneaky: HodosEnvironmentPlugin = {
       manifest: plugin.manifest,
@@ -97,8 +97,8 @@ describe('plugin registry', () => {
     const { registry: r } = registry()
     const plugin = createQuizPlugin()
     await expect(r.register({ manifest: plugin.manifest, register() { throw new Error('boom') } }, { trusted: true })).rejects.toMatchObject({ code: 'REGISTRATION_FAILED' })
-    await expect(r.register({ manifest: { ...plugin.manifest, requiresCore: '^9.0.0' }, register: plugin.register }, { trusted: true })).rejects.toMatchObject({ code: 'INCOMPATIBLE_CORE' })
-    await expect(r.register({ manifest: { ...plugin.manifest, id: 'Bad Id' }, register: plugin.register }, { trusted: true })).rejects.toMatchObject({ code: 'INVALID_MANIFEST' })
+    await expect(r.register({ manifest: { ...plugin.manifest, requiresCore: '^9.0.0' }, register: ctx => plugin.register(ctx) }, { trusted: true })).rejects.toMatchObject({ code: 'INCOMPATIBLE_CORE' })
+    await expect(r.register({ manifest: { ...plugin.manifest, id: 'Bad Id' }, register: ctx => plugin.register(ctx) }, { trusted: true })).rejects.toMatchObject({ code: 'INVALID_MANIFEST' })
   })
 
   it('times out a register() that never settles', async () => {
@@ -109,8 +109,8 @@ describe('plugin registry', () => {
 
   it('unregisters every contribution, runs cleanup and notifies listeners', async () => {
     const { registry: r } = registry()
-    const disposed = vi.fn()
-    const changes = vi.fn()
+    const disposed = vi.fn<() => void>()
+    const changes = vi.fn<() => void>()
     r.onChange(changes)
     const plugin = createQuizPlugin()
     const dispose = await r.register({ manifest: plugin.manifest, async register(ctx) { await plugin.register(ctx); ctx.onDispose(disposed) } }, { trusted: true })
@@ -130,7 +130,7 @@ describe('plugin registry', () => {
 
   it('never calls an untrusted plugin\'s in-process functions', async () => {
     const { registry: r } = registry()
-    const spy = vi.fn()
+    const spy = vi.fn<() => void>()
     await r.register(sandboxedPlugin('function grade(input) { return { score: 1, correct: true, skillEvidence: [], misconceptions: [], feedback: "sandboxed" } }', spy), { trusted: false })
     const result = await r.grade({ ...gradeInput, kind: 'tp.text' })
     expect(result.feedback).toBe('sandboxed')
@@ -185,8 +185,10 @@ describe('plugin registry', () => {
   })
 })
 
+/** Run a grade hook in the sandbox. */
+const call = (source: string, input: unknown = {}): Promise<unknown> => sandbox.call('grade', source, input)
+
 describe('sandbox (QuickJS in a child process)', () => {
-  const call = (source: string, input: unknown = {}): Promise<unknown> => sandbox.call('grade', source, input)
 
   it('runs a pure hook and round-trips tricky input safely', async () => {
     const tricky = { s: '"); throw new Error("x"); ("', line: '  ', html: '</script><script>', back: '\\', emoji: '♞' }
@@ -239,15 +241,17 @@ describe('sandbox (QuickJS in a child process)', () => {
   })
 })
 
-describe('declarative plugins', () => {
-  function writePlugin(files: Record<string, string>): string {
-    const dir = mkdtempSync(join(tmpdir(), 'hodos-decl-'))
-    for (const [name, text] of Object.entries(files)) {
-      mkdirSync(join(dir, name, '..'), { recursive: true })
-      writeFileSync(join(dir, name), text)
-    }
-    return dir
+/** Write a plugin directory from file contents. */
+function writePlugin(files: Record<string, string>): string {
+  const dir = mkdtempSync(join(tmpdir(), 'hodos-decl-'))
+  for (const [name, text] of Object.entries(files)) {
+    mkdirSync(join(dir, name, '..'), { recursive: true })
+    writeFileSync(join(dir, name), text)
   }
+  return dir
+}
+
+describe('declarative plugins', () => {
   const manifest = {
     id: 'decl-plugin', version: '1.0.0', displayName: 'Declarative', requiresCore: `^${CORE_PLUGIN_API_VERSION}`, sdkVersion: SDK_VERSION,
     capabilities: { environments: ['decl.env'], exerciseKinds: ['decl.text'], graders: ['decl.grader'] },

@@ -12,6 +12,7 @@ import {
   stripServerFields,
   uniformGrade,
   validateManifest,
+  type HodosEnvironmentHost,
   type HodosEnvironmentManifest,
   type JsonSchema,
 } from '@hodos/plugin-sdk'
@@ -111,7 +112,7 @@ describe('schema projection', () => {
       options: [{ id: 'a', text: 'A', rationale: 'because' }],
     }
     expect(stripServerFields(schema, value)).toEqual({ question: 'Q?', options: [{ id: 'a', text: 'A' }] })
-    expect(serverOnlyPaths(schema).sort()).toEqual(['/answer', '/options/*/rationale'])
+    expect(serverOnlyPaths(schema).toSorted()).toEqual(['/answer', '/options/*/rationale'])
   })
 
   it('keeps open objects when the schema says so', () => {
@@ -145,8 +146,8 @@ describe('helpers', () => {
   })
 
   it('createCordisEntry registers through the hodos service inside an effect', async () => {
-    const dispose = vi.fn(async () => {})
-    const registerEnvironment = vi.fn(async () => dispose)
+    const dispose = vi.fn<() => Promise<void>>(async () => {})
+    const registerEnvironment = vi.fn<HodosEnvironmentHost['registerEnvironment']>(async () => dispose)
     const plugin = defineEnvironmentPlugin({ manifest, register: () => {} })
     const entry = createCordisEntry(plugin)
     expect(entry.inject).toEqual(['hodos'])
@@ -160,34 +161,38 @@ describe('helpers', () => {
   })
 })
 
-describe('renderer handshake', () => {
-  function fakeWindow() {
-    const parent = {}
-    let listener: ((event: { data: unknown; source: unknown; ports: readonly PortLike[] }) => void) | undefined
-    return {
-      win: { parent, addEventListener: (_type: 'message', l: typeof listener) => { listener = l } },
-      deliver: (data: unknown, source: unknown, ports: PortLike[]) => listener?.({ data, source, ports }),
-      parent,
-    }
+/** A window that records its message listener, and a way to deliver messages to it. */
+function fakeWindow() {
+  const parent = {}
+  let listener: ((event: { data: unknown; source: unknown; ports: readonly PortLike[] }) => void) | undefined
+  return {
+    win: { parent, addEventListener: (_type: 'message', l: typeof listener) => { listener = l } },
+    deliver: (data: unknown, source: unknown, ports: PortLike[]) => listener?.({ data, source, ports }),
+    parent,
   }
+}
+
+describe('renderer handshake', () => {
 
   it('accepts the port only from the parent and dispatches validated messages', async () => {
     const { win, deliver, parent } = fakeWindow()
     const sent: unknown[] = []
-    const port: PortLike = { postMessage: m => { sent.push(m) }, onmessage: null }
+    const listeners: Array<(event: { readonly data: unknown }) => void> = []
+    let started = false
+    const port: PortLike = { postMessage: m => { sent.push(m) }, addEventListener: (_type, l) => { listeners.push(l) }, start: () => { started = true } }
+    const send = (data: unknown): void => { for (const l of listeners) l({ data }) }
     const presented: string[] = []
     const pending = connectRenderer(win, { onPresent: ex => presented.push(ex.id) })
     deliver({ type: 'hodos:connect', protocol: 1 }, {}, [port])
-    expect(port.onmessage).toBeNull()
+    expect(listeners).toHaveLength(0)
     deliver({ type: 'hodos:connect', protocol: 1 }, parent, [port])
     const connection = await pending
+    expect(started).toBe(true)
     expect(sent).toEqual([{ type: 'hodos:ready', protocol: 1 }])
-    port.onmessage?.({ data: { type: 'hodos:present', exercise: { id: 'bad' } } })
-    port.onmessage?.({
-      data: {
-        type: 'hodos:present',
-        exercise: { id: 'x1', itemId: 'i1', kind: 'k', environment: 'e', skills: [], difficulty: 0, payload: null, mode: 'practice', hintsAvailable: 0, attempt: 1 },
-      },
+    send({ type: 'hodos:present', exercise: { id: 'bad' } })
+    send({
+      type: 'hodos:present',
+      exercise: { id: 'x1', itemId: 'i1', kind: 'k', environment: 'e', skills: [], difficulty: 0, payload: null, mode: 'practice', hintsAvailable: 0, attempt: 1 },
     })
     expect(presented).toEqual(['x1'])
     connection.respond('x1', { answer: 'a' })

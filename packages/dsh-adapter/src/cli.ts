@@ -45,6 +45,10 @@ const USAGE = `Usage:
 --data-dir defaults to $HODOS_DATA_DIR, else $DSH_HOME/hodos, else ~/.dsh/hodos
 (the default dataDir of the Hodos DeepSeek Harness bundle).`
 
+function nonEmpty(value: string | undefined): string | undefined {
+  return value !== undefined && value.trim() !== '' ? value : undefined
+}
+
 /**
  * The Hodos data directory the inbox lives in.
  * @param flag - `--data-dir`, if given.
@@ -52,11 +56,14 @@ const USAGE = `Usage:
  * @param cwd - base for relative paths.
  */
 export function resolveDataDir(flag: string | undefined, env: Readonly<Record<string, string | undefined>>, cwd: string): string {
-  const pick = (value: string | undefined): string | undefined => (value !== undefined && value.trim() !== '' ? value : undefined)
-  const explicit = pick(flag) ?? pick(env.HODOS_DATA_DIR)
+  const explicit = nonEmpty(flag) ?? nonEmpty(env.HODOS_DATA_DIR)
   if (explicit !== undefined) return resolve(cwd, explicit.replace(/^~(?=$|[\\/])/, homedir()))
-  const dshHome = pick(env.DSH_HOME)
+  const dshHome = nonEmpty(env.DSH_HOME)
   return dshHome === undefined ? join(homedir(), '.dsh', 'hodos') : join(resolve(cwd, dshHome.replace(/^~(?=$|[\\/])/, homedir())), 'hodos')
+}
+
+function isFactory(value: unknown): value is () => unknown {
+  return typeof value === 'function'
 }
 
 function isEnvironmentPlugin(value: unknown): value is HodosEnvironmentPlugin {
@@ -75,7 +82,7 @@ async function importEnvironments(io: CliIo): Promise<HodosEnvironmentPlugin[]> 
       continue
     }
     const create = typeof mod === 'object' && mod !== null && 'createPlugin' in mod ? mod.createPlugin : undefined
-    const plugin: unknown = typeof create === 'function' ? create() : undefined
+    const plugin = isFactory(create) ? create() : undefined
     if (isEnvironmentPlugin(plugin)) plugins.push(plugin)
     else io.err(`warning: ${name} does not export createPlugin()`)
   }
@@ -148,12 +155,20 @@ async function check(io: CliIo, file: string, registry: PluginRegistry): Promise
   return errors === 0 ? course : null
 }
 
+function fileSafe(s: string): string {
+  return s.replace(/[^A-Za-z0-9._-]/g, '-')
+}
+
+/** File names in a directory, newest first (names start with the course id and end with a timestamp). */
+async function newestFirst(dir: string): Promise<string[]> {
+  return (await readdir(dir).catch(() => [] as string[])).toSorted().toReversed()
+}
+
 async function submit(io: CliIo, course: CourseSpec, file: string, dataDir: string): Promise<string> {
   const inbox = join(dataDir, INBOX_DIR)
   await mkdir(inbox, { recursive: true, mode: 0o700 })
-  const safe = (s: string): string => s.replace(/[^A-Za-z0-9._-]/g, '-')
   const stamp = (io.now?.() ?? new Date()).getTime()
-  const name = `${safe(course.id)}@${safe(course.version)}-${stamp}.json`
+  const name = `${fileSafe(course.id)}@${fileSafe(course.version)}-${stamp}.json`
   const target = join(inbox, name)
   // Write then rename, so the service never reads a half-written file (it skips *.tmp).
   await writeFile(`${target}.tmp`, await readFile(resolve(io.cwd, file)), { mode: 0o600 })
@@ -163,10 +178,9 @@ async function submit(io: CliIo, course: CourseSpec, file: string, dataDir: stri
 
 async function status(io: CliIo, dataDir: string): Promise<void> {
   const inbox = join(dataDir, INBOX_DIR)
-  const list = async (dir: string): Promise<string[]> => (await readdir(dir).catch(() => [] as string[])).sort().reverse()
-  const pending = (await list(inbox)).filter(n => n.endsWith('.json'))
-  const imported = (await list(join(inbox, 'imported'))).filter(n => n.endsWith('.json')).slice(0, 10)
-  const rejected = (await list(join(inbox, 'rejected'))).filter(n => n.endsWith('.json')).slice(0, 10)
+  const pending = (await newestFirst(inbox)).filter(n => n.endsWith('.json'))
+  const imported = (await newestFirst(join(inbox, 'imported'))).filter(n => n.endsWith('.json')).slice(0, 10)
+  const rejected = (await newestFirst(join(inbox, 'rejected'))).filter(n => n.endsWith('.json')).slice(0, 10)
   io.out(`Course inbox: ${inbox}`)
   io.out(pending.length === 0 ? 'Waiting: none.' : `Waiting (imported while DeepSeek Harness runs with Hodos): ${pending.join(', ')}`)
   io.out(imported.length === 0 ? 'Imported: none yet.' : `Imported as drafts (approve them in the Hodos workspace): ${imported.join(', ')}`)

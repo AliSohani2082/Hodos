@@ -132,6 +132,11 @@ export function positionOf(square: Square, orientation: Orientation): { row: num
   return orientation === 'white' ? { row: 8 - rank, col: file } : { row: rank - 1, col: 7 - file }
 }
 
+/** Keep a row or column on the board. */
+function clamp(n: number): number {
+  return Math.min(7, Math.max(0, n))
+}
+
 /**
  * Keyboard navigation in screen terms: ArrowUp always moves up the screen,
  * whichever side is at the bottom.
@@ -139,7 +144,6 @@ export function positionOf(square: Square, orientation: Orientation): { row: num
  */
 export function navigate(square: Square, key: string, orientation: Orientation): Square | null {
   const { row, col } = positionOf(square, orientation)
-  const clamp = (n: number): number => Math.min(7, Math.max(0, n))
   switch (key) {
     case 'ArrowUp': return squareAt(clamp(row - 1), col, orientation)
     case 'ArrowDown': return squareAt(clamp(row + 1), col, orientation)
@@ -162,7 +166,7 @@ export function chessOf(fen: string): Chess {
 export function movesFrom(fen: string, square: Square): Move[] {
   try {
     return chessOf(fen).moves({ square, verbose: true })
-  } catch (_invalid) {
+  } catch {
     return []
   }
 }
@@ -175,7 +179,7 @@ function bare(san: string): string {
 export function findMove(fen: string, san: string): Move | null {
   try {
     return chessOf(fen).moves({ verbose: true }).find(m => bare(m.san) === bare(san)) ?? null
-  } catch (_invalid) {
+  } catch {
     return null
   }
 }
@@ -186,7 +190,7 @@ export function applyMove(fen: string, move: { from: Square; to: Square; promoti
     const chess = chessOf(fen)
     const played = chess.move(move)
     return { fen: chess.fen(), move: played }
-  } catch (_illegal) {
+  } catch {
     return null
   }
 }

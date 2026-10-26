@@ -193,7 +193,7 @@ export class UciEngine {
         this.send(`position fen ${fen}`)
         this.send(options.movetimeMs !== undefined ? `go movetime ${Math.round(options.movetimeMs)}` : `go depth ${Math.max(1, Math.min(30, options.depth ?? 14))}`)
         const best = await this.waitFor(l => l.startsWith('bestmove'))
-        return { bestmove: best.split(/\s+/)[1] ?? '(none)', lines: [...lines.values()].sort((a, b) => a.multipv - b.multipv) }
+        return { bestmove: best.split(/\s+/)[1] ?? '(none)', lines: [...lines.values()].toSorted((a, b) => a.multipv - b.multipv) }
       } finally {
         this.onLine.delete(collect)
       }

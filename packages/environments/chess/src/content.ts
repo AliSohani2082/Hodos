@@ -50,7 +50,7 @@ function themeAnswer(theme: PuzzleTheme): string {
 function identifyItem(p: Puzzle, modes: readonly ExerciseMode[]): ExerciseItem {
   const facts = keyFacts(p)
   // Deterministic option order that differs between items.
-  const shift = [...p.id].reduce((a, c) => a + c.charCodeAt(0), 0) % IDENTIFY_OPTIONS.length
+  const shift = p.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % IDENTIFY_OPTIONS.length
   const options = IDENTIFY_OPTIONS.map((_, i) => IDENTIFY_OPTIONS[(i + shift) % IDENTIFY_OPTIONS.length] ?? IDENTIFY_OPTIONS[0])
   return {
     id: `spot-${p.id}`,

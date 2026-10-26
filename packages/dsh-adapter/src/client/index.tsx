@@ -32,6 +32,8 @@ interface ClientContext {
 /**
  * The workspace iframe. It is same-origin first-party content (the Hodos
  * app); environment renderers inside it run in their own sandboxed iframes.
+ * It has no sandbox: it needs scripts and its same-origin API (authenticated
+ * by the Harness cookie), and a sandbox that allows both is no boundary.
  */
 export function Workspace(props: { sessionId?: string }): React.ReactElement {
   const src = `/hodos/app/?session=${encodeURIComponent(props.sessionId ?? '')}`

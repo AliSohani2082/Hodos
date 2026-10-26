@@ -17,7 +17,9 @@ import {
 /** The subset of `MessagePort` the helper uses. */
 export interface PortLike {
   postMessage(message: unknown): void
-  onmessage: ((event: { readonly data: unknown }) => void) | null
+  addEventListener(type: 'message', listener: (event: { readonly data: unknown }) => void): void
+  /** Start delivering messages; a port with listeners added by `addEventListener` needs it. */
+  start(): void
 }
 
 /** The subset of `Window` the helper uses. */
@@ -64,7 +66,7 @@ export function connectRenderer(win: WindowLike, handlers: RendererHandlers): Pr
       const port = event.ports[0]
       if (port === undefined) return
       connected = true
-      port.onmessage = message => {
+      port.addEventListener('message', message => {
         const parsed = parseHostMessage(message.data)
         if (parsed === null) return
         switch (parsed.type) {
@@ -76,7 +78,8 @@ export function connectRenderer(win: WindowLike, handlers: RendererHandlers): Pr
           case 'hodos:lock': handlers.onLock?.(parsed.locked); break
           case 'hodos:clear': handlers.onClear?.(); break
         }
-      }
+      })
+      port.start()
       port.postMessage({ type: 'hodos:ready', protocol: RENDERER_PROTOCOL })
       resolve({
         respond(exerciseId, response) {

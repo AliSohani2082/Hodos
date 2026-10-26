@@ -101,7 +101,7 @@ async function readJson(req: IncomingMessage): Promise<JsonObject> {
   let parsed: unknown
   try {
     parsed = JSON.parse(text)
-  } catch (_invalid) {
+  } catch {
     // Malformed JSON is a client error; the parser's message adds nothing.
     throw new BadRequest('request body is not valid JSON')
   }
@@ -248,7 +248,7 @@ function serveFile(res: ServerResponse, root: string, requested: string, headers
   let decoded: string
   try {
     decoded = decodeURIComponent(requested)
-  } catch (_malformed) {
+  } catch {
     // A malformed escape cannot name a real file.
     return false
   }

@@ -5,7 +5,7 @@
  * text form, and every prompt also has a plain-text form.
  * @module @hodos/math/kinds
  */
-import type { Diagnostic, ExerciseItem, ExerciseKindSpec, JsonObject, JsonSchema, JsonValue, LessonBlockSpec, LessonNode } from '@hodos/plugin-sdk'
+import { unreachable, type Diagnostic, type ExerciseItem, type ExerciseKindSpec, type JsonObject, type JsonSchema, type JsonValue, type LessonBlockSpec, type LessonNode } from '@hodos/plugin-sdk'
 import { equivalent, hasUnexpandedProduct, isProduct, parse, type Expr } from './expr.js'
 import { toText } from './present.js'
 
@@ -45,6 +45,11 @@ function str(value: JsonValue | undefined): string {
   return typeof value === 'string' ? value : ''
 }
 
+/** A graph coordinate as text (the schema makes it a number). */
+function coord(value: JsonValue | undefined): string {
+  return typeof value === 'number' ? String(value) : '?'
+}
+
 function strings(value: JsonValue | undefined): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
 }
@@ -82,6 +87,7 @@ export function meetsForm(answer: Expr, key: Expr, form: Form): boolean {
     case 'expanded': return !hasUnexpandedProduct(answer)
     case 'factored': return isProduct(answer)
     case 'simplified': return size(answer) <= size(key)
+    default: return unreachable(form, 'form')
   }
 }
 
@@ -108,8 +114,8 @@ function graphParts(graph: JsonValue | undefined): string[] {
   const g = obj(graph)
   const parts: string[] = []
   for (const f of Array.isArray(g.functions) ? g.functions : []) parts.push(`y = ${str(obj(f).expr)}`)
-  for (const p of Array.isArray(g.points) ? g.points : []) if (Array.isArray(p)) parts.push(`point (${String(p[0])}, ${String(p[1])})`)
-  for (const l of Array.isArray(g.lines) ? g.lines : []) if (Array.isArray(l)) parts.push(`a line through (${String(l[0])}, ${String(l[1])}) and (${String(l[2])}, ${String(l[3])})`)
+  for (const p of Array.isArray(g.points) ? g.points : []) if (Array.isArray(p)) parts.push(`point (${coord(p[0])}, ${coord(p[1])})`)
+  for (const l of Array.isArray(g.lines) ? g.lines : []) if (Array.isArray(l)) parts.push(`a line through (${coord(l[0])}, ${coord(l[1])}) and (${coord(l[2])}, ${coord(l[3])})`)
   return parts
 }
 

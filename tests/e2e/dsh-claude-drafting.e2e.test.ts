@@ -15,7 +15,7 @@ import { chromium, type Browser, type Page } from 'playwright'
 import { tacticsCourse } from '@hodos/chess'
 import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, startDsh, type DshProcess } from './support/dsh.js'
-import { enterDsh, hodosApp, openHodosTab, say } from './support/ui.js'
+import { apiData, enterDsh, hodosApp, openHodosTab, say } from './support/ui.js'
 
 const ENABLED = DSH_AVAILABLE && process.env.HODOS_E2E_CLAUDE_CODE === '1'
 const BUNDLE = '@deepseek-ai/dsh-subagent-claude-code@0.2.1-rc.3'
@@ -82,9 +82,8 @@ describe.skipIf(!ENABLED)('course drafting through DSH\'s Claude Code subagent',
 
     // The draft waits in the workspace for the learner.
     const session = await openHodosTab(p)
-    const response = await p.request.get(`${the(dsh, 'dsh').origin}/hodos/api/v1/drafts?session=${encodeURIComponent(session)}`)
-    const drafts: { data: Array<{ id: string; origin: string }> } = await response.json()
-    expect(drafts.data).toEqual([expect.objectContaining({ id: 'chess.endgame-draft', origin: 'agent' })])
+    const drafts = await apiData(await p.request.get(`${the(dsh, 'dsh').origin}/hodos/api/v1/drafts?session=${encodeURIComponent(session)}`))
+    expect(drafts).toMatchObject([{ id: 'chess.endgame-draft', origin: 'agent' }])
     await expect.poll(() => hodosApp(p).locator('section.drafts h3').first().textContent(), { timeout: 20_000 }).toContain('Chess endgame basics (draft)')
   })
 })

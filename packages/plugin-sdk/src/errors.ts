@@ -49,6 +49,18 @@ export class HodosPluginError extends Error {
 }
 
 /**
+ * Close an exhaustive `switch` over a union. TypeScript proves the call
+ * unreachable; at run time a value outside the union (read from storage or
+ * from untrusted input) throws here instead of falling through.
+ * @param value - the switched value, narrowed to `never`.
+ * @param what - what the value is, for the message.
+ * @throws {Error} always.
+ */
+export function unreachable(value: never, what: string): never {
+  throw new Error(`unexpected ${what}: ${JSON.stringify(value)}`)
+}
+
+/**
  * Whether any finding is an error.
  * @param diagnostics - findings to inspect.
  * @returns true when at least one has severity `error`.

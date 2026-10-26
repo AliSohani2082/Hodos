@@ -12,10 +12,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { chromium, type Browser, type FrameLocator, type Page } from 'playwright'
 import type { ExerciseView } from '@hodos/core'
 import { KIND, SKILL, spanishCourse } from '@hodos/language'
-import type { JsonObject } from '@hodos/plugin-sdk'
+import type { ExerciseItem } from '@hodos/plugin-sdk'
 import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, startDsh, type DshProcess } from './support/dsh.js'
 import { enterDsh, hodosApp, hodosState, openHodosTab, say, waitForExercise, waitForGrading, type HodosState } from './support/ui.js'
+import { jsonObject, jsonObjects, jsonString, jsonStrings } from '../support/json.js'
 
 const course = spanishCourse()
 
@@ -36,16 +37,25 @@ const state = (): Promise<HodosState> => hodosState(the(page, 'page'), the(dsh, 
 const openExercise = (): Promise<ExerciseView> => waitForExercise(state)
 const settled = (exercise: ExerciseView): Promise<void> => waitForGrading(state, exercise)
 
+function item(exercise: ExerciseView): ExerciseItem {
+  return the(course.items.find(i => i.id === exercise.itemId), `item ${exercise.itemId}`)
+}
+
+/** The first accepted answer of a typed item; '' for a choice. */
+function accepted(entry: ExerciseItem): string {
+  if (entry.kind === KIND.choice) return ''
+  return the(jsonStrings(jsonObject(entry.key, `the key of ${entry.id}`).accepted, `the answers of ${entry.id}`)[0], `an answer of ${entry.id}`)
+}
+
 /** Answer in the workspace form: a typed text or the option's radio button. */
 async function answer(exercise: ExerciseView, typed?: string): Promise<void> {
-  const entry = course.items.find(i => i.id === exercise.itemId)
-  if (entry === undefined) throw new Error(`unknown item ${exercise.itemId}`)
-  const key = entry.key as JsonObject
+  const entry = item(exercise)
   if (entry.kind === KIND.choice) {
-    const option = ((entry.payload as JsonObject).options as JsonObject[]).find(o => o.id === key.correct)
-    await app().getByRole('radio', { name: String(option?.text) }).check()
+    const correct = jsonObject(entry.key, `the key of ${entry.id}`).correct
+    const option = jsonObjects(jsonObject(entry.payload, `the payload of ${entry.id}`).options, `the options of ${entry.id}`).find(o => o.id === correct)
+    await app().getByRole('radio', { name: jsonString(option?.text, `the right option of ${entry.id}`) }).check()
   } else {
-    await app().getByLabel('Your answer').fill(typed ?? String((key.accepted as string[])[0]))
+    await app().getByLabel('Your answer').fill(typed ?? accepted(entry))
   }
   await app().getByRole('button', { name: 'Submit answer' }).click()
   await settled(exercise)
@@ -92,27 +102,25 @@ describe.skipIf(!DSH_AVAILABLE)('vocabulary journey in DeepSeek Harness', () => 
     await app().getByRole('button', { name: 'Continue to practice' }).click()
 
     // Practice until the checkpoint is recommended; one answer misses its accents.
-    let missed = false
+    let accentFeedback: string | null | undefined
     for (let n = 0; n < 25; n++) {
       const now = await state()
       if (now.journey?.nextAction.type === 'practice' && now.journey.nextAction.readyForCheckpoint) break
       const next = app().getByRole('button', { name: 'Next exercise' })
       if (await next.count() > 0) await next.click()
       const exercise = await openExercise()
-      const entry = course.items.find(i => i.id === exercise.itemId)
-      const accepted = String(((entry?.key as JsonObject | undefined)?.accepted as string[] | undefined)?.[0] ?? '')
-      if (!missed && entry?.kind !== KIND.choice && /[áéíóú]/u.test(accepted)) {
-        missed = true
-        await answer(exercise, accepted.normalize('NFD').replace(/́/gu, ''))
-        await expect.poll(() => app().locator('.feedback').textContent()).toContain('Partly right.')
-        await expect(app().locator('.feedback .misconception').first().textContent()).resolves.toContain('Check the accents')
+      const typed = accepted(item(exercise))
+      if (accentFeedback === undefined && /[áéíóú]/u.test(typed)) {
+        await answer(exercise, typed.normalize('NFD').replace(/́/gu, ''))
+        await app().locator('.feedback', { hasText: 'Partly right.' }).waitFor({ timeout: 20_000 })
+        accentFeedback = await app().locator('.feedback .misconception').first().textContent()
         const retry = (await state()).exercise
         if (retry !== null && retry.id === exercise.id) await answer(retry)
         continue
       }
       await answer(exercise)
     }
-    expect(missed).toBe(true)
+    expect(accentFeedback).toContain('Check the accents')
 
     await app().getByRole('button', { name: 'Take the checkpoint' }).click()
     await expect.poll(() => app().locator('.mode-banner strong').textContent(), { timeout: 20_000 }).toBe('Checkpoint')

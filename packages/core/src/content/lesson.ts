@@ -171,7 +171,7 @@ export function parseLesson(source: string, blocks: BlockLookup, lessonId = 'les
         // Inline wrappers carry no meaning in the neutral tree; keep their children.
         return children.length === 1 ? children[0] ?? null : { id: positional, type: 'span', attributes: {}, children }
       case 'text': {
-        const content = node.attributes.content
+        const content: unknown = node.attributes.content
         if (typeof content !== 'string') {
           diagnostics.push({ severity: 'error', code: 'lesson/no-variables', message: `line ${line}: variables and functions are not allowed in lessons`, target: lessonId })
           return null
@@ -203,7 +203,7 @@ export function parseLesson(source: string, blocks: BlockLookup, lessonId = 'les
         }
         const attributes = JSON.parse(JSON.stringify(node.attributes)) as JsonObject // plain data: mdtype objects were rejected above
         if (typeof attributes.id !== 'string') attributes.id = `${name}-${++counter}`
-        const id = String(attributes.id)
+        const id = attributes.id
         if (ids.has(id)) diagnostics.push({ severity: 'error', code: 'lesson/duplicate-id', message: `line ${line}: block id ${id} is used twice`, target: lessonId })
         ids.add(id)
         for (const d of def.validateAttributes(attributes)) diagnostics.push({ ...d, code: `lesson/${name}-attributes`, message: `line ${line}: ${name} ${d.message}`, target: id })
@@ -252,7 +252,7 @@ export function stampBlockIds(source: string, lessonId: string): string {
     for (const child of node.children) walk(child)
   }
   walk(ast)
-  for (const edit of edits.reverse()) {
+  for (const edit of edits.toReversed()) {
     const text = lines[edit.line]
     if (text === undefined) continue
     const marker = `{% ${edit.tag}`
@@ -287,6 +287,14 @@ export function projectLessonForStudent(tree: LessonNode, blocks: BlockLookup): 
   return project(tree)
 }
 
+/** Inline content of a node as plain text; links keep their address. */
+function inlineText(node: LessonNode): string {
+  if (node.type === 'text' || node.type === 'code') return node.text ?? ''
+  if (node.type === 'break') return '\n'
+  if (node.type === 'link') return `${(node.children ?? []).map(inlineText).join('')} (${str(node.attributes.href)})`
+  return (node.children ?? []).map(inlineText).join('')
+}
+
 /**
  * Plain-text rendering of a lesson: the fallback when no renderer is
  * available, and the agent's view. Blocks use their `fallbackText`.
@@ -296,20 +304,14 @@ export function projectLessonForStudent(tree: LessonNode, blocks: BlockLookup): 
  */
 export function lessonPlainText(tree: LessonNode, blocks: BlockLookup): string {
   const out: string[] = []
-  const inline = (node: LessonNode): string => {
-    if (node.type === 'text' || node.type === 'code') return node.text ?? ''
-    if (node.type === 'break') return '\n'
-    if (node.type === 'link') return `${(node.children ?? []).map(inline).join('')} (${String(node.attributes.href ?? '')})`
-    return (node.children ?? []).map(inline).join('')
-  }
   const block = (node: LessonNode, depth: number): void => {
     switch (node.type) {
       case 'document': (node.children ?? []).forEach(c => block(c, depth)); return
-      case 'heading': out.push(`${'#'.repeat(Number(node.attributes.level ?? 1))} ${inline(node)}`); return
-      case 'paragraph': out.push(inline(node)); return
+      case 'heading': out.push(`${'#'.repeat(Number(node.attributes.level ?? 1))} ${inlineText(node)}`); return
+      case 'paragraph': out.push(inlineText(node)); return
       case 'fence': out.push(node.text ?? ''); return
-      case 'list': (node.children ?? []).forEach((c, i) => out.push(`${node.attributes.ordered === true ? `${i + 1}.` : '-'} ${(c.children ?? []).map(inline).join(' ')}`)); return
-      case 'blockquote': (node.children ?? []).forEach(c => out.push(`> ${inline(c)}`)); return
+      case 'list': (node.children ?? []).forEach((c, i) => out.push(`${node.attributes.ordered === true ? `${i + 1}.` : '-'} ${(c.children ?? []).map(inlineText).join(' ')}`)); return
+      case 'blockquote': (node.children ?? []).forEach(c => out.push(`> ${inlineText(c)}`)); return
       case 'rule': out.push('---'); return
       default: {
         const def = CORE_BLOCKS.get(node.type) ?? blocks.block(node.type)
@@ -317,7 +319,7 @@ export function lessonPlainText(tree: LessonNode, blocks: BlockLookup): string {
           let text = ''
           try {
             text = def.fallbackText(node)
-          } catch (_error) {
+          } catch {
             // A failing projection degrades to the block name.
             text = `[${node.type}]`
           }
@@ -325,7 +327,7 @@ export function lessonPlainText(tree: LessonNode, blocks: BlockLookup): string {
           ;(node.children ?? []).forEach(c => block(c, depth + 1))
           return
         }
-        const text = inline(node)
+        const text = inlineText(node)
         if (text !== '') out.push(text)
       }
     }

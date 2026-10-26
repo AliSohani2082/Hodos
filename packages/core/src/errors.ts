@@ -3,6 +3,7 @@
  * learner or a model: they never contain answer keys or other learners' data.
  * @module @hodos/core/errors
  */
+import { unreachable } from '@hodos/plugin-sdk'
 
 /** Error codes. Hosts map them to HTTP statuses and tool results. */
 export type HodosErrorCode =
@@ -50,5 +51,6 @@ export function httpStatusOf(code: HodosErrorCode): number {
     case 'RATE_LIMITED': return 429
     case 'UNAVAILABLE': return 503
     case 'INTERNAL': return 500
+    default: return unreachable(code, 'error code')
   }
 }

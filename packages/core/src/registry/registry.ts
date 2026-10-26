@@ -129,10 +129,15 @@ function withTimeout<T>(promise: Promise<T>, ms: number, what: string): Promise<
   ])
 }
 
+/** Whether a manifest capability list declares an id. */
+function declared(list: readonly string[] | undefined, id: string): boolean {
+  return (list ?? []).includes(id)
+}
+
 function isDirectory(path: string): boolean {
   try {
     return statSync(path).isDirectory()
-  } catch (_missing) {
+  } catch {
     // A missing or unreadable path is simply not a directory.
     return false
   }
@@ -254,7 +259,6 @@ export class PluginRegistry {
     const findings: Diagnostic[] = []
     const err = (code: string, message: string): void => { findings.push({ severity: 'error', code, message }) }
     const caps = manifest.capabilities
-    const declared = (list: readonly string[] | undefined, id: string): boolean => (list ?? []).includes(id)
     const unique = <T>(items: readonly T[], key: (t: T) => string, what: string, existing: ReadonlyMap<string, unknown>): void => {
       const seen = new Set<string>()
       for (const item of items) {
@@ -328,7 +332,7 @@ export class PluginRegistry {
       if (!/^[a-z0-9][a-z0-9._-]{1,63}@[0-9]+$/.test(p.id)) err('registry/bad-preset', `invalid preset id ${p.id}`)
       if (!declared(caps.presets, p.id)) err('registry/undeclared', `preset ${p.id} is not declared in the manifest`)
       for (const [kind, loop] of Object.entries(p.kindLoops ?? {})) {
-        if (!(kind in DEFAULT_LOOP_FOR_KIND) || !LEARNING_LOOPS.some(l => l === loop)) err('registry/bad-preset', `preset ${p.id} maps ${kind} to unknown loop ${String(loop)}`)
+        if (!(kind in DEFAULT_LOOP_FOR_KIND) || !LEARNING_LOOPS.some(l => l === loop)) err('registry/bad-preset', `preset ${p.id} maps ${kind} to unknown loop ${loop}`)
       }
       const maxHint = p.tutor?.maxHintLevel
       if (maxHint !== undefined && !(Number.isInteger(maxHint) && maxHint >= 0 && maxHint <= 5)) err('registry/bad-preset', `preset ${p.id} hint ceiling must be 0..5`)
@@ -375,7 +379,7 @@ export class PluginRegistry {
   }
 
   private async runDisposers(pluginId: string, disposers: ReadonlyArray<() => void | Promise<void>>): Promise<void> {
-    for (const dispose of [...disposers].reverse()) {
+    for (const dispose of disposers.toReversed()) {
       try {
         await withTimeout(Promise.resolve(dispose()), 5000, `plugin ${pluginId} cleanup`)
       } catch (error) {
@@ -608,7 +612,7 @@ export class PluginRegistry {
     if (!kind.trusted && !kind.declarative) return genericFallbackText(kind.spec.title, payload)
     try {
       return kind.spec.fallbackText(payload)
-    } catch (_error) {
+    } catch {
       // A throwing projection must not break the learner's view; use the generic one.
       return genericFallbackText(kind.spec.title, payload)
     }

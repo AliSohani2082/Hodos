@@ -81,7 +81,7 @@ const cancelEl = element('cancel', HTMLButtonElement)
 const replayEl = element('replay', HTMLButtonElement)
 
 function reducedMotion(): boolean {
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 function stopReplay(): void {
@@ -180,7 +180,7 @@ function paint(): void {
   let chess: Chess
   try {
     chess = chessOf(state.fen)
-  } catch (_invalid) {
+  } catch {
     chess = chessOf(EMPTY_FEN)
   }
   const targets = state.selected === null ? [] : movesFrom(state.fen, state.selected)
@@ -574,19 +574,23 @@ replayEl.addEventListener('click', replay)
 
 // ------------------------------------------------------------------ connection
 
-void connectRenderer(window, {
-  onInit: init => { document.documentElement.dataset.theme = init.colorScheme },
-  onPresent: present,
-  onProgress,
-  onResult: result => onResult(result.exerciseId, result.correct, readReveal(result.reveal)),
-  onBlock: showDiagram,
-  onLock,
-  onClear: clear,
-}).then(conn => {
+/** Connect to the workspace, then report the page height whenever it changes. */
+async function start(): Promise<void> {
+  const conn = await connectRenderer(window, {
+    onInit: init => { document.documentElement.dataset.theme = init.colorScheme },
+    onPresent: present,
+    onProgress,
+    onResult: result => onResult(result.exerciseId, result.correct, readReveal(result.reveal)),
+    onBlock: showDiagram,
+    onLock,
+    onClear: clear,
+  })
   connection = conn
   const report = (): void => conn.resize(Math.ceil(document.documentElement.scrollHeight))
   new ResizeObserver(report).observe(document.body)
   report()
-})
+}
+
+void start()
 
 paint()

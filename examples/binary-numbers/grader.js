@@ -8,7 +8,10 @@
 var READ_HELP = 'Each place is worth twice the place to its right: 1, 2, 4, 8, 16 and so on.'
 
 function reverse(text) {
-  return String(text).split('').reverse().join('')
+  var s = String(text)
+  var out = ''
+  for (var i = s.length - 1; i >= 0; i--) out += s.charAt(i)
+  return out
 }
 
 function bitsOf(text) {

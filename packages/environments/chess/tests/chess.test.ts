@@ -17,8 +17,8 @@ const item = (id: string): ExerciseItem => {
   return found
 }
 
-function stepInput(it: ExerciseItem, move: string, progress: StepResult['progress'] | null = null): StepInput {
-  return { kind: it.kind, payload: it.payload, key: it.key, response: { move }, mode: 'practice', skills: it.skills, attempt: 1, progress }
+function stepInput(entry: ExerciseItem, move: string, progress: StepResult['progress'] | null = null): StepInput {
+  return { kind: entry.kind, payload: entry.payload, key: entry.key, response: { move }, mode: 'practice', skills: entry.skills, attempt: 1, progress }
 }
 
 describe('puzzle set', () => {
@@ -33,25 +33,25 @@ describe('puzzle set', () => {
 
   it('carries a Stockfish verification record for exactly the current puzzle set', () => {
     // Changing any puzzle voids the record; re-run `pnpm verify:puzzles --write` with an engine.
-    const checked = expandPuzzles().filter(p => p.engineChecked).map(p => p.id).sort()
-    expect([...engineVerifiedIds()].sort()).toEqual(checked)
+    const checked = expandPuzzles().filter(p => p.engineChecked).map(p => p.id).toSorted()
+    expect([...engineVerifiedIds()].toSorted()).toEqual(checked)
     const engineItems = tacticsCourse(engineVerifiedIds()).items.filter(i => i.provenance?.verifiedBy?.includes('stockfish'))
-    expect(engineItems.map(i => i.id).sort()).toEqual(checked)
+    expect(engineItems.map(i => i.id).toSorted()).toEqual(checked)
   })
 
   it('gives authors valid examples in its kind guidance', () => {
     const example = puzzleKind.guidance?.example
     if (example === undefined) throw new Error('the puzzle kind has no example')
-    const item: ExerciseItem = { id: 'example', kind: 'chess.puzzle', skills: [{ skillId: 'x', weight: 1 }], difficulty: 0, modes: ['practice'], payload: example.payload, key: example.key }
-    expect(validatePuzzleItem(item).filter(d => d.severity === 'error')).toEqual([])
+    const sample: ExerciseItem = { id: 'example', kind: 'chess.puzzle', skills: [{ skillId: 'x', weight: 1 }], difficulty: 0, modes: ['practice'], payload: example.payload, key: example.key }
+    expect(validatePuzzleItem(sample).filter(d => d.severity === 'error')).toEqual([])
     const identify = identifyKind.guidance?.example
     if (identify === undefined) throw new Error('the identify kind has no example')
-    expect(identifyKind.validateItem?.({ ...item, kind: 'chess.identify', payload: identify.payload, key: identify.key })).toEqual([])
+    expect(identifyKind.validateItem?.({ ...sample, kind: 'chess.identify', payload: identify.payload, key: identify.key })).toEqual([])
   })
 
   it('passes the plugin\'s semantic validation for every item', () => {
-    for (const it of course.items.filter(i => i.kind === 'chess.puzzle')) {
-      expect(validatePuzzleItem(it).filter(d => d.severity === 'error'), it.id).toEqual([])
+    for (const entry of course.items.filter(i => i.kind === 'chess.puzzle')) {
+      expect(validatePuzzleItem(entry).filter(d => d.severity === 'error'), entry.id).toEqual([])
     }
   })
 
@@ -91,11 +91,13 @@ describe('puzzle set', () => {
   })
 
   it('never puts the solution in the client payload', () => {
-    for (const it of course.items) {
-      const key = it.key as JsonObject
-      const line = Array.isArray(key.line) ? key.line : []
-      for (const san of line) if (typeof san === 'string' && san.length >= 4) expect(JSON.stringify(it.payload), it.id).not.toContain(san)
-    }
+    // Moves of four characters or more (Nxe7+, Qd8#) are specific enough to search for.
+    const moves = course.items.flatMap(entry => {
+      const key = entry.key as JsonObject
+      return (Array.isArray(key.line) ? key.line : []).filter((san): san is string => typeof san === 'string' && san.length >= 4).map(san => ({ entry, san }))
+    })
+    expect(moves.length).toBeGreaterThan(0)
+    for (const { entry, san } of moves) expect(JSON.stringify(entry.payload), entry.id).not.toContain(san)
   })
 })
 
@@ -103,7 +105,7 @@ describe('grader', () => {
   it('accepts the key move and completes', async () => {
     const r = await stepPuzzle(stepInput(item('fork-king-queen-e7'), 'Ne7+'))
     expect(r.status).toBe('complete')
-    if (r.status === 'complete') expect(r.grade).toMatchObject({ correct: true, score: 1 })
+    expect(r.status === 'complete' ? r.grade : null).toMatchObject({ correct: true, score: 1 })
   })
 
   it('accepts UCI notation', async () => {
@@ -114,12 +116,12 @@ describe('grader', () => {
   it('ignores illegal moves without consuming the attempt', async () => {
     const r = await stepPuzzle(stepInput(item('fork-king-queen-e7'), 'Qh5'))
     expect(r.status).toBe('continue')
-    if (r.status === 'continue') expect(r.message).toContain('not a legal move')
+    expect(r.status === 'continue' ? r.message : '').toContain('not a legal move')
   })
 
   it('marks a wrong move with misconceptions and feedback that hides the answer', async () => {
-    const it = item('fork-king-queen-e7')
-    const r = await stepPuzzle(stepInput(it, 'Nb6'))
+    const entry = item('fork-king-queen-e7')
+    const r = await stepPuzzle(stepInput(entry, 'Nb6'))
     expect(r.status).toBe('complete')
     if (r.status !== 'complete') return
     expect(r.grade.correct).toBe(false)
@@ -128,14 +130,14 @@ describe('grader', () => {
   })
 
   it('plays the opponent\'s reply in multi-move lines and gives partial credit', async () => {
-    const it = item('fork-royal-a8')
-    const first = await stepPuzzle(stepInput(it, 'Nc7+'))
+    const entry = item('fork-royal-a8')
+    const first = await stepPuzzle(stepInput(entry, 'Nc7+'))
     expect(first.status).toBe('continue')
     if (first.status !== 'continue') return
     expect(first.progress).toMatchObject({ played: ['Nc7+', 'Kd7'] })
-    const good = await stepPuzzle(stepInput(it, 'Nxa8', first.progress))
+    const good = await stepPuzzle(stepInput(entry, 'Nxa8', first.progress))
     expect(good.status === 'complete' && good.grade.correct).toBe(true)
-    const bad = await stepPuzzle(stepInput(it, 'Nb5', first.progress))
+    const bad = await stepPuzzle(stepInput(entry, 'Nb5', first.progress))
     expect(bad.status === 'complete' && !bad.grade.correct && bad.grade.score === 0.5).toBe(true)
   })
 
@@ -155,11 +157,11 @@ describe('grader', () => {
   })
 
   it('solves mirrored puzzles with the mirrored line', async () => {
-    const it = item('skewer-rank-rook-m')
-    const first = await stepPuzzle(stepInput(it, 'Ra3+'))
+    const entry = item('skewer-rank-rook-m')
+    const first = await stepPuzzle(stepInput(entry, 'Ra3+'))
     expect(first.status).toBe('continue')
     if (first.status !== 'continue') return
-    const done = await stepPuzzle(stepInput(it, 'Rxh3', first.progress))
+    const done = await stepPuzzle(stepInput(entry, 'Rxh3', first.progress))
     expect(done.status === 'complete' && done.grade.correct).toBe(true)
   })
 })

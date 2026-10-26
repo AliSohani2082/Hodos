@@ -40,7 +40,7 @@ export function positionProblems(fen: string): PositionProblem[] {
   try {
     const other = new Chess(flipped.join(' '))
     if (other.inCheck()) return [{ code: 'chess/opponent-in-check', message: 'the side not to move is in check' }]
-  } catch (_invalid) {
+  } catch {
     // The flipped FEN can be invalid only if the original was; reported above.
   }
   return []
@@ -67,7 +67,7 @@ export function parseMove(fen: string, text: string): Move | null {
     }
     // Accept a missing or extra check/mate suffix and 0-0 for castling.
     return chess.move(trimmed.replace(/0-0-0/g, 'O-O-O').replace(/0-0/g, 'O-O'), { strict: false })
-  } catch (_illegal) {
+  } catch {
     // chess.js throws for illegal or unparsable moves.
     return null
   }
@@ -83,7 +83,7 @@ export function playLine(fen: string, line: readonly string[]): string | null {
   const chess = new Chess(fen)
   try {
     for (const san of line) chess.move(san)
-  } catch (_illegal) {
+  } catch {
     // An illegal move invalidates the line.
     return null
   }
@@ -97,6 +97,11 @@ export function bareSan(san: string): string {
 
 const SQUARE = /([a-h])([1-8])/g
 
+/** Swap upper and lower case (FEN text is ASCII). */
+function swapCase(s: string): string {
+  return s.split('').map(c => (c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase())).join('')
+}
+
 /**
  * Mirror a position: swap colours and flip ranks. Tactics are preserved.
  * @param fen - FEN.
@@ -104,9 +109,8 @@ const SQUARE = /([a-h])([1-8])/g
  */
 export function mirrorFen(fen: string): string {
   const [board = '', turn = 'w', castling = '-', ep = '-', half = '0', full = '1'] = fen.split(' ')
-  const swapCase = (s: string): string => [...s].map(c => (c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase())).join('')
-  const ranks = board.split('/').reverse().map(swapCase)
-  const castle = castling === '-' ? '-' : [...swapCase(castling)].sort((a, b) => 'KQkq'.indexOf(a) - 'KQkq'.indexOf(b)).join('')
+  const ranks = board.split('/').toReversed().map(swapCase)
+  const castle = castling === '-' ? '-' : swapCase(castling).split('').toSorted((a, b) => 'KQkq'.indexOf(a) - 'KQkq'.indexOf(b)).join('')
   const passant = ep === '-' ? '-' : ep.replace(SQUARE, (_m, f: string, r: string) => `${f}${9 - Number(r)}`)
   return [ranks.join('/'), turn === 'w' ? 'b' : 'w', castle, passant, half, full].join(' ')
 }
@@ -143,7 +147,17 @@ export function targetsAfter(fen: string, move: Move): Target[] {
       if (chess.attackers(cell.square, us).includes(move.to)) out.push({ square: cell.square, piece: cell.type })
     }
   }
-  return out.sort((a, b) => PIECE_VALUE[b.piece] - PIECE_VALUE[a.piece])
+  return out.toSorted((a, b) => PIECE_VALUE[b.piece] - PIECE_VALUE[a.piece])
+}
+
+/** File (0–7) of a square name. */
+function file(square: string): number {
+  return square.charCodeAt(0) - 97
+}
+
+/** Rank (0–7) of a square name. */
+function rank(square: string): number {
+  return Number(square[1]) - 1
 }
 
 /**
@@ -157,8 +171,6 @@ export function targetsAfter(fen: string, move: Move): Target[] {
 export function behind(fen: string, move: Move, target: Square): Target | null {
   const chess = new Chess(fen)
   chess.move(move.san)
-  const file = (s: string): number => s.charCodeAt(0) - 97
-  const rank = (s: string): number => Number(s[1]) - 1
   const df = Math.sign(file(target) - file(move.to))
   const dr = Math.sign(rank(target) - rank(move.to))
   const straight = file(target) === file(move.to) || rank(target) === rank(move.to) || Math.abs(file(target) - file(move.to)) === Math.abs(rank(target) - rank(move.to))
@@ -201,7 +213,7 @@ export function leavesPieceHanging(fen: string, move: Move): boolean {
 export function pieceList(fen: string, color: Color): string {
   const chess = new Chess(fen)
   const pieces = chess.board().flat().filter((c): c is NonNullable<typeof c> => c !== null && c.color === color)
-  return pieces.sort((a, b) => PIECE_VALUE[b.type] - PIECE_VALUE[a.type]).map(p => `${PIECE_NAME[p.type]} ${p.square}`).join(', ')
+  return pieces.toSorted((a, b) => PIECE_VALUE[b.type] - PIECE_VALUE[a.type]).map(p => `${PIECE_NAME[p.type]} ${p.square}`).join(', ')
 }
 
 /**

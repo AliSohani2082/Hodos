@@ -54,7 +54,7 @@ describe('skill graph validation', () => {
       { id: 'bb', title: 'B', kind: 'wizardry' },
       { id: 'Bad Id', title: 'C', kind: 'fact' },
     ] as unknown as SkillSpec[]
-    const codes = validateSkillGraph(bad).map(f => f.code).sort()
+    const codes = validateSkillGraph(bad).map(f => f.code).toSorted()
     expect(codes).toEqual(['graph/bad-id', 'graph/bad-kind', 'graph/duplicate', 'graph/self-loop', 'graph/unknown-prerequisite'])
   })
 
@@ -67,12 +67,14 @@ describe('skill graph validation', () => {
   })
 })
 
+/** A journey whose path is approved. */
+const approved = (): JourneyState => replayJourney(initialJourneyState(true), [
+  { type: 'DIAGNOSTIC_COMPLETED', known: ['rules'] },
+  { type: 'PATH_PROPOSED', path: ['fork', 'pin'] },
+  { type: 'PATH_APPROVED' },
+])
+
 describe('learning protocol state machine', () => {
-  const approved = (): JourneyState => replayJourney(initialJourneyState(true), [
-    { type: 'DIAGNOSTIC_COMPLETED', known: ['rules'] },
-    { type: 'PATH_PROPOSED', path: ['fork', 'pin'] },
-    { type: 'PATH_APPROVED' },
-  ])
 
   it('walks goal → diagnostic → planning → teach → practice → checkpoint → next skill → complete', () => {
     let s = approved()
@@ -142,10 +144,12 @@ function closure(nodes: DiagnosticNode[], raw: Set<string>): Set<string> {
   return new Set(nodes.map(n => n.id).filter(ok))
 }
 
+/** A diagnostic configuration for the simulations. */
+const base = (strategy: DiagnosticConfig['strategy'], seed = 7): DiagnosticConfig => ({
+  ...DEFAULT_DIAGNOSTIC_CONFIG, strategy, seed, priors: {}, particles: 1500,
+})
+
 describe('diagnostic', () => {
-  const base = (strategy: DiagnosticConfig['strategy'], seed = 7): DiagnosticConfig => ({
-    ...DEFAULT_DIAGNOSTIC_CONFIG, strategy, seed, priors: {}, particles: 1500,
-  })
 
   it('half-split classifies most skills correctly within the question budget (simulation)', () => {
     const rng = seededRandom(42)

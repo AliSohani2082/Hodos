@@ -25,6 +25,10 @@ function obj(value: JsonValue | null | undefined): JsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value) ? value : {}
 }
 
+function str(value: JsonValue | undefined): string {
+  return typeof value === 'string' ? value : ''
+}
+
 /** Read the learner's number: a typed text (any numeric expression) or a number. */
 function readNumber(response: JsonValue): { value: number } | { problem: string } {
   const r = obj(response)
@@ -55,7 +59,7 @@ function gradeNumeric(input: GradeInput): GradeResult {
   const misconceptions = (Array.isArray(key.misconceptions) ? key.misconceptions : [])
     .map(obj)
     .filter(m => typeof m.value === 'number' && within(read.value, m.value, tolerance))
-    .map(m => String(m.id))
+    .map(m => str(m.id))
   return uniformGrade(input.skills, 0, { misconceptions, feedback: 'Not quite.' })
 }
 
@@ -74,8 +78,8 @@ function gradeExpression(input: GradeInput): GradeResult {
   const misconceptions: string[] = []
   const listed = obj(input.key).misconceptions
   for (const m of Array.isArray(listed) ? listed : []) {
-    const wrong = parse(String(obj(m).expression), variables)
-    if (wrong.ok && equivalent(parsed.expr, wrong.expr, variables) === 'equivalent') misconceptions.push(String(obj(m).id))
+    const wrong = parse(str(obj(m).expression), variables)
+    if (wrong.ok && equivalent(parsed.expr, wrong.expr, variables) === 'equivalent') misconceptions.push(str(obj(m).id))
   }
   return uniformGrade(input.skills, 0, { misconceptions, feedback: 'Not equivalent to the expression asked for.' })
 }

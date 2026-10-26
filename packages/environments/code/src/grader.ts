@@ -7,7 +7,7 @@
  * states the key, a hidden test, or anything the program printed.
  * @module @hodos/code/grader
  */
-import { uniformGrade, type GradeInput, type GradeResult, type JsonObject, type JsonValue } from '@hodos/plugin-sdk'
+import { uniformGrade, unreachable, type GradeInput, type GradeResult, type JsonObject, type JsonValue } from '@hodos/plugin-sdk'
 import { compareOutput, outputLines, sameIgnoringQuotes, sameIgnoringSpacing, sameOutput, type OutputDifference } from './output.js'
 import { DEFAULT_LIMITS, runAll, type CodeRunner, type RunOutcome } from './runner.js'
 
@@ -36,6 +36,7 @@ function describe(difference: OutputDifference): string {
       : `${difference.line === 2 ? 'Line 1 is' : `Lines 1–${difference.line - 1} are`} right; line ${difference.line} is not what the program prints.`
     case 'missing-lines': return 'Right so far, but the program prints more lines.'
     case 'extra-lines': return 'The program prints fewer lines than that.'
+    default: return unreachable(difference, 'output difference')
   }
 }
 
@@ -93,6 +94,7 @@ function explain(v: Verdict): string {
     case 'timeout': return `your program did not finish within ${DEFAULT_LIMITS.wallMs / 1000} s.`
     case 'memory': return 'your program used too much memory.'
     case 'output-limit': return 'your program printed too much.'
+    default: return unreachable(v, 'run verdict')
   }
 }
 

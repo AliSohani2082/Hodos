@@ -28,7 +28,8 @@ export interface CordisLikeContext {
 export interface CordisEntry {
   readonly name: string
   readonly inject: readonly string[]
-  apply(ctx: CordisLikeContext): void
+  /** A plain function (it uses no `this`), so modules can export it on its own. */
+  readonly apply: (ctx: CordisLikeContext) => void
 }
 
 /**

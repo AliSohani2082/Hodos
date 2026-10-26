@@ -111,9 +111,11 @@ describe('lesson IR', () => {
   })
 })
 
+/** Error codes of a course. */
+const errors = async (course: CourseSpec, requireCoverage = false): Promise<string[]> =>
+  (await validateCourse(course, registry, { requireCoverage })).filter(d => d.severity === 'error').map(d => d.code)
+
 describe('course validation', () => {
-  const errors = async (course: CourseSpec, requireCoverage = false): Promise<string[]> =>
-    (await validateCourse(course, registry, { requireCoverage })).filter(d => d.severity === 'error').map(d => d.code)
 
   it('accepts the fixture course', async () => {
     expect(await errors(quizCourse(), true)).toEqual([])
@@ -146,8 +148,10 @@ describe('course validation', () => {
   })
 })
 
+/** Insert a learner. */
+const learner = (store: HodosStore, id: string): void => store.insertLearner({ id: brandId<'LearnerId'>(id), displayName: id, settings: {}, createdAt: '2026-10-26T00:00:00.000Z' })
+
 describe('store', () => {
-  const learner = (store: HodosStore, id: string): void => store.insertLearner({ id: brandId<'LearnerId'>(id), displayName: id, settings: {}, createdAt: '2026-10-26T00:00:00.000Z' })
 
   it('migrates a new database and records the schema version', () => {
     const store = new HodosStore(':memory:')
@@ -171,7 +175,7 @@ describe('store', () => {
 
   it('enforces foreign keys', () => {
     const store = new HodosStore(':memory:')
-    expect(() => store.bindPrincipal('owner', brandId<'LearnerId'>('lrn_missing'))).toThrow()
+    expect(() => store.bindPrincipal('owner', brandId<'LearnerId'>('lrn_missing'))).toThrow(/FOREIGN KEY constraint failed/)
     store.close()
   })
 

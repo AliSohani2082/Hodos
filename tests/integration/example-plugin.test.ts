@@ -4,18 +4,16 @@
  * item checks run in the QuickJS sandbox, its answers graded there, and a
  * journey through the engine with its lesson block and renderer.
  */
-import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
 import { HodosEngine, HodosStore, loadDeclarativePlugin, PluginRegistry, SandboxRunner, validateCourse, type Actor } from '@hodos/core'
-import type { ContentPack, ExerciseItem, GradeInput, JsonValue } from '@hodos/plugin-sdk'
+import type { ExerciseItem, GradeInput, JsonValue } from '@hodos/plugin-sdk'
+import { jsonObject, jsonString } from '../support/json.js'
 
 const DIR = fileURLToPath(new URL('../../examples/binary-numbers', import.meta.url))
-const pack: ContentPack = JSON.parse(readFileSync(join(DIR, 'content/binary-basics.json'), 'utf8'))
-const course = pack.courses[0]
-if (course === undefined) throw new Error('the example pack has no course')
 
 const sandbox = new SandboxRunner()
 afterAll(() => sandbox.dispose())
@@ -27,13 +25,17 @@ async function registry(dir = DIR): Promise<PluginRegistry> {
   return r
 }
 
+// The course as the host reads it: through the plugin's declared content pack.
+const course = (await registry()).contentPacks()[0]?.pack.courses[0]
+if (course === undefined) throw new Error('the example pack has no course')
+
 const item = (id: string): ExerciseItem => {
   const found = course.items.find(i => i.id === id)
   if (found === undefined) throw new Error(`no item ${id}`)
   return found
 }
-const input = (it: ExerciseItem, text: string): GradeInput => ({ kind: it.kind, payload: it.payload, key: it.key, response: { text }, mode: 'practice', skills: it.skills, attempt: 1 })
-const withKey = (it: ExerciseItem, key: JsonValue): ExerciseItem => ({ ...it, key })
+const input = (entry: ExerciseItem, text: string): GradeInput => ({ kind: entry.kind, payload: entry.payload, key: entry.key, response: { text }, mode: 'practice', skills: entry.skills, attempt: 1 })
+const withKey = (entry: ExerciseItem, key: JsonValue): ExerciseItem => ({ ...entry, key })
 
 describe('example plugin: binary numbers (untrusted, declarative)', () => {
   it('registers as untrusted data with a sandboxed grader and renderer', async () => {
@@ -77,7 +79,7 @@ describe('example plugin: binary numbers (untrusted, declarative)', () => {
     engine.completeLesson(ui)
     const exercise = engine.nextExercise(ui)
     expect(exercise?.renderer).toMatchObject({ pluginId: 'example-binary', rendererId: 'binary-bits' })
-    const value = String((typeof exercise?.payload === 'object' && exercise.payload !== null && !Array.isArray(exercise.payload) ? exercise.payload : {}).value)
+    const value = jsonString(jsonObject(exercise?.payload, 'the exercise payload').value, 'the value to convert')
     const attempt = await engine.submitAttempt(ui, { presentationId: exercise?.id ?? '', response: { text: value } })
     expect(attempt.status).toBe('incorrect')
     expect(attempt.misconceptionFeedback).toEqual(['The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.'])

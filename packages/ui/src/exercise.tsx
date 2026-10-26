@@ -37,7 +37,9 @@ function GenericAnswer(props: { exercise: ExerciseView; disabled: boolean; onSub
   const { exercise } = props
   const options = optionsOf(exercise.payload)
   const field = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null)
-  useEffect(() => { setValue(''); field.current?.focus() }, [exercise.id, exercise.attempt])
+  const firstOption = useRef<HTMLInputElement | null>(null)
+  // Rendered once per attempt (the panel keys it), so focus moves to the answer for each new attempt.
+  useEffect(() => { (firstOption.current ?? field.current)?.focus() }, [])
   const submit = (event: React.FormEvent): void => {
     event.preventDefault()
     if (value.trim() === '') return
@@ -49,7 +51,7 @@ function GenericAnswer(props: { exercise: ExerciseView; disabled: boolean; onSub
       case 'structured': {
         try {
           props.onSubmit(JSON.parse(value) as JsonValue)
-        } catch (_invalid) {
+        } catch {
           props.onSubmit({ text: value })
         }
         break
@@ -64,7 +66,7 @@ function GenericAnswer(props: { exercise: ExerciseView; disabled: boolean; onSub
           <legend className="sr-only">Choose one answer</legend>
           {options.map((o, i) => (
             <label key={o.id} className="choice">
-              <input type="radio" name={`choice-${exercise.id}`} value={o.id} checked={value === o.id} onChange={() => setValue(o.id)} autoFocus={i === 0} />
+              <input ref={i === 0 ? firstOption : undefined} type="radio" name={`choice-${exercise.id}`} value={o.id} checked={value === o.id} onChange={() => setValue(o.id)} />
               <span>{o.text}</span>
             </label>
           ))}
@@ -91,22 +93,24 @@ function GenericAnswer(props: { exercise: ExerciseView; disabled: boolean; onSub
 export function ExercisePanel(props: Props): React.ReactElement {
   const { exercise } = props
   const frame = useRef<RendererHandle | null>(null)
-  const shownAt = useRef(Date.now())
+  const presented = useRef<string | null>(null)
+  const shownAt = useRef(0)
   const [busy, setBusy] = useState(false)
-  const [result, setResult] = useState<AttemptView | null>(null)
-  const [hints, setHints] = useState<HintView[]>([])
+  // Results and hints belong to one exercise; a new exercise starts without them.
+  const [graded, setGraded] = useState<{ exerciseId: string; result: AttemptView } | null>(null)
+  const [requested, setRequested] = useState<{ exerciseId: string; hints: HintView[] } | null>(null)
+  const result = graded?.exerciseId === exercise.id ? graded.result : null
+  const hints = requested?.exerciseId === exercise.id ? requested.hints : []
   const assessment = exercise.mode === 'checkpoint' || exercise.mode === 'diagnostic'
-  // State refreshes replace the object; the board is re-presented only for a new exercise id.
-  const latest = useRef(exercise)
-  latest.current = exercise
 
+  // State refreshes replace the exercise object; the renderer is given each exercise id once.
   useEffect(() => {
+    if (presented.current === exercise.id) return
+    presented.current = exercise.id
     shownAt.current = Date.now()
-    setResult(null)
-    setHints([])
-    frame.current?.post({ type: 'hodos:present', exercise: latest.current })
+    frame.current?.post({ type: 'hodos:present', exercise })
     frame.current?.post({ type: 'hodos:lock', locked: false })
-  }, [exercise.id])
+  })
 
   const submit = async (response: JsonValue): Promise<void> => {
     if (busy) return
@@ -114,7 +118,7 @@ export function ExercisePanel(props: Props): React.ReactElement {
     frame.current?.post({ type: 'hodos:lock', locked: true })
     try {
       const outcome = await api.submit(exercise.id, response, Date.now() - shownAt.current)
-      setResult(outcome)
+      setGraded({ exerciseId: exercise.id, result: outcome })
       if (outcome.status === 'continue') {
         frame.current?.post({ type: 'hodos:progress', exerciseId: exercise.id, progress: outcome.progress ?? null, ...(outcome.message === undefined ? {} : { message: outcome.message }) })
         frame.current?.post({ type: 'hodos:lock', locked: false })
@@ -141,7 +145,8 @@ export function ExercisePanel(props: Props): React.ReactElement {
   const hint = async (): Promise<void> => {
     try {
       const h = await api.hint(exercise.id)
-      setHints(previous => [...previous.filter(p => p.level !== h.level), h])
+      const id = exercise.id
+      setRequested(previous => ({ exerciseId: id, hints: [...(previous?.exerciseId === id ? previous.hints : []).filter(p => p.level !== h.level), h] }))
       props.announce(`Hint ${h.level}: ${h.text}`)
     } catch (error) {
       props.onError(error instanceof ApiError ? error.message : 'No hint is available right now.')
@@ -150,7 +155,7 @@ export function ExercisePanel(props: Props): React.ReactElement {
 
   const finished = result !== null && result.status !== 'continue' && !result.canRetry
   const shownHints = [...exercise.hints.map(h => ({ level: h.level, text: h.text })), ...hints.map(h => ({ level: h.level, text: h.text }))]
-    .filter((h, i, all) => all.findIndex(x => x.level === h.level) === i).sort((a, b) => a.level - b.level)
+    .filter((h, i, all) => all.findIndex(x => x.level === h.level) === i).toSorted((a, b) => a.level - b.level)
 
   return (
     <section className={`exercise mode-${exercise.mode}`} aria-labelledby="exercise-title">
@@ -178,7 +183,7 @@ export function ExercisePanel(props: Props): React.ReactElement {
         )
         : <p className={exercise.responseKind === 'lines' || exercise.responseKind === 'code' ? 'prompt prompt-code' : 'prompt'}>{exercise.fallbackText}</p>}
       {exercise.renderer !== null && <details className="text-alternative"><summary>Text version</summary><pre>{exercise.fallbackText}</pre></details>}
-      {!finished && <GenericAnswer exercise={exercise} disabled={busy} onSubmit={response => { void submit(response) }} />}
+      {!finished && <GenericAnswer key={`${exercise.id}:${exercise.attempt}`} exercise={exercise} disabled={busy} onSubmit={response => { void submit(response) }} />}
       <div className="controls">
         {exercise.mode === 'diagnostic' && !finished && <button type="button" onClick={() => { void submit({ dontKnow: true }) }} disabled={busy}>I don't know</button>}
         {exercise.hintsAvailable > 0 && !finished && <button type="button" onClick={() => { void hint() }} disabled={busy}>Hint ({exercise.hintsAvailable} left)</button>}
@@ -197,14 +202,14 @@ function AttemptFeedback(props: { result: AttemptView }): React.ReactElement | n
   const r = props.result
   if (r.status === 'recorded' && r.checkpoint?.result === undefined) return null
   return (
-    <div className={`feedback status-${r.status}`} role="status">
-      {r.status === 'correct' && <p><strong>Correct.</strong> {r.feedback}</p>}
-      {(r.status === 'incorrect' || r.status === 'partial') && <p><strong>{r.status === 'partial' ? 'Partly right.' : 'Not quite.'}</strong> {r.feedback}</p>}
-      {r.status === 'continue' && <p>{r.message ?? 'Good — keep going.'}</p>}
-      {r.misconceptionFeedback?.map(m => <p key={m} className="misconception">{m}</p>)}
-      {r.explanation !== undefined && <p className="explanation">{r.explanation}</p>}
-      {r.stuck && <p>Several misses in a row — ask for a hint or talk it through with your tutor.</p>}
-      {r.canRetry && <p>{r.attemptsLeft} attempt(s) left.</p>}
-    </div>
+    <output className={`feedback status-${r.status}`} aria-live="polite">
+      {r.status === 'correct' && <span className="feedback-line"><strong>Correct.</strong> {r.feedback}</span>}
+      {(r.status === 'incorrect' || r.status === 'partial') && <span className="feedback-line"><strong>{r.status === 'partial' ? 'Partly right.' : 'Not quite.'}</strong> {r.feedback}</span>}
+      {r.status === 'continue' && <span className="feedback-line">{r.message ?? 'Good — keep going.'}</span>}
+      {r.misconceptionFeedback?.map(m => <span key={m} className="feedback-line misconception">{m}</span>)}
+      {r.explanation !== undefined && <span className="feedback-line explanation">{r.explanation}</span>}
+      {r.stuck && <span className="feedback-line">Several misses in a row — ask for a hint or talk it through with your tutor.</span>}
+      {r.canRetry && <span className="feedback-line">{r.attemptsLeft} attempt(s) left.</span>}
+    </output>
   )
 }

@@ -49,7 +49,8 @@ async function setup(options: { path?: string; quiz?: QuizOptions; plugin?: bool
   const registry = new PluginRegistry({ sandbox, logger: silent })
   if (options.plugin !== false) await registry.register(createQuizPlugin(options.quiz), { trusted: true })
   const engine = new HodosEngine({ store, registry, clock, ids: sequentialIds(), ...(options.config === undefined ? {} : { config: options.config }) })
-  if (options.plugin !== false) expect(await engine.syncContentPacks()).toEqual([])
+  const synced = options.plugin === false ? [] : await engine.syncContentPacks()
+  expect(synced).toEqual([])
   const learnerId = engine.learnerForPrincipal('owner')
   const events: EngineEvent[] = []
   engine.onEvent(e => events.push(e))
@@ -246,14 +247,16 @@ async function customJourney(env: Env, id: string, items: ExerciseItem[]): Promi
   env.engine.completeLesson(env.ui)
 }
 
+/** Start a journey and finish its lesson, so practice is next. */
+async function learning(env: Env): Promise<void> {
+  env.engine.startJourney(env.ui, { goal: 'arithmetic multiplication', skipDiagnostic: true })
+  env.engine.approvePath(env.ui)
+  const lesson = env.engine.lesson(env.ui)
+  for (const l of lesson.lessons) for (const c of l.checks) env.engine.answerCheck(env.ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
+  env.engine.completeLesson(env.ui)
+}
+
 describe('engine: policy and security', () => {
-  async function learning(env: Env): Promise<void> {
-    env.engine.startJourney(env.ui, { goal: 'arithmetic multiplication', skipDiagnostic: true })
-    env.engine.approvePath(env.ui)
-    const lesson = env.engine.lesson(env.ui)
-    for (const l of lesson.lessons) for (const c of l.checks) env.engine.answerCheck(env.ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
-    env.engine.completeLesson(env.ui)
-  }
 
   it('counts relayed answers and tutor contact as assisted', async () => {
     const env = await setup()

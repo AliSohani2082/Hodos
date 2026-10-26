@@ -12,13 +12,14 @@
  * a web server).
  * @module @hodos/dsh
  */
+// Type augmentations of the DSH services Hodos uses (connection, webServer, subagents).
+/// <reference types="@deepseek-ai/dsh-client-connection" />
+/// <reference types="@deepseek-ai/dsh-host-webserver" />
+/// <reference types="@deepseek-ai/dsh-subagent" />
 import { existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-client-connection'
-import type {} from '@deepseek-ai/dsh-host-webserver'
-import type {} from '@deepseek-ai/dsh-subagent'
 import { Config, type HodosConfig } from './config.js'
 import { draftCourseTool } from './delegate.js'
 import { createHandler } from './http.js'
@@ -47,7 +48,7 @@ export function findAppDir(): string | null {
   const candidates = [resolve(here, '../app'), resolve(here, '../../ui/dist')]
   try {
     candidates.push(join(dirname(fileURLToPath(import.meta.resolve('@hodos/ui/package.json'))), 'dist'))
-  } catch (_absent) {
+  } catch {
     // Tarball installs bundle the app instead of depending on @hodos/ui.
   }
   return candidates.find(dir => existsSync(join(dir, 'index.html'))) ?? null

@@ -16,6 +16,10 @@ export const GRADER_ID = 'chess.grader'
 const FEN = { type: 'string', minLength: 15, maxLength: 120 } as const
 const SQUARE = { type: 'string', pattern: '^[a-h][1-8]$' } as const
 
+function str(value: JsonValue | undefined): string {
+  return typeof value === 'string' ? value : ''
+}
+
 function obj(value: JsonValue | undefined): JsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value) ? value : {}
 }
@@ -184,8 +188,8 @@ export const identifyKind: ExerciseKindSpec = {
   },
   fallbackText: payload => {
     const p = obj(payload)
-    const options = Array.isArray(p.options) ? p.options.map(o => `(${String(obj(o).id)}) ${String(obj(o).text)}`) : []
-    return `${String(p.prompt)}\n${typeof p.fen === 'string' ? describePosition(p.fen) : ''}\n${options.join('\n')}`
+    const options = Array.isArray(p.options) ? p.options.map(o => `(${str(obj(o).id)}) ${str(obj(o).text)}`) : []
+    return `${str(p.prompt)}\n${typeof p.fen === 'string' ? describePosition(p.fen) : ''}\n${options.join('\n')}`
   },
   reveal: item => ({ correct: obj(item.key).correct ?? null }),
 }

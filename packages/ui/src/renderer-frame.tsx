@@ -5,7 +5,7 @@
  * sandbox with `connect-src 'none'`). The only channel is one MessagePort,
  * and every message is validated with the SDK parser; anything else is dropped.
  */
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import {
   parseRendererMessage,
   RENDERER_PROTOCOL,
@@ -39,7 +39,7 @@ export function rendererUrl(renderer: RendererRef): string {
 }
 
 function colorScheme(): 'light' | 'dark' {
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches === true ? 'dark' : 'light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
 export const RendererFrame = forwardRef<RendererHandle, Props>(function RendererFrame(props, ref) {
@@ -48,8 +48,9 @@ export const RendererFrame = forwardRef<RendererHandle, Props>(function Renderer
   const ready = useRef(false)
   const queue = useRef<HostToRendererMessage[]>([])
   const [height, setHeight] = useState(props.initialHeight ?? 440)
+  // Port messages arrive outside rendering; they read the latest props from here.
   const handlers = useRef(props)
-  handlers.current = props
+  useLayoutEffect(() => { handlers.current = props })
 
   const post = useCallback((message: HostToRendererMessage) => {
     if (port.current !== null && ready.current) port.current.postMessage(message)
@@ -66,7 +67,7 @@ export const RendererFrame = forwardRef<RendererHandle, Props>(function Renderer
     ready.current = false
     const channel = new MessageChannel()
     port.current = channel.port1
-    channel.port1.onmessage = event => {
+    channel.port1.addEventListener('message', event => {
       const message = parseRendererMessage(event.data)
       if (message === null) return
       const current = handlers.current
@@ -88,7 +89,8 @@ export const RendererFrame = forwardRef<RendererHandle, Props>(function Renderer
           if (current.capabilities.includes('respond')) current.onResponse?.(message.exerciseId, message.response)
           break
       }
-    }
+    })
+    channel.port1.start()
     // The renderer has an opaque origin, so '*' is the only usable target; the message carries nothing but the port.
     target.postMessage({ type: 'hodos:connect', protocol: RENDERER_PROTOCOL }, '*', [channel.port2])
   }

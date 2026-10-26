@@ -79,7 +79,7 @@ export function summarizeRequest(raw: JsonObject, index: number, meta: { path?: 
     for (const b of blocks(m.content)) if (b.type === 'tool_use' && typeof b.id === 'string' && typeof b.name === 'string') toolNames.set(b.id, b.name)
   }
   // DeepSeek Harness may append a trailing `system` message, so the turn's input is the last user message.
-  const last = [...messages].reverse().find(m => m.role === 'user')
+  const last = messages.findLast(m => m.role === 'user')
   const lastBlocks = last === undefined ? [] : blocks(last.content)
   const toolResults = lastBlocks.filter(b => b.type === 'tool_result').map(b => ({
     name: typeof b.tool_use_id === 'string' ? toolNames.get(b.tool_use_id) ?? 'unknown' : 'unknown',
@@ -103,7 +103,7 @@ export function summarizeRequest(raw: JsonObject, index: number, meta: { path?: 
 }
 
 function sse(res: ServerResponse, payload: JsonObject): void {
-  res.write(`event: ${String(payload.type)}\ndata: ${JSON.stringify(payload)}\n\n`)
+  res.write(`event: ${typeof payload.type === 'string' ? payload.type : 'message'}\ndata: ${JSON.stringify(payload)}\n\n`)
 }
 
 function message(reply: MockReply, index: number): JsonObject {
@@ -168,7 +168,7 @@ export async function startMockLlm(script: MockScript, port = 0): Promise<MockLl
       try {
         const parsed: unknown = JSON.parse(await body(req))
         raw = isObject(parsed) ? parsed : {}
-      } catch (_invalid) {
+      } catch {
         // A malformed request is the harness's bug; answer like the real API would.
         res.writeHead(400, { 'content-type': 'application/json' }).end('{"type":"error","error":{"type":"invalid_request_error","message":"invalid JSON"}}')
         return

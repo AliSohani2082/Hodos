@@ -12,6 +12,7 @@
  * persists each event, so a journey can be replayed and resumed.
  * @module @hodos/core/protocol/journey
  */
+import { unreachable } from '@hodos/plugin-sdk'
 import { HodosError } from '../errors.js'
 
 /** Journey phase. */
@@ -165,6 +166,7 @@ export function transition(state: JourneyState, event: JourneyEvent): JourneySta
     case 'REVIEW_COMPLETED':
       if (state.phase !== 'reviewing' || state.resumePhase === null) invalid(state, event)
       return { ...state, phase: state.resumePhase, resumePhase: null }
+    default: return unreachable(event, 'journey event')
   }
 }
 

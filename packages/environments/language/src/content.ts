@@ -48,7 +48,8 @@ function hints(spec: Spec): ItemHint[] {
   const accepted = spec.key.accepted
   const first = Array.isArray(accepted) && typeof accepted[0] === 'string' ? accepted[0] : ''
   if (spec.kind === KIND.choice) {
-    return [{ level: 1, text: spec.rule }, { level: 5, text: `The answer is option (${String(spec.key.correct)}).` }]
+    const correct = typeof spec.key.correct === 'string' ? spec.key.correct : ''
+    return [{ level: 1, text: spec.rule }, { level: 5, text: `The answer is option (${correct}).` }]
   }
   return [
     { level: 1, text: spec.rule },

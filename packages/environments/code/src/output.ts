@@ -49,12 +49,18 @@ export function sameOutput(a: string, b: string): boolean {
 
 /** Whether two outputs differ only in quote characters. */
 export function sameIgnoringQuotes(a: string, b: string): boolean {
-  const strip = (s: string): string => s.replace(/['"]/g, '')
-  return sameOutput(strip(a), strip(b))
+  return sameOutput(withoutQuotes(a), withoutQuotes(b))
+}
+
+function withoutQuotes(s: string): string {
+  return s.replace(/['"]/g, '')
 }
 
 /** Whether two outputs differ only in spaces and line breaks. */
 export function sameIgnoringSpacing(a: string, b: string): boolean {
-  const squash = (s: string): string => s.replace(/\s+/gu, ' ').trim()
-  return squash(a) === squash(b)
+  return squashed(a) === squashed(b)
+}
+
+function squashed(s: string): string {
+  return s.replace(/\s+/gu, ' ').trim()
 }

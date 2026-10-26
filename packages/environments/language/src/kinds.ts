@@ -201,10 +201,10 @@ export const orderKind: ExerciseKindSpec = {
     example: { payload: { tokens: ['estudiante', 'soy', 'yo'], translation: 'I am a student.' }, key: { accepted: ['Yo soy estudiante'] } },
   },
   validateItem: item => {
-    const tokens = strings(obj(item.payload).tokens).flatMap(words).sort().join(' ')
+    const tokens = strings(obj(item.payload).tokens).flatMap(words).toSorted().join(' ')
     const accepted = strings(obj(item.key).accepted)
     const out: Diagnostic[] = []
-    for (const a of accepted) if (words(a).sort().join(' ') !== tokens) out.push(error('language/order-tokens', `"${a}" does not use exactly the given words`))
+    for (const a of accepted) if (words(a).toSorted().join(' ') !== tokens) out.push(error('language/order-tokens', `"${a}" does not use exactly the given words`))
     const solution = canonical(strings(obj(item.payload).tokens).join(' '))
     if (accepted.some(a => canonical(a) === solution)) out.push(error('language/order-shuffled', 'the tokens are listed in a solution order'))
     return out

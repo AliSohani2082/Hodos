@@ -3,7 +3,7 @@
  * chat composer and the Hodos sidebar tab.
  */
 import { expect } from 'vitest'
-import type { FrameLocator, Locator, Page } from 'playwright'
+import type { APIResponse, FrameLocator, Locator, Page } from 'playwright'
 import type { CheckpointView, ExerciseView, JourneyView } from '@hodos/core'
 
 /** DSH's chat composer. */
@@ -59,6 +59,17 @@ export function hodosApp(page: Page): FrameLocator {
   return page.frameLocator('iframe[title="Hodos"]')
 }
 
+/**
+ * The `data` of a successful Hodos API response (Hodos answers `{ data }`).
+ * @param response - a response from the Hodos API.
+ */
+export async function apiData(response: APIResponse): Promise<unknown> {
+  expect(response.status()).toBe(200)
+  const body: unknown = await response.json()
+  if (typeof body !== 'object' || body === null || !('data' in body)) throw new Error(`not a Hodos API response: ${JSON.stringify(body)}`)
+  return body.data
+}
+
 /** What the workspace reads from the Hodos API, as far as tests look at it. */
 export interface HodosState {
   readonly journey: JourneyView | null
@@ -73,10 +84,11 @@ export interface HodosState {
  * @param session - the DSH session id.
  */
 export async function hodosState(page: Page, origin: string, session: string): Promise<HodosState> {
-  const response = await page.request.get(`${origin}/hodos/api/v1/state?session=${encodeURIComponent(session)}`)
-  expect(response.status()).toBe(200)
-  const body: { data: HodosState } = await response.json()
-  return body.data
+  const data = await apiData(await page.request.get(`${origin}/hodos/api/v1/state?session=${encodeURIComponent(session)}`))
+  if (typeof data !== 'object' || data === null || !('journey' in data && 'exercise' in data && 'checkpoint' in data)) {
+    throw new Error(`not a workspace state: ${JSON.stringify(data)}`)
+  }
+  return data as HodosState
 }
 
 /**

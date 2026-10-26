@@ -39,8 +39,12 @@ export interface QuizOptions {
 
 export const QUIZ_ENV = 'quiz.card'
 
-function obj(value: JsonValue): JsonObject {
-  return typeof value === 'object' && value !== null && !Array.isArray(value) ? value : {}
+function obj(json: JsonValue): JsonObject {
+  return typeof json === 'object' && json !== null && !Array.isArray(json) ? json : {}
+}
+
+function str(json: JsonValue | undefined): string {
+  return typeof json === 'string' ? json : ''
 }
 
 function normalize(text: string): string {
@@ -59,6 +63,21 @@ function result(input: GradeInput, correct: boolean, score: number, misconceptio
 
 function keyText(key: JsonObject): string {
   return typeof key.answer === 'string' ? key.answer : typeof key.correct === 'string' ? key.correct : JSON.stringify(key)
+}
+
+/** Grade one step of a `quiz.sequence` exercise. */
+function stepSequence(input: StepInput): StepResult {
+  const steps = Array.isArray(obj(input.key).steps) ? (obj(input.key).steps as JsonValue[]).filter((s): s is string => typeof s === 'string') : []
+  const entered = Array.isArray(obj(input.progress ?? null).entered) ? (obj(input.progress ?? null).entered as JsonValue[]).filter((s): s is string => typeof s === 'string') : []
+  const token = obj(input.response).token
+  const expected = steps[entered.length]
+  if (typeof token !== 'string' || expected === undefined || normalize(token) !== normalize(expected)) {
+    const score = steps.length === 0 ? 0 : entered.length / steps.length
+    return { status: 'complete', progress: { entered }, grade: result(input, false, score, [], 'That step does not work.') }
+  }
+  const next = [...entered, expected]
+  if (next.length === steps.length) return { status: 'complete', progress: { entered: next }, grade: result(input, true, 1, [], 'Sequence complete.') }
+  return { status: 'continue', progress: { entered: next }, message: 'Good. Next step?' }
 }
 
 /**
@@ -105,23 +124,10 @@ export function createQuizPlugin(options: QuizOptions = {}): HodosEnvironmentPlu
     if (options.foreignSkill === true) return { ...out, skillEvidence: [...out.skillEvidence, { skillId: 'quiz.unrelated', score: 1 }] }
     return out
   }
-  const step = (input: StepInput): StepResult => {
-    const steps = Array.isArray(obj(input.key).steps) ? (obj(input.key).steps as JsonValue[]).filter((s): s is string => typeof s === 'string') : []
-    const entered = Array.isArray(obj(input.progress ?? null).entered) ? (obj(input.progress ?? null).entered as JsonValue[]).filter((s): s is string => typeof s === 'string') : []
-    const token = obj(input.response).token
-    const expected = steps[entered.length]
-    if (typeof token !== 'string' || expected === undefined || normalize(token) !== normalize(expected)) {
-      const score = steps.length === 0 ? 0 : entered.length / steps.length
-      return { status: 'complete', progress: { entered }, grade: result(input, false, score, [], 'That step does not work.') }
-    }
-    const next = [...entered, expected]
-    if (next.length === steps.length) return { status: 'complete', progress: { entered: next }, grade: result(input, true, 1, [], 'Sequence complete.') }
-    return { status: 'continue', progress: { entered: next }, message: 'Good. Next step?' }
-  }
   return {
     manifest,
     register(ctx) {
-      ctx.registerGrader({ id: 'quiz.grader', kinds: ['quiz.choice', 'quiz.text', 'quiz.sequence'], method: options.method ?? 'deterministic', grade, step })
+      ctx.registerGrader({ id: 'quiz.grader', kinds: ['quiz.choice', 'quiz.text', 'quiz.sequence'], method: options.method ?? 'deterministic', grade, step: stepSequence })
       ctx.registerExerciseKind({
         id: 'quiz.choice',
         title: 'Multiple choice',
@@ -149,13 +155,13 @@ export function createQuizPlugin(options: QuizOptions = {}): HodosEnvironmentPlu
         responseSchema: { type: 'object', additionalProperties: false, required: ['choice'], properties: { choice: { type: 'string', maxLength: 64 } } },
         validateItem: item => {
           const payload = obj(item.payload)
-          const options = Array.isArray(payload.options) ? payload.options.map(o => obj(o).id) : []
-          return options.includes(obj(item.key).correct ?? null) ? [] : [{ severity: 'error', code: 'quiz/key', message: 'the correct option is not one of the options' }]
+          const ids = Array.isArray(payload.options) ? payload.options.map(o => obj(o).id) : []
+          return ids.includes(obj(item.key).correct ?? null) ? [] : [{ severity: 'error', code: 'quiz/key', message: 'the correct option is not one of the options' }]
         },
         fallbackText: payload => {
           const p = obj(payload)
-          const options = Array.isArray(p.options) ? p.options.map(o => `(${String(obj(o).id)}) ${String(obj(o).text)}`) : []
-          return `${String(p.prompt)}\n${options.join('\n')}`
+          const lines = Array.isArray(p.options) ? p.options.map(o => `(${str(obj(o).id)}) ${str(obj(o).text)}`) : []
+          return `${str(p.prompt)}\n${lines.join('\n')}`
         },
         reveal: item => ({ correct: obj(item.key).correct ?? null }),
       })
@@ -175,7 +181,7 @@ export function createQuizPlugin(options: QuizOptions = {}): HodosEnvironmentPlu
           properties: { answer: { type: 'string', minLength: 1 }, accept: { type: 'array', items: { type: 'string' } } },
         },
         responseSchema: { type: 'object', additionalProperties: false, required: ['text'], properties: { text: { type: 'string', maxLength: 200 } } },
-        fallbackText: payload => String(obj(payload).prompt),
+        fallbackText: payload => str(obj(payload).prompt),
         reveal: item => ({ answer: obj(item.key).answer ?? null }),
       })
       ctx.registerExerciseKind({
@@ -189,7 +195,10 @@ export function createQuizPlugin(options: QuizOptions = {}): HodosEnvironmentPlu
         payloadSchema: { type: 'object', additionalProperties: false, required: ['prompt', 'length'], properties: { prompt: { type: 'string' }, length: { type: 'integer' } } },
         keySchema: { type: 'object', additionalProperties: false, required: ['steps'], properties: { steps: { type: 'array', minItems: 1, items: { type: 'string' } } } },
         responseSchema: { type: 'object', additionalProperties: false, required: ['token'], properties: { token: { type: 'string', maxLength: 64 } } },
-        fallbackText: payload => `${String(obj(payload).prompt)} (${String(obj(payload).length)} steps)`,
+        fallbackText: payload => {
+          const length = obj(payload).length
+          return `${str(obj(payload).prompt)} (${typeof length === 'number' ? length : '?'} steps)`
+        },
       })
       ctx.registerLessonBlock({
         name: 'quiz-note',
@@ -202,7 +211,7 @@ export function createQuizPlugin(options: QuizOptions = {}): HodosEnvironmentPlu
           properties: { id: { type: 'string' }, text: { type: 'string', maxLength: 300 }, secret: { type: 'string', 'x-visibility': 'server' } },
         },
         guidance: { when: 'a short aside', syntax: '{% quiz-note text="..." /%}' },
-        fallbackText: node => `Note: ${String(node.attributes.text)}`,
+        fallbackText: node => `Note: ${str(node.attributes.text)}`,
       })
       ctx.registerContentPack(quizPack())
     },
@@ -358,8 +367,8 @@ export function quizPack(): ContentPack {
  */
 export function correctResponse(item: ExerciseItem): JsonValue {
   const key = obj(item.key)
-  if (item.kind === 'quiz.choice') return { choice: String(key.correct) }
-  return { text: String(key.answer) }
+  if (item.kind === 'quiz.choice') return { choice: str(key.correct) }
+  return { text: str(key.answer) }
 }
 
 /**

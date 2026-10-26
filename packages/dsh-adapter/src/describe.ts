@@ -5,6 +5,7 @@
  * @module @hodos/dsh/describe
  */
 import type { AttemptView, CheckpointView, ExerciseView, HintView, JourneyView, LessonView, NextAction, ProgressView, SkillView } from '@hodos/core'
+import { unreachable } from '@hodos/plugin-sdk'
 
 const WORKSPACE_HINT = 'The learner works in the Hodos workspace: right sidebar → "Hodos learning".'
 
@@ -29,6 +30,7 @@ export function describeNext(action: NextAction): string {
     case 'review': return `Next: ${action.due} skill(s) are due for review (hodos_start_review).`
     case 'rest': return `Next: ${action.reason}.`
     case 'complete': return 'The goal is reached. Reviews will be scheduled to keep it fresh.'
+    default: return unreachable(action, 'next action')
   }
 }
 

@@ -1,0 +1,63 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // Lint policy: oxlint's correctness and suspicious categories as errors, the
+  // type-aware safety rules below, and no inline disable directives anywhere.
+  // A finding is fixed in the code, or the rule is configured here (for the
+  // repository, or for the one file it cannot apply to) with the reason next
+  // to it.
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "react", "jsx-a11y", "promise", "node", "vitest"],
+  "categories": { "correctness": "error", "suspicious": "error" },
+  "options": { "typeAware": true, "reportUnusedDisableDirectives": "error" },
+  "ignorePatterns": ["**/lib/**", "**/dist/**", "dist-packages/**", "coverage/**", ".e2e/**", "spikes/**", "docs/research/**"],
+  "rules": {
+    // The UI uses React's automatic JSX runtime (tsconfig "jsx": "react-jsx"): React need not be in scope.
+    "react/react-in-jsx-scope": "off",
+    "react/rules-of-hooks": "error",
+    // Vitest's expect takes an optional failure message as its second argument.
+    "vitest/valid-expect": ["error", { "maxArgs": 2 }],
+    // Off: it asks for named imports wherever a default import's member has a
+    // named export of the same name, but the type declarations of CommonJS
+    // packages such as @markdoc/markdoc list named exports that Node's ES
+    // module loader cannot provide; `Markdoc.parse` is the form that runs.
+    "import/no-named-as-default-member": "off",
+    // Type-aware safety rules from the pedantic category.
+    "typescript/no-misused-promises": "error",
+    "typescript/only-throw-error": "error",
+    "typescript/prefer-promise-reject-errors": "error",
+    "typescript/switch-exhaustiveness-check": ["error", { "considerDefaultExhaustiveForUnions": true }],
+    // Not enabled: a type assertion here follows a schema check or a type
+    // guard, or reads data this code wrote itself (database columns with CHECK
+    // constraints, branded ids), with the reason in a comment. The rule cannot
+    // see those checks, and rewriting each assertion as an equivalent `any`
+    // assignment would hide the same risk instead of removing it. Untyped
+    // `any` flows are caught by the no-unsafe-* rules below instead.
+    "typescript/no-unsafe-type-assertion": "off"
+  },
+  "overrides": [
+    {
+      // Untyped values (JSON.parse, third-party any) must be narrowed before use. TypeScript only:
+      // plain JavaScript files carry no types for these rules to check.
+      "files": ["**/*.ts", "**/*.tsx"],
+      "rules": {
+        "typescript/no-unsafe-argument": "error",
+        "typescript/no-unsafe-assignment": "error",
+        "typescript/no-unsafe-call": "error",
+        "typescript/no-unsafe-member-access": "error",
+        "typescript/no-unsafe-return": "error"
+      }
+    },
+    {
+      // The sidebar iframe that holds the workspace is first-party, same-origin
+      // content that needs scripts and its cookie-authenticated API; no sandbox
+      // can isolate that. Untrusted renderers get `sandbox="allow-scripts"` in
+      // the workspace (packages/ui), where this rule stays on.
+      "files": ["packages/dsh-adapter/src/client/index.tsx"],
+      "rules": { "react/iframe-missing-sandbox": "off" }
+    },
+    {
+      // Sandboxed grader sources are scripts whose top-level functions are the hooks Hodos calls.
+      "files": ["examples/*/grader.js"],
+      "rules": { "eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^(grade|step|validateItem)$" }] }
+    }
+  ]
+}

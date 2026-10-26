@@ -37,15 +37,19 @@ function optNum(row: Row, col: string): number | null {
   const v = row[col]
   return typeof v === 'number' ? v : typeof v === 'bigint' ? Number(v) : null
 }
-function json<T>(row: Row, col: string): T {
+/**
+ * A JSON column. Every `*_json` column is written by this module from a typed
+ * value, so each read site asserts the type it wrote.
+ */
+function json(row: Row, col: string): unknown {
   try {
-    return JSON.parse(str(row, col)) as T // stored by this module from typed values
+    return JSON.parse(str(row, col))
   } catch (error) {
     throw new HodosError('INTERNAL', `stored column ${col} holds invalid JSON: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
-function optJson<T>(row: Row, col: string): T | null {
-  return optStr(row, col) === null ? null : json<T>(row, col)
+function optJson(row: Row, col: string): unknown {
+  return optStr(row, col) === null ? null : json(row, col)
 }
 
 /** Stored learner. */
@@ -241,7 +245,7 @@ function presentationFromRow(row: Row): PresentationRecord {
     lastHintAt: optStr(row, 'last_hint_at'),
     tutorContact: num(row, 'tutor_contact') === 1,
     released: num(row, 'released') === 1,
-    progress: optJson<JsonValue>(row, 'progress_json'),
+    progress: optJson(row, 'progress_json') as JsonValue | null,
     checkpointId: optStr(row, 'checkpoint_id'),
     diagnosticId: optStr(row, 'diagnostic_id'),
     presentedAt: str(row, 'presented_at'),
@@ -267,15 +271,15 @@ function evidenceFromRow(row: Row): EvidenceRecord {
     mode: str(row, 'mode') as ExerciseMode, // constrained on write
     attempt: num(row, 'attempt'),
     countsForMastery: num(row, 'counts_for_mastery') === 1,
-    response: json<JsonValue>(row, 'response_json'),
-    grade: json<GradeResult>(row, 'grade_json'),
+    response: json(row, 'response_json') as JsonValue,
+    grade: json(row, 'grade_json') as GradeResult,
     hintLevel: num(row, 'hint_level'),
     assisted: num(row, 'assisted') === 1,
-    assistance: json<Assistance>(row, 'assistance_json'),
+    assistance: json(row, 'assistance_json') as Assistance,
     channel: str(row, 'channel') as EvidenceRecord['channel'], // constrained on write
     latencyMs: optNum(row, 'latency_ms'),
     confidence: optStr(row, 'confidence') as EvidenceRecord['confidence'], // constrained on write
-    itemFacts: json<ItemFacts>(row, 'item_facts_json'),
+    itemFacts: json(row, 'item_facts_json') as ItemFacts,
     createdAt: str(row, 'created_at'),
   }
 }
@@ -310,7 +314,7 @@ export class HodosStore {
     if (latestApplied > latestKnown) {
       throw new HodosError('UNAVAILABLE', `database schema version ${latestApplied} is newer than this Hodos (${latestKnown}); refusing to downgrade`)
     }
-    for (const m of [...migrations].sort((a, b) => a.version - b.version)) {
+    for (const m of migrations.toSorted((a, b) => a.version - b.version)) {
       if (applied.has(m.version)) continue
       this.transaction(() => {
         this.db.exec(m.sql)
@@ -381,7 +385,7 @@ export class HodosStore {
   learner(id: string): LearnerRecord | undefined {
     const row = this.get('SELECT * FROM learners WHERE id = ?', id)
     return row === undefined ? undefined : {
-      id: brandId<'LearnerId'>(str(row, 'id')), displayName: str(row, 'display_name'), settings: json<JsonObject>(row, 'settings_json'), createdAt: str(row, 'created_at'),
+      id: brandId<'LearnerId'>(str(row, 'id')), displayName: str(row, 'display_name'), settings: json(row, 'settings_json') as JsonObject, createdAt: str(row, 'created_at'),
     }
   }
 
@@ -428,7 +432,7 @@ export class HodosStore {
     return {
       id: str(row, 'id'), version: str(row, 'version'), status: str(row, 'status') as CourseStatus, // CHECK constraint
       origin: str(row, 'origin') as CourseRecord['origin'], // CHECK constraint
-      pluginId: optStr(row, 'plugin_id'), title: str(row, 'title'), spec: json<CourseSpec>(row, 'spec_json'),
+      pluginId: optStr(row, 'plugin_id'), title: str(row, 'title'), spec: json(row, 'spec_json') as CourseSpec,
       proposedBy: optStr(row, 'proposed_by'), createdAt: str(row, 'created_at'), approvedAt: optStr(row, 'approved_at'),
     }
   }
@@ -463,7 +467,7 @@ export class HodosStore {
   private journeyFromRow(row: Row): JourneyRecord {
     return {
       id: brandId<'JourneyId'>(str(row, 'id')), learnerId: brandId<'LearnerId'>(str(row, 'learner_id')), courseId: str(row, 'course_id'),
-      courseVersion: str(row, 'course_version'), goalText: str(row, 'goal_text'), state: json<JourneyState>(row, 'state_json'),
+      courseVersion: str(row, 'course_version'), goalText: str(row, 'goal_text'), state: json(row, 'state_json') as JourneyState,
       createdAt: str(row, 'created_at'), updatedAt: str(row, 'updated_at'),
     }
   }
@@ -488,7 +492,7 @@ export class HodosStore {
   /** @param journeyId - journey. @returns its events in order. */
   journeyEvents(journeyId: string): Array<{ event: JourneyEvent; channel: string; createdAt: string }> {
     return this.all('SELECT event_json, actor_channel, created_at FROM journey_events WHERE journey_id = ? ORDER BY seq', journeyId)
-      .map(r => ({ event: json<JourneyEvent>(r, 'event_json'), channel: str(r, 'actor_channel'), createdAt: str(r, 'created_at') }))
+      .map(r => ({ event: json(r, 'event_json') as JourneyEvent, channel: str(r, 'actor_channel'), createdAt: str(r, 'created_at') }))
   }
 
   /** Touch a journey's update time (e.g. on activity). */
@@ -587,7 +591,7 @@ export class HodosStore {
   /** @param learnerId - learner. @returns stored skill states by skill id. */
   skillStates(learnerId: string): Map<string, SkillState> {
     return new Map(this.all('SELECT skill_id, state_json FROM skill_states WHERE learner_id = ?', learnerId)
-      .map(r => [str(r, 'skill_id'), json<SkillState>(r, 'state_json')]))
+      .map(r => [str(r, 'skill_id'), json(r, 'state_json') as SkillState]))
   }
 
   /** @param learnerId - learner. @returns the highest evidence sequence reflected in derived state. */
@@ -653,7 +657,7 @@ export class HodosStore {
     return {
       id: str(row, 'id'), learnerId: brandId<'LearnerId'>(str(row, 'learner_id')), journeyId: str(row, 'journey_id'), skillId: str(row, 'skill_id'),
       status: str(row, 'status') as CheckpointRecord['status'], // CHECK constraint
-      itemIds: json<string[]>(row, 'item_ids_json'), tutorContact: num(row, 'tutor_contact') === 1, result: optJson<JsonObject>(row, 'result_json'),
+      itemIds: json(row, 'item_ids_json') as string[], tutorContact: num(row, 'tutor_contact') === 1, result: optJson(row, 'result_json') as JsonObject | null,
       startedAt: str(row, 'started_at'), completedAt: optStr(row, 'completed_at'),
     }
   }
@@ -697,8 +701,8 @@ export class HodosStore {
     return row === undefined ? undefined : {
       id: str(row, 'id'), learnerId: brandId<'LearnerId'>(str(row, 'learner_id')), journeyId: str(row, 'journey_id'),
       status: str(row, 'status') as DiagnosticRecord['status'], // CHECK constraint
-      scope: json<DiagnosticNode[]>(row, 'scope_json'), config: json<DiagnosticConfig>(row, 'config_json'),
-      observations: json<DiagnosticObservation[]>(row, 'observations_json'), result: optJson<DiagnosticEstimate>(row, 'result_json'),
+      scope: json(row, 'scope_json') as DiagnosticNode[], config: json(row, 'config_json') as DiagnosticConfig,
+      observations: json(row, 'observations_json') as DiagnosticObservation[], result: optJson(row, 'result_json') as DiagnosticEstimate | null,
       createdAt: str(row, 'created_at'), completedAt: optStr(row, 'completed_at'),
     }
   }
@@ -750,7 +754,7 @@ export class HodosStore {
   /** @returns stored environment state, or undefined. */
   envState(learnerId: string, pluginId: string, key: string): JsonValue | undefined {
     const row = this.get('SELECT value_json FROM env_state WHERE learner_id = ? AND plugin_id = ? AND key = ?', learnerId, pluginId, key)
-    return row === undefined ? undefined : json<JsonValue>(row, 'value_json')
+    return row === undefined ? undefined : json(row, 'value_json') as JsonValue
   }
 
   /** Record a security-relevant event (leak blocked, forbidden access, rejected plugin output). */
@@ -761,7 +765,7 @@ export class HodosStore {
   /** @returns security events, oldest first. */
   securityEvents(): Array<{ type: string; learnerId: string | null; details: JsonObject; createdAt: string }> {
     return this.all('SELECT * FROM security_events ORDER BY seq').map(r => ({
-      type: str(r, 'type'), learnerId: optStr(r, 'learner_id'), details: json<JsonObject>(r, 'details_json'), createdAt: str(r, 'created_at'),
+      type: str(r, 'type'), learnerId: optStr(r, 'learner_id'), details: json(r, 'details_json') as JsonObject, createdAt: str(r, 'created_at'),
     }))
   }
 }

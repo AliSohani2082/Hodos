@@ -147,13 +147,17 @@ function block(node: LessonNode): void {
   }
 }
 
-void connectRenderer(window, {
-  onInit: init => { document.documentElement.dataset.theme = init.colorScheme },
-  onPresent: present,
-  onBlock: block,
-  onClear: () => show(),
-}).then(conn => {
+/** Connect to the workspace, then report the page height whenever it changes. */
+async function start(): Promise<void> {
+  const conn = await connectRenderer(window, {
+    onInit: init => { document.documentElement.dataset.theme = init.colorScheme },
+    onPresent: present,
+    onBlock: block,
+    onClear: () => show(),
+  })
   const report = (): void => conn.resize(Math.ceil(document.documentElement.scrollHeight))
   new ResizeObserver(report).observe(document.body)
   report()
-})
+}
+
+void start()

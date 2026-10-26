@@ -33,8 +33,8 @@ describe('course on the Hodos engine', () => {
       const ex = engine.nextExercise(ui)
       if (ex === null || ex.mode !== 'diagnostic') break
       const rules = ex.skills.some(s => s.skillId === SKILL.rules)
-      const it = course.items.find(x => x.id === ex.itemId)
-      const key = (it?.key as { line?: string[] } | undefined)?.line?.[0] ?? ''
+      const entry = course.items.find(x => x.id === ex.itemId)
+      const key = (entry?.key as { line?: string[] } | undefined)?.line?.[0] ?? ''
       await engine.submitAttempt(ui, { presentationId: ex.id, response: rules ? { move: key } : { dontKnow: true } })
     }
     const planned = engine.journey(ui)

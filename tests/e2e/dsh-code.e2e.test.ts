@@ -11,10 +11,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { chromium, type Browser, type FrameLocator, type Page } from 'playwright'
 import type { ExerciseView } from '@hodos/core'
 import { FEEDBACK, SKILL, tracingCourse } from '@hodos/code'
-import type { ExerciseItem, JsonObject } from '@hodos/plugin-sdk'
+import type { ExerciseItem } from '@hodos/plugin-sdk'
 import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, startDsh, type DshProcess } from './support/dsh.js'
 import { enterDsh, hodosApp, hodosState, openHodosTab, say, waitForExercise, waitForGrading, type HodosState } from './support/ui.js'
+import { jsonObject, jsonObjects, jsonString } from '../support/json.js'
 
 const course = tracingCourse()
 
@@ -36,11 +37,14 @@ function item(exercise: ExerciseView): ExerciseItem {
   return the(course.items.find(i => i.id === exercise.itemId), `item ${exercise.itemId}`)
 }
 
-function key(it: ExerciseItem): { output: string; misreading: { output: string; id: string } } {
-  const k: JsonObject = typeof it.key === 'object' && it.key !== null && !Array.isArray(it.key) ? it.key : {}
-  const listed = Array.isArray(k.misconceptions) ? k.misconceptions : []
-  const first = listed.flatMap(m => (typeof m === 'object' && m !== null && !Array.isArray(m) && typeof m.output === 'string' && typeof m.id === 'string' ? [{ output: m.output, id: m.id }] : []))[0]
-  return { output: String(k.output), misreading: the(first, `a misreading for ${it.id}`) }
+function key(entry: ExerciseItem): { output: string; misreading: { output: string; id: string } } {
+  const k = jsonObject(entry.key, `the key of ${entry.id}`)
+  const first = jsonObjects(k.misconceptions, `the misreadings of ${entry.id}`)[0]
+  const misreading = the(first, `a misreading for ${entry.id}`)
+  return {
+    output: jsonString(k.output, `the output of ${entry.id}`),
+    misreading: { output: jsonString(misreading.output, 'its output'), id: jsonString(misreading.id, 'its id') },
+  }
 }
 
 async function toolResult(name: string, text: string): Promise<void> {
@@ -94,10 +98,10 @@ describe.skipIf(!DSH_AVAILABLE)('code and math bundles in DeepSeek Harness', () 
 
     // Practice: the exercise program in the code view; a misreading first, then the right output.
     const exercise = await waitForExercise(state)
-    const it = item(exercise)
-    const { output, misreading } = key(it)
+    const entry = item(exercise)
+    const { output, misreading } = key(entry)
     const listing = app().locator('section.environment-pane iframe.renderer-frame').contentFrame()
-    const source = String((typeof it.payload === 'object' && it.payload !== null && !Array.isArray(it.payload) ? it.payload : {}).source)
+    const source = jsonString(jsonObject(entry.payload, `the payload of ${entry.id}`).source, `the source of ${entry.id}`)
     await expect.poll(() => listing.locator('.code .line').count(), { timeout: 20_000 }).toBe(source.split('\n').length)
     await app().getByLabel('Your answer').fill(misreading.output)
     await app().getByRole('button', { name: 'Submit answer' }).click()

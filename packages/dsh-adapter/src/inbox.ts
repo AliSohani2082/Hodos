@@ -50,7 +50,7 @@ async function readRegularFile(path: string): Promise<{ text: string } | { probl
   try {
     // O_NOFOLLOW: a symbolic link fails here instead of being followed (where the platform supports it).
     handle = await open(path, constants.O_RDONLY | ('O_NOFOLLOW' in constants ? constants.O_NOFOLLOW : 0))
-  } catch (_unreadable) {
+  } catch {
     return { problem: 'the file cannot be opened (symbolic links are not followed)' }
   }
   try {
@@ -83,7 +83,7 @@ export class CourseInbox {
     if (this.scanning) return []
     this.scanning = true
     try {
-      const names = (await readdir(this.deps.dir).catch(() => [] as string[])).filter(n => INBOX_FILE_NAME.test(n)).sort().slice(0, MAX_FILES_PER_SCAN)
+      const names = (await readdir(this.deps.dir).catch(() => [] as string[])).filter(n => INBOX_FILE_NAME.test(n)).toSorted().slice(0, MAX_FILES_PER_SCAN)
       const outcomes: InboxOutcome[] = []
       for (const name of names) outcomes.push(await this.importFile(name))
       return outcomes
@@ -103,7 +103,7 @@ export class CourseInbox {
     let proposal: unknown
     try {
       proposal = JSON.parse(read.text)
-    } catch (_invalid) {
+    } catch {
       return this.reject(name, ['the file is not valid JSON'], [])
     }
     let result: Awaited<ReturnType<InboxDeps['propose']>>
@@ -130,7 +130,7 @@ export class CourseInbox {
     ].join('\n')
     try {
       await rename(join(this.deps.dir, name), target)
-    } catch (_gone) {
+    } catch {
       // A file that cannot be moved (for example a link that was not followed) is removed instead.
       await unlink(join(this.deps.dir, name)).catch(() => undefined)
     }

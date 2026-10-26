@@ -84,7 +84,7 @@ async function call<T>(method: 'GET' | 'POST', path: string, body?: Record<strin
   let payload: ApiEnvelope | null = null
   try {
     payload = await response.json() as ApiEnvelope
-  } catch (_notJson) {
+  } catch {
     // Non-JSON answers (e.g. the DSH login page) are reported by status below.
   }
   if (!response.ok) {

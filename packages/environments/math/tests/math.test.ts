@@ -22,8 +22,8 @@ const kind = (id: string) => {
   if (found === undefined) throw new Error(`no kind ${id}`)
   return found
 }
-const input = (it: ExerciseItem, response: JsonObject): GradeInput => ({ kind: it.kind, payload: it.payload, key: it.key, response, mode: 'practice', skills: it.skills, attempt: 1 })
-const errors = (it: ExerciseItem): string[] => (kind(it.kind).validateItem?.(it) ?? []).filter(d => d.severity === 'error').map(d => d.code)
+const input = (entry: ExerciseItem, response: JsonObject): GradeInput => ({ kind: entry.kind, payload: entry.payload, key: entry.key, response, mode: 'practice', skills: entry.skills, attempt: 1 })
+const errors = (entry: ExerciseItem): string[] => (kind(entry.kind).validateItem?.(entry) ?? []).filter(d => d.severity === 'error').map(d => d.code)
 
 describe('parsing', () => {
   it('follows the usual precedence, with implicit multiplication', () => {
@@ -50,13 +50,15 @@ describe('parsing', () => {
     expect(parse('2y', ['x'])).toEqual({ ok: false, error: 'unknown symbol "y"' })
     expect(parse('(x + 1', ['x'])).toEqual({ ok: false, error: 'a parenthesis is not closed' })
     expect(parse('x +', ['x'])).toEqual({ ok: false, error: 'the expression ends too early' })
-    expect(parse('sqrt x', ['x'])).toMatchObject({ ok: false, error: expect.stringContaining('needs parentheses') })
+    const sqrt = parse('sqrt x', ['x'])
+    expect(sqrt.ok ? '' : sqrt.error).toContain('needs parentheses')
     expect(parse('', ['x'])).toEqual({ ok: false, error: 'the expression is empty' })
     expect(parse('2 $ 3', [])).toMatchObject({ ok: false })
   })
 
   it('stays bounded on hostile input', () => {
-    expect(parse('x'.repeat(LIMITS.maxLength + 1), ['x'])).toMatchObject({ ok: false, error: expect.stringContaining('longer') })
+    const long = parse('x'.repeat(LIMITS.maxLength + 1), ['x'])
+    expect(long.ok ? '' : long.error).toContain('longer')
     expect(parse(`${'('.repeat(100)}x${')'.repeat(100)}`, ['x'])).toEqual({ ok: false, error: 'the expression is nested too deeply' })
     // 250 letters multiply implicitly: 499 nodes.
     expect(parse('x'.repeat(250), ['x'])).toEqual({ ok: false, error: 'the expression is too large' })
@@ -117,7 +119,9 @@ describe('grading', () => {
     expect(gradeMath(input(item('sol-1'), { text: '7' })).misconceptions).toEqual(['added-instead-of-subtracted'])
     expect(gradeMath(input(item('sol-3'), { text: '1.67' })).misconceptions).toEqual(['divided-instead-of-multiplied'])
     expect(gradeMath(input(item('slo-1'), { text: '0.5' })).misconceptions).toEqual(['run-over-rise'])
-    expect(gradeMath(input(item('sol-1'), { text: 'four' }))).toMatchObject({ correct: false, feedback: expect.stringContaining('could not read') })
+    const unreadable = gradeMath(input(item('sol-1'), { text: 'four' }))
+    expect(unreadable.correct).toBe(false)
+    expect(unreadable.feedback).toContain('could not read')
   })
 
   it('accepts any equivalent expression in the requested form', () => {
@@ -132,10 +136,11 @@ describe('grading', () => {
   })
 
   it('never states the answer in feedback', () => {
-    for (const it of items.filter(i => i.kind === KIND.expression)) {
-      const answer = String((it.key as JsonObject).answer)
+    for (const entry of items.filter(i => i.kind === KIND.expression)) {
+      const answer = (entry.key as JsonObject).answer
+      if (typeof answer !== 'string') throw new Error(`${entry.id} has no answer`)
       for (const text of ['x', '', 'x^2 + 99', '((']) {
-        expect(gradeMath(input(it, { text })).feedback ?? '', it.id).not.toContain(answer)
+        expect(gradeMath(input(entry, { text })).feedback ?? '', entry.id).not.toContain(answer)
       }
     }
   })
@@ -143,7 +148,7 @@ describe('grading', () => {
 
 describe('items and validation', () => {
   it('has only valid items and covers every skill', () => {
-    for (const it of items) expect(errors(it), it.id).toEqual([])
+    for (const entry of items) expect(errors(entry), entry.id).toEqual([])
     for (const course of courses) {
       for (const skill of course.skills) {
         const of = (mode: string): number => course.items.filter(i => i.skills.some(s => s.skillId === skill.id) && i.modes.some(m => m === mode)).length
@@ -167,7 +172,7 @@ describe('items and validation', () => {
   })
 
   it('shows every exercise as plain text', () => {
-    for (const it of items) expect(kind(it.kind).fallbackText(it.payload).length, it.id).toBeGreaterThan(10)
+    for (const entry of items) expect(kind(entry.kind).fallbackText(entry.payload).length, entry.id).toBeGreaterThan(10)
     expect(kind(KIND.numeric).fallbackText(item('slo-1').payload)).toContain('a line through (0, 1) and (2, 5)')
   })
 })

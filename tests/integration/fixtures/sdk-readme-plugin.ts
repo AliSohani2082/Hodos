@@ -1,4 +1,11 @@
-import { CORE_PLUGIN_API_VERSION, SDK_VERSION, createCordisEntry, uniformGrade, type HodosEnvironmentPlugin } from '@hodos/plugin-sdk'
+import { CORE_PLUGIN_API_VERSION, SDK_VERSION, createCordisEntry, uniformGrade, type HodosEnvironmentPlugin, type JsonValue } from '@hodos/plugin-sdk'
+
+/** A string field of a JSON object; '' when the value is not an object or the field is not a string. */
+function field(value: JsonValue, name: string): string {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return ''
+  const found = value[name]
+  return typeof found === 'string' ? found : ''
+}
 
 export function createPlugin(): HodosEnvironmentPlugin {
   return {
@@ -11,9 +18,7 @@ export function createPlugin(): HodosEnvironmentPlugin {
       ctx.registerGrader({
         id: 'capitals.grader', kinds: ['capitals.name'], method: 'deterministic',
         grade: input => {
-          const typed = typeof input.response === 'object' && input.response !== null && !Array.isArray(input.response) ? String(input.response.text ?? '') : ''
-          const answer = typeof input.key === 'object' && input.key !== null && !Array.isArray(input.key) ? String(input.key.answer ?? '') : ''
-          const right = typed.trim().toLowerCase() === answer.toLowerCase()
+          const right = field(input.response, 'text').trim().toLowerCase() === field(input.key, 'answer').toLowerCase()
           return uniformGrade(input.skills, right ? 1 : 0, { feedback: right ? 'Correct.' : 'Not quite.' })
         },
       })
@@ -23,7 +28,7 @@ export function createPlugin(): HodosEnvironmentPlugin {
         payloadSchema: { type: 'object', required: ['country'], properties: { country: { type: 'string' } } },
         keySchema: { type: 'object', required: ['answer'], properties: { answer: { type: 'string' } } },
         responseSchema: { type: 'object', required: ['text'], properties: { text: { type: 'string', maxLength: 100 } } },
-        fallbackText: payload => `What is the capital of ${typeof payload === 'object' && payload !== null && !Array.isArray(payload) ? String(payload.country) : 'this country'}?`,
+        fallbackText: payload => `What is the capital of ${field(payload, 'country')}?`,
       })
     },
   }

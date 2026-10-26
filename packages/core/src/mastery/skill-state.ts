@@ -11,7 +11,7 @@
  * | drill            | item FSRS    | ≥ 90% of items acquired, checkpoint successes |
  * @module @hodos/core/mastery/skill-state
  */
-import type { ExerciseMode, LearningLoop, SkillKind } from '@hodos/plugin-sdk'
+import { unreachable, type ExerciseMode, type LearningLoop, type SkillKind } from '@hodos/plugin-sdk'
 import { bktUpdate, bktUpdateMulti, clampP, type BktMode } from './bkt.js'
 import type { MasteryConfig } from './config.js'
 import { eloFromPrior, eloPMastered, eloUpdate, recentMedian, type ItemCalibration } from './elo.js'
@@ -353,6 +353,7 @@ export function normalizedMastery(
       const sum = items.reduce((acc, it) => acc + (it.acquired && it.card !== null ? scheduler.retrievability(it.card, now) : 0), 0)
       return sum / deck
     }
+    default: return unreachable(est, 'estimator state')
   }
 }
 
@@ -366,6 +367,7 @@ function estimateConfidence(state: SkillState): number {
       const items = Object.values(est.items)
       return items.length === 0 ? 0 : items.filter(i => i.attempts >= 2).length / items.length
     }
+    default: return unreachable(est, 'estimator state')
   }
 }
 

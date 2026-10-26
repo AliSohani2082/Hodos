@@ -5,6 +5,7 @@
 import { afterAll, describe, expect, it } from 'vitest'
 import { createMathPlugin, expressionsCourse, linesCourse, SKILL } from '@hodos/math'
 import { HodosEngine, HodosStore, PluginRegistry, SandboxRunner, validateCourse, type Actor } from '@hodos/core'
+import { jsonObject, jsonString } from '../support/json.js'
 
 const sandbox = new SandboxRunner()
 afterAll(() => sandbox.dispose())
@@ -40,7 +41,7 @@ describe('algebra courses on the Hodos engine', () => {
     // A simplify item: answer it unsimplified first.
     const exercise = engine.nextExercise(ui)
     expect(exercise?.renderer).toMatchObject({ rendererId: 'math-view' })
-    const formula = String((exercise?.payload as { formula?: string } | undefined)?.formula ?? '')
+    const formula = jsonString(jsonObject(exercise?.payload, 'the exercise payload').formula, 'the formula')
     const attempt = await engine.submitAttempt(ui, { presentationId: exercise?.id ?? '', response: { text: formula } })
     expect(attempt.status).toBe('partial')
     expect(attempt.misconceptionFeedback?.[0]).toContain('combine like terms')

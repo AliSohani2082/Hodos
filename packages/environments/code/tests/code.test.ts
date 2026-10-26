@@ -37,11 +37,14 @@ const item = (id: string): ExerciseItem => {
   if (found === undefined) throw new Error(`no item ${id}`)
   return found
 }
-const keyOf = (it: ExerciseItem): JsonObject => (typeof it.key === 'object' && it.key !== null && !Array.isArray(it.key) ? it.key : {})
-const payloadOf = (it: ExerciseItem): JsonObject => (typeof it.payload === 'object' && it.payload !== null && !Array.isArray(it.payload) ? it.payload : {})
-const input = (it: ExerciseItem, response: JsonValue): GradeInput => ({ kind: it.kind, payload: it.payload, key: it.key, response, mode: 'practice', skills: it.skills, attempt: 1 })
-const codes = (it: ExerciseItem, severity: 'error' | 'warning' = 'error'): string[] => (predictKind.validateItem?.(it) ?? []).filter(d => d.severity === severity).map(d => d.code)
-const withSource = (it: ExerciseItem, source: string): ExerciseItem => ({ ...it, payload: { ...payloadOf(it), source } })
+const str = (value: JsonValue | undefined): string => (typeof value === 'string' ? value : '')
+const keyOf = (entry: ExerciseItem): JsonObject => (typeof entry.key === 'object' && entry.key !== null && !Array.isArray(entry.key) ? entry.key : {})
+const payloadOf = (entry: ExerciseItem): JsonObject => (typeof entry.payload === 'object' && entry.payload !== null && !Array.isArray(entry.payload) ? entry.payload : {})
+const input = (entry: ExerciseItem, response: JsonValue): GradeInput => ({ kind: entry.kind, payload: entry.payload, key: entry.key, response, mode: 'practice', skills: entry.skills, attempt: 1 })
+const codes = (entry: ExerciseItem, severity: 'error' | 'warning' = 'error'): string[] => (predictKind.validateItem?.(entry) ?? []).filter(d => d.severity === severity).map(d => d.code)
+const withSource = (entry: ExerciseItem, source: string): ExerciseItem => ({ ...entry, payload: { ...payloadOf(entry), source } })
+
+const node = (attributes: JsonObject): LessonNode => ({ id: 'b', type: 'code-snippet', attributes: { id: 'b', ...attributes } })
 
 describe('tokenizer', () => {
   it('classifies tokens and keeps every character', () => {
@@ -112,9 +115,9 @@ describe('predict-the-output grading', () => {
     expect(gradePredict(input(item('loop-c3'), { text: '10\n6' })).feedback).toBe('Right so far, but the program prints more lines.')
     expect(gradePredict(input(item('ex-1'), { text: '' })).feedback).toContain('Type what the program prints')
     const templates = /^(Correct\.|The first line is not what the program prints\.|Line 1 is right; line \d+ is not what the program prints\.|Lines 1–\d+ are right; line \d+ is not what the program prints\.|Right so far, but the program prints more lines\.|The program prints fewer lines than that\.|The values are right; check the (quotes|spaces and line breaks)\.)$/u
-    for (const it of course.items) {
-      for (const text of ['x', '0\n0\n0\n0\n0', String(keyOf(it).output).toUpperCase(), `${String(keyOf(it).output)}\nextra`]) {
-        expect(gradePredict(input(it, { text })).feedback ?? '', it.id).toMatch(templates)
+    for (const entry of course.items) {
+      for (const text of ['x', '0\n0\n0\n0\n0', str(keyOf(entry).output).toUpperCase(), `${str(keyOf(entry).output)}\nextra`]) {
+        expect(gradePredict(input(entry, { text })).feedback ?? '', entry.id).toMatch(templates)
       }
     }
   })
@@ -122,9 +125,9 @@ describe('predict-the-output grading', () => {
 
 describe('items, lessons and validation', () => {
   it('has only valid items and full coverage of every skill', () => {
-    for (const it of course.items) {
-      expect(codes(it), it.id).toEqual([])
-      expect(codes(it, 'warning'), it.id).toEqual([])
+    for (const entry of course.items) {
+      expect(codes(entry), entry.id).toEqual([])
+      expect(codes(entry, 'warning'), entry.id).toEqual([])
     }
     for (const skill of course.skills) {
       const of = (mode: string): number => course.items.filter(i => i.skills.some(s => s.skillId === skill.id) && i.modes.some(m => m === mode)).length
@@ -135,20 +138,20 @@ describe('items, lessons and validation', () => {
   })
 
   it('gives feedback for every misconception an item can detect', () => {
-    for (const it of course.items) {
-      const listed = keyOf(it).misconceptions
+    for (const entry of course.items) {
+      const listed = keyOf(entry).misconceptions
       const ids = Array.isArray(listed) ? listed.flatMap(m => (typeof m === 'object' && m !== null && !Array.isArray(m) && typeof m.id === 'string' ? [m.id] : [])) : []
-      expect(ids.length, it.id).toBeGreaterThan(0)
+      expect(ids.length, entry.id).toBeGreaterThan(0)
       for (const id of ids) {
-        expect(FEEDBACK[id], `${it.id}: ${id}`).toBeDefined()
-        expect(it.misconceptionFeedback?.[id], `${it.id}: ${id}`).toBe(FEEDBACK[id])
+        expect(FEEDBACK[id], `${entry.id}: ${id}`).toBeDefined()
+        expect(entry.misconceptionFeedback?.[id], `${entry.id}: ${id}`).toBe(FEEDBACK[id])
       }
-      expect(Object.keys(it.misconceptionFeedback ?? {})).toEqual(expect.arrayContaining(['quotes', 'spacing']))
+      expect(Object.keys(entry.misconceptionFeedback ?? {})).toEqual(expect.arrayContaining(['quotes', 'spacing']))
     }
   })
 
   it('keeps lesson programs apart from exercise programs', () => {
-    const exercisePrograms = new Set(course.items.map(i => String(payloadOf(i).source)))
+    const exercisePrograms = new Set(course.items.map(i => str(payloadOf(i).source)))
     const lessonPrograms = snippets().filter(s => s.id.includes('/'))
     expect(lessonPrograms.length).toBeGreaterThanOrEqual(course.lessons.length)
     for (const s of lessonPrograms) expect(exercisePrograms.has(s.source), s.id).toBe(false)
@@ -169,19 +172,17 @@ describe('items, lessons and validation', () => {
   })
 
   it('validates lesson snippets with the same rules', () => {
-    const node = (attributes: JsonObject): LessonNode => ({ id: 'b', type: 'code-snippet', attributes: { id: 'b', ...attributes } })
     expect(snippetBlock.validate?.(node({ source: 'print(1)', output: '1' }))).toEqual([])
     expect(snippetBlock.validate?.(node({ source: 'import socket\nprint(1)' })).map(d => d.code)).toContain('code/import')
     expect(snippetBlock.fallbackText(node({ source: 'x = 2\nprint(x)', output: '2' }))).toBe('1 | x = 2\n2 | print(x)\n\nIt prints:\n2')
   })
 
   it('shows every exercise as numbered plain text without its output', () => {
-    for (const it of course.items) {
-      const text = predictKind.fallbackText(it.payload)
-      expect(text, it.id).toContain('1 | ')
-      const output = String(keyOf(it).output)
-      if (output.includes('\n')) expect(text, it.id).not.toContain(output)
-    }
+    for (const entry of course.items) expect(predictKind.fallbackText(entry.payload), entry.id).toContain('1 | ')
+    // Multi-line outputs are specific enough to search for in the prompt text.
+    const multiLine = course.items.filter(entry => str(keyOf(entry).output).includes('\n'))
+    expect(multiLine.length).toBeGreaterThan(0)
+    for (const entry of multiLine) expect(predictKind.fallbackText(entry.payload), entry.id).not.toContain(str(keyOf(entry).output))
     expect(predictKind.reveal?.(item('ex-2'))).toEqual({ output: '34\n7\nababab' })
   })
 })
@@ -189,7 +190,7 @@ describe('items, lessons and validation', () => {
 describe('CPython verification', () => {
   it('carries a CPython record for exactly the current programs', () => {
     // Changing any program or output voids the record; re-run `pnpm verify:snippets --write`.
-    expect([...cpythonVerifiedIds()].sort()).toEqual(snippets().map(s => s.id).sort())
+    expect([...cpythonVerifiedIds()].toSorted()).toEqual(snippets().map(s => s.id).toSorted())
     const verifiedItems = tracingCourse(cpythonVerifiedIds()).items.filter(i => i.provenance?.verifiedBy?.includes('cpython'))
     expect(verifiedItems).toHaveLength(course.items.length)
   })
@@ -234,6 +235,11 @@ const sum = (stdin: string): string => {
 }
 const ok = (stdout: string): RunOutcome => ({ status: 'ok', stdout, stderr: '' })
 
+/** Grade a submission with a short budget. */
+const grader = (runner: CodeRunner): Promise<unknown> => createWriteGrader(runner, 200)(input(writeItem, { code: 'print(1)' }))
+/** A runner that answers every input with the same (possibly malformed) outcome. */
+const malformed = (outcome: unknown): CodeRunner => ({ isolation: 'x', languages: ['python'], run: r => Promise.resolve(r.inputs.map(() => outcome as RunOutcome)) })
+
 describe('code-writing exercises (runner contract; no runner ships)', () => {
   it('is not offered without a runner', () => {
     const plugin = createCodePlugin()
@@ -249,7 +255,7 @@ describe('code-writing exercises (runner contract; no runner ships)', () => {
     const grade = await createWriteGrader(tableRunner((_r, i) => ok(sum(i)), seen), 1000)(input(writeItem, { code: 'n = int(input())\nprint(n * (n + 1) // 2)' }))
     expect(grade).toMatchObject({ correct: true, score: 1, feedback: 'All tests passed.' })
     expect(seen).toHaveLength(1)
-    expect(Object.keys(seen[0] ?? {}).sort()).toEqual(['inputs', 'language', 'limits', 'signal', 'source'])
+    expect(Object.keys(seen[0] ?? {}).toSorted()).toEqual(['inputs', 'language', 'limits', 'signal', 'source'])
     expect(seen[0]?.inputs).toEqual(['3\n', '1\n', '10\n', '100\n'])
     expect(JSON.stringify(seen[0])).not.toContain('5050')
   })
@@ -275,8 +281,6 @@ describe('code-writing exercises (runner contract; no runner ships)', () => {
   })
 
   it('fails closed on a malformed, short or slow runner', async () => {
-    const grader = (runner: CodeRunner): Promise<unknown> => createWriteGrader(runner, 200)(input(writeItem, { code: 'print(1)' }))
-    const malformed = (outcome: unknown): CodeRunner => ({ isolation: 'x', languages: ['python'], run: r => Promise.resolve(r.inputs.map(() => outcome as RunOutcome)) })
     await expect(grader(malformed({ status: 'passed', stdout: '', stderr: '' }))).rejects.toThrow(/malformed/)
     await expect(grader(malformed({ status: 'ok', stdout: 1, stderr: '' }))).rejects.toThrow(/malformed/)
     await expect(grader({ isolation: 'x', languages: ['python'], run: () => Promise.resolve([ok('6\n')]) })).rejects.toThrow(/1 outcomes for 4 inputs/)

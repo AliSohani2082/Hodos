@@ -76,6 +76,11 @@ function tokenize(text: string, variables: ReadonlySet<string>): Token[] | strin
   return out
 }
 
+/** Whether a token can begin a factor (for implicit multiplication). */
+function startsPrimary(t: Token | undefined): boolean {
+  return t !== undefined && (t.t === 'num' || t.t === 'id' || t.t === '(')
+}
+
 /**
  * Parse an expression.
  * @param text - what the learner or author wrote.
@@ -95,7 +100,6 @@ export function parse(text: string, variables: readonly string[] = []): ParseRes
     if (nodes > LIMITS.maxNodes) throw new Error('the expression is too large')
     return expr
   }
-  const startsPrimary = (t: Token | undefined): boolean => t !== undefined && (t.t === 'num' || t.t === 'id' || t.t === '(')
 
   const expression = (depth: number): Expr => {
     if (depth > LIMITS.maxDepth) throw new Error('the expression is nested too deeply')

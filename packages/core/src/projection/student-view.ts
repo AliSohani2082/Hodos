@@ -68,9 +68,9 @@ export function secretFragments(item: ExerciseItem, kind: RegisteredKind | undef
   if (kind !== undefined) {
     const all: string[] = []
     stringLeaves(item.payload, all)
-    const visible: string[] = []
-    stringLeaves(projectPayload(item, kind), visible)
-    const visibleSet = new Set(visible)
+    const shown: string[] = []
+    stringLeaves(projectPayload(item, kind), shown)
+    const visibleSet = new Set(shown)
     for (const s of all) if (!visibleSet.has(s)) candidates.push(s)
   }
   const visibleText = JSON.stringify([projectPayload(item, kind), item.id, item.skills.map(s => s.skillId), ...visible.filter(v => v !== undefined)])

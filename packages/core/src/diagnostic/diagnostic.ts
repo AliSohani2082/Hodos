@@ -164,7 +164,7 @@ export class Diagnostic {
       }
       this.particles.push(closed)
     }
-    this.weights = new Array<number>(k).fill(1 / k)
+    this.weights = Array.from({ length: k }, () => 1 / k)
     // Priors act as weak pseudo-observations, never as verified knowledge.
     for (const [id, prior] of Object.entries(this.config.priors)) {
       const i = this.index.get(id)
@@ -193,7 +193,7 @@ export class Diagnostic {
   marginals(): Record<string, number> {
     const out: Record<string, number> = {}
     if (this.config.strategy === 'halfsplit') {
-      const m = new Array<number>(this.ids.length).fill(0)
+      const m = Array.from({ length: this.ids.length }, () => 0)
       this.particles.forEach((particle, p) => {
         const w = this.weights[p] ?? 0
         for (let i = 0; i < this.ids.length; i++) if (particle[i] === 1) m[i] = (m[i] ?? 0) + w
@@ -340,7 +340,7 @@ export class Diagnostic {
       next.push(this.particles[lo] ?? new Uint8Array(this.ids.length))
     }
     this.particles = next
-    this.weights = new Array<number>(k).fill(1 / k)
+    this.weights = Array.from({ length: k }, () => 1 / k)
   }
 
   /**

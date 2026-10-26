@@ -14,6 +14,7 @@ import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, startDsh, type DshProcess } from './support/dsh.js'
 import { openRenderer, post, received, startRendererHost, type RendererHost } from './support/renderer-host.js'
 import { enterDsh, hodosApp, hodosState, openHodosTab, say, waitForExercise, waitForGrading, type HodosState } from './support/ui.js'
+import { jsonObject, jsonString } from '../support/json.js'
 
 const PLUGIN = fileURLToPath(new URL('../../examples/binary-numbers', import.meta.url))
 
@@ -32,6 +33,14 @@ function the<T>(value: T | undefined, what: string): T {
   return value
 }
 
+/** A `hodos:present` message for a conversion exercise with this payload. */
+function presentMessage(payload: object): object {
+  return {
+    type: 'hodos:present',
+    exercise: { id: 'p1', itemId: 'read-2', kind: 'binary.convert', environment: 'binary.bits', skills: [{ skillId: 'binary.read', weight: 1 }], difficulty: 0, mode: 'practice', hintsAvailable: 1, attempt: 1, payload },
+  }
+}
+
 describe('example renderer (plain JavaScript, sandboxed iframe, renderer CSP)', () => {
   let host: RendererHost | undefined
   beforeAll(async () => {
@@ -43,15 +52,11 @@ describe('example renderer (plain JavaScript, sandboxed iframe, renderer CSP)', 
 
   it('shows place-value boxes for exercises and lesson blocks, ignoring malformed messages', async () => {
     const { page, frame, errors } = await openRenderer(the(browser, 'browser'), the(host, 'host'), 'binary.bits')
-    const exercise = (payload: object): object => ({
-      type: 'hodos:present',
-      exercise: { id: 'p1', itemId: 'read-2', kind: 'binary.convert', environment: 'binary.bits', skills: [{ skillId: 'binary.read', weight: 1 }], difficulty: 0, mode: 'practice', hintsAvailable: 1, attempt: 1, payload },
-    })
-    await post(page, exercise({ prompt: 'What is the binary number 1100 in decimal?', direction: 'to-decimal', value: '1100' }))
+    await post(page, presentMessage({ prompt: 'What is the binary number 1100 in decimal?', direction: 'to-decimal', value: '1100' }))
     await expect.poll(() => frame.locator('.bits th').allTextContents()).toEqual(['8', '4', '2', '1'])
     expect(await frame.locator('.bits td').allTextContents()).toEqual(['1', '1', '0', '0'])
     expect(await frame.locator('.bits').getAttribute('aria-label')).toBe('Place values and bits: 8: 1, 4: 1, 2: 0, 1: 0')
-    await post(page, exercise({ prompt: 'Write 20 in binary.', direction: 'to-binary', value: '20' }))
+    await post(page, presentMessage({ prompt: 'Write 20 in binary.', direction: 'to-binary', value: '20' }))
     await expect.poll(() => frame.locator('.bits th').count()).toBe(8)
     expect((await frame.locator('.bits td').allTextContents()).join('')).toBe('')
     await post(page, { type: 'hodos:block', block: { id: 'b1', type: 'binary-bits', attributes: { id: 'b1', value: 22, bits: 8 } } })
@@ -112,13 +117,13 @@ describe.skipIf(!DSH_AVAILABLE)('example plugin in DeepSeek Harness (pluginDirs)
     await app().getByRole('button', { name: 'Check' }).click()
     await app().getByRole('button', { name: 'Continue to practice' }).click()
 
-    const exercise = await waitForExercise(state)
-    const value = String(typeof exercise.payload === 'object' && exercise.payload !== null && !Array.isArray(exercise.payload) ? exercise.payload.value : '')
+    const practice = await waitForExercise(state)
+    const value = jsonString(jsonObject(practice.payload, 'the exercise payload').value, 'the value to convert')
     const pane = app().locator('section.environment-pane iframe.renderer-frame').contentFrame()
     await expect.poll(() => pane.locator('.bits td').allTextContents(), { timeout: 20_000 }).toEqual(value.padStart(value.length > 4 ? 8 : 4, '0').split(''))
     await app().getByLabel('Your answer').fill(value)
     await app().getByRole('button', { name: 'Submit answer' }).click()
-    await waitForGrading(state, exercise)
+    await waitForGrading(state, practice)
     await expect.poll(() => app().locator('.feedback .misconception').first().textContent()).toBe('The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.')
     const retry = await waitForExercise(state)
     await app().getByLabel('Your answer').fill(String(parseInt(value, 2)))

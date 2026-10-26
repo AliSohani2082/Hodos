@@ -117,7 +117,8 @@ export async function stepPuzzle(input: StepInput, options: GraderOptions = {}):
   const payload = readPayload(input.payload)
   const key = readKey(input.key)
   const progress = readProgress(input.progress, payload.fen)
-  const text = typeof obj(input.response).move === 'string' ? String(obj(input.response).move) : ''
+  const typed = obj(input.response).move
+  const text = typeof typed === 'string' ? typed : ''
   const move = parseMove(progress.fen, text)
   if (move === null) {
     // An illegal move costs nothing: the board is unchanged.
@@ -144,7 +145,7 @@ export async function stepPuzzle(input: StepInput, options: GraderOptions = {}):
         if (engine !== null) {
           try {
             correct = await engineAccepts(engine, progress.fen, move.san, expected, options.engineMovetimeMs ?? 300)
-          } catch (_engineFailure) {
+          } catch {
             // Without a verdict the authored line stands.
             correct = false
           }
@@ -178,7 +179,7 @@ export async function stepPuzzle(input: StepInput, options: GraderOptions = {}):
     let replySan: string
     try {
       replySan = replied.move(reply).san
-    } catch (_illegal) {
+    } catch {
       // Validated content cannot reach this; finish rather than strand the learner.
       return { status: 'complete', progress: { fen: after.fen(), played }, grade: result(input, 1, true, [], 'Correct.') }
     }

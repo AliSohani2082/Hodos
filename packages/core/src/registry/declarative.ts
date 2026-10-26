@@ -135,7 +135,7 @@ async function inside(root: string, relativePath: string): Promise<string> {
   let real: string
   try {
     real = await realpath(lexical)
-  } catch (_missing) {
+  } catch {
     // Report the plugin-relative path only.
     throw new HodosPluginError('INVALID_CONTENT', `path ${relativePath} does not exist in the plugin directory`)
   }

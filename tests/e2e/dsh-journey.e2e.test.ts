@@ -16,21 +16,16 @@ import { Chess, type Square } from 'chess.js'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, onTestFailed } from 'vitest'
 import { chromium, type Browser, type FrameLocator, type Page } from 'playwright'
 import { SKILL, tacticsCourse } from '@hodos/chess'
-import type { CheckpointView, ExerciseView, JourneyView } from '@hodos/core'
-import type { ExerciseItem, JsonObject } from '@hodos/plugin-sdk'
+import type { ExerciseView } from '@hodos/core'
+import type { ExerciseItem } from '@hodos/plugin-sdk'
 import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, startDsh, type DshHome, type DshProcess } from './support/dsh.js'
-import { enterDsh as enter, hodosApp, openHodosTab as openTab, say as sayIn } from './support/ui.js'
+import { enterDsh as enter, hodosApp, hodosState, openHodosTab as openTab, say as sayIn, type HodosState } from './support/ui.js'
+import { jsonObject, jsonObjects, jsonString, jsonStrings } from '../support/json.js'
 
 const GOAL = 'Teach me chess tactics. I know the basic rules but struggle with knight forks.'
 const course = tacticsCourse()
 const items = new Map(course.items.map(i => [i.id, i]))
-
-interface WorkspaceState {
-  readonly journey: JourneyView | null
-  readonly exercise: ExerciseView | null
-  readonly checkpoint: CheckpointView | null
-}
 
 let home: DshHome | undefined
 let dsh: DshProcess | undefined
@@ -53,11 +48,8 @@ function board(workspace: FrameLocator): FrameLocator {
   return workspace.locator('section.environment-pane iframe.renderer-frame').contentFrame()
 }
 
-async function state(sessionId = session): Promise<WorkspaceState> {
-  const response = await the(page, 'page').request.get(`${the(dsh, 'dsh').origin}/hodos/api/v1/state?session=${encodeURIComponent(sessionId)}`)
-  expect(response.status()).toBe(200)
-  const body: { data: WorkspaceState } = await response.json()
-  return body.data
+function state(sessionId = session): Promise<HodosState> {
+  return hodosState(the(page, 'page'), the(dsh, 'dsh').origin, sessionId)
 }
 
 function item(exercise: ExerciseView): ExerciseItem {
@@ -65,11 +57,16 @@ function item(exercise: ExerciseView): ExerciseItem {
 }
 
 function position(exercise: ExerciseView): { fen: string; played: string[] } {
-  const progress = exercise.progress as JsonObject | undefined
-  const payload = exercise.payload as JsonObject
-  return typeof progress?.fen === 'string'
-    ? { fen: progress.fen, played: Array.isArray(progress.played) ? progress.played.map(String) : [] }
-    : { fen: String(payload.fen), played: [] }
+  if (exercise.progress !== undefined && exercise.progress !== null) {
+    const progress = jsonObject(exercise.progress, 'the puzzle progress')
+    return { fen: jsonString(progress.fen, 'the position'), played: jsonStrings(progress.played, 'the moves played') }
+  }
+  return { fen: jsonString(jsonObject(exercise.payload, 'the puzzle').fen, 'the position'), played: [] }
+}
+
+/** The solution line of a puzzle item. */
+function solution(entry: ExerciseItem): string[] {
+  return jsonStrings(jsonObject(entry.key, `the key of ${entry.id}`).line, `the line of ${entry.id}`)
 }
 
 function squares(fen: string, san: string): { from: Square; to: Square } {
@@ -79,11 +76,11 @@ function squares(fen: string, san: string): { from: Square; to: Square } {
 
 /** A legal move that fails the item's goal. */
 function wrongMove(entry: ExerciseItem, fen: string): { from: Square; to: Square } {
-  const key = (entry.key as JsonObject).line as string[]
-  const goal = String((entry.payload as JsonObject).goal)
+  const key = solution(entry)
+  const goal = jsonString(jsonObject(entry.payload, `the payload of ${entry.id}`).goal, `the goal of ${entry.id}`)
   for (const move of new Chess(fen).moves({ verbose: true })) {
     const after = new Chess(move.after)
-    const fails = goal === 'mate' ? !after.isCheckmate() : goal === 'check' ? !after.inCheck() : move.san.replace(/[+#]/g, '') !== String(key[0]).replace(/[+#]/g, '')
+    const fails = goal === 'mate' ? !after.isCheckmate() : goal === 'check' ? !after.inCheck() : move.san.replace(/[+#]/g, '') !== (key[0] ?? '').replace(/[+#]/g, '')
     if (fails && move.captured === undefined && !after.inCheck()) return { from: move.from, to: move.to }
   }
   throw new Error(`no wrong move in ${fen}`)
@@ -96,8 +93,8 @@ async function play(move: { from: Square; to: Square }): Promise<void> {
 }
 
 /** Wait until the server answered the response given at (`attempt`, `played` moves) of `exercise`. */
-async function settled(exercise: ExerciseView, played: number): Promise<WorkspaceState> {
-  const found: { state: WorkspaceState | null } = { state: null }
+async function settled(exercise: ExerciseView, played: number): Promise<HodosState> {
+  const found: { state: HodosState | null } = { state: null }
   await expect.poll(async () => {
     found.state = await state()
     const ex = found.state.exercise
@@ -110,17 +107,17 @@ async function settled(exercise: ExerciseView, played: number): Promise<Workspac
 async function solve(exercise: ExerciseView): Promise<void> {
   const entry = item(exercise)
   if (entry.kind === 'chess.identify') {
-    const correct = String((entry.key as JsonObject).correct)
-    const option = ((entry.payload as JsonObject).options as JsonObject[]).find(o => o.id === correct)
-    await app().getByRole('radio', { name: String(option?.text) }).check()
+    const correct = jsonObject(entry.key, `the key of ${entry.id}`).correct
+    const option = jsonObjects(jsonObject(entry.payload, `the payload of ${entry.id}`).options, `the options of ${entry.id}`).find(o => o.id === correct)
+    await app().getByRole('radio', { name: jsonString(option?.text, `the right option of ${entry.id}`) }).check()
     await app().getByRole('button', { name: 'Submit answer' }).click()
     await settled(exercise, 0)
     return
   }
-  const line = (entry.key as JsonObject).line as string[]
+  const line = solution(entry)
   let { fen, played } = position(exercise)
   for (;;) {
-    await play(squares(fen, String(line[played.length])))
+    await play(squares(fen, the(line[played.length], `move ${played.length + 1} of ${entry.id}`)))
     const next = await settled(exercise, played.length)
     const ex = next.exercise
     if (ex === null || ex.id !== exercise.id || ex.attempt > exercise.attempt) return
@@ -213,7 +210,7 @@ describe.skipIf(!DSH_AVAILABLE)('demo journey in DeepSeek Harness', () => {
       const exercise = await openExercise()
       const entry = item(exercise)
       if (entry.skills.some(s => s.skillId === SKILL.rules) && entry.kind === 'chess.puzzle') {
-        const san = String(((entry.key as JsonObject).line as string[])[0])
+        const san = the(solution(entry)[0], `the first move of ${entry.id}`)
         await app().getByLabel('Or type your move (e.g. Nf3)').fill(san)
         await app().getByRole('button', { name: 'Submit answer' }).click()
       } else {

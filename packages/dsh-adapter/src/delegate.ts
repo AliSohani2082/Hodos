@@ -6,8 +6,8 @@
  * until the learner approves it.
  * @module @hodos/dsh/delegate
  */
+/// <reference types="@deepseek-ai/dsh-subagent" />
 import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-subagent'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
 import type { HodosService } from './service.js'
@@ -39,7 +39,7 @@ export function extractJson(text: string): unknown {
   if (candidate.trim() === '') return undefined
   try {
     return JSON.parse(candidate)
-  } catch (_invalid) {
+  } catch {
     // Not JSON: the caller reports that no course came back.
     return undefined
   }
@@ -76,7 +76,7 @@ export function draftCourseTool(hodos: HodosService, subagents: SubagentRuntime)
       try {
         hodos.engine.chargeDelegation(actor.learnerId)
       } catch (error) {
-        throw new Error(`RATE_LIMITED: ${error instanceof Error ? error.message : 'delegation budget spent'}`)
+        throw new Error(`RATE_LIMITED: ${error instanceof Error ? error.message : 'delegation budget spent'}`, { cause: error })
       }
       const provider = hodos.config.delegateProvider !== '' ? hodos.config.delegateProvider : subagents.list()[0]
       if (provider === undefined) return { text: 'No subagent provider is configured in this harness; propose the course yourself with hodos_propose_course.' }
