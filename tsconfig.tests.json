@@ -7,7 +7,15 @@
     "declarationMap": false,
     "sourceMap": false,
     "incremental": false,
-    "customConditions": ["hodos-source"]
+    "customConditions": [
+      "hodos-source"
+    ]
   },
-  "include": ["packages/*/tests/**/*.ts", "packages/environments/*/tests/**/*.ts", "examples/*/tests/**/*.ts"]
+  "include": [
+    "packages/*/tests/**/*.ts",
+    "packages/environments/*/tests/**/*.ts",
+    "examples/*/tests/**/*.ts",
+    "tests/integration/**/*.ts",
+    "tests/e2e/**/*.ts"
+  ]
 }

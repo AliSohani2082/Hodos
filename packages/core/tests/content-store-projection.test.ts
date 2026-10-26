@@ -235,6 +235,14 @@ describe('student-view projection and leak guard', () => {
     expect(after).toContain('fourteen')
   })
 
+  it('does not treat words of the always-visible item id and skill ids as secrets', () => {
+    // A chess puzzle's key names its theme ("fork"), which its skill id already shows.
+    const themed = { ...text, id: 'fork-royal-a8', skills: [{ skillId: 'chess.tactics.fork.knight', weight: 1 }], key: { text: 'four', theme: 'fork' } }
+    const secrets = secretFragments(themed, registry.kind(text.kind), { hintLevel: 0, answer: false })
+    expect(secrets).not.toContain('fork')
+    expect(secrets).toContain('four')
+  })
+
   it('detects canaries raw, JSON-escaped and case-folded, without false positives in ids', () => {
     const canary = 'CANARY "quoted" answer'
     expect(scanForLeaks({ feedback: `here: ${canary}` }, [canary])).toEqual([canary])

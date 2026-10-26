@@ -41,9 +41,10 @@ export interface ReleaseState {
 
 /**
  * Collect the secrets that must not appear in a payload at this release state.
- * Fragments already visible in the projected payload, or in other values the
- * learner legitimately sees (their own responses, the board after the steps
- * played so far), are excluded.
+ * Fragments already visible in the projected payload, in the item id and
+ * skill ids (shown with every exercise), or in other values the learner
+ * legitimately sees (their own responses, the board after the steps played
+ * so far), are excluded: they are not withheld, so they cannot leak.
  * @param item - the stored item.
  * @param kind - its kind (for schema-driven payload stripping).
  * @param release - what is released.
@@ -72,7 +73,7 @@ export function secretFragments(item: ExerciseItem, kind: RegisteredKind | undef
     const visibleSet = new Set(visible)
     for (const s of all) if (!visibleSet.has(s)) candidates.push(s)
   }
-  const visibleText = JSON.stringify([projectPayload(item, kind), ...visible.filter(v => v !== undefined)])
+  const visibleText = JSON.stringify([projectPayload(item, kind), item.id, item.skills.map(s => s.skillId), ...visible.filter(v => v !== undefined)])
   return [...new Set(candidates)].filter(s => s.length >= MIN_SECRET_LENGTH && !visibleText.includes(s) && !visibleText.includes(JSON.stringify(s).slice(1, -1)))
 }
 

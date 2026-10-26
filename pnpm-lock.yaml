@@ -11,6 +11,21 @@ importers:
       '@eslint/js':
         specifier: ^9.39.0
         version: 9.39.5
+      '@hodos/chess':
+        specifier: workspace:*
+        version: link:packages/environments/chess
+      '@hodos/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@hodos/dsh':
+        specifier: workspace:*
+        version: link:packages/dsh-adapter
+      '@hodos/plugin-sdk':
+        specifier: workspace:*
+        version: link:packages/plugin-sdk
+      '@hodos/testing':
+        specifier: workspace:*
+        version: link:packages/testing
       '@types/node':
         specifier: ^24.10.0
         version: 24.19.2
@@ -26,6 +41,9 @@ importers:
       eslint:
         specifier: ^9.39.0
         version: 9.39.5(supports-color@7.2.0)
+      playwright:
+        specifier: 1.63.0
+        version: 1.63.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -100,6 +118,19 @@ importers:
       '@hodos/testing':
         specifier: workspace:*
         version: link:../testing
+
+  packages/environments/chess:
+    dependencies:
+      '@hodos/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../plugin-sdk
+      chess.js:
+        specifier: 1.4.0
+        version: 1.4.0
+    devDependencies:
+      '@hodos/testing':
+        specifier: workspace:*
+        version: link:../../testing
 
   packages/plugin-sdk:
     dependencies:
@@ -1108,6 +1139,9 @@ packages:
     resolution: {integrity: sha512-PAJdDJusoxnwm1VwW07VWwUN1sl7smmC3OKggvndJFadxxDRyFJBX/ggnu/KE4kQAB7a3Dp8f/YXC1FlUprWmA==}
     engines: {node: '>= 16'}
 
+  chess.js@1.4.0:
+    resolution: {integrity: sha512-BBJgrrtKQOzFLonR0l+k64A98NLemPwNsCskwb+29bRwobUa4iTm51E1kwGPbWXAcfdDa18nad6vpPPKPWarqw==}
+
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
     engines: {node: '>=7.0.0'}
@@ -1440,6 +1474,16 @@ packages:
   picomatch@4.0.7:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
+
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.63.0:
+    resolution: {integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   postcss@8.5.31:
     resolution: {integrity: sha512-YUbWYCgErwnMAVkjUnYa+KlMBzGpHwiIt/DE7f0G33AuX2LH9UcTk6KgWxd3zRU+pN3u/C+Xl3EnMLM4Hea7Sg==}
@@ -2454,6 +2498,8 @@ snapshots:
 
   check-error@2.1.3: {}
 
+  chess.js@1.4.0: {}
+
   color-convert@2.0.1:
     dependencies:
       color-name: 1.1.4
@@ -2802,6 +2848,12 @@ snapshots:
   picocolors@1.1.1: {}
 
   picomatch@4.0.7: {}
+
+  playwright-core@1.63.0: {}
+
+  playwright@1.63.0:
+    dependencies:
+      playwright-core: 1.63.0
 
   postcss@8.5.31:
     dependencies:

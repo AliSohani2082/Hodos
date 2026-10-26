@@ -37,19 +37,22 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          include: ['packages/**/tests/**/*.test.ts', 'examples/**/tests/**/*.test.ts'],
+          include: ['packages/**/tests/**/*.test.ts', 'examples/**/tests/**/*.test.ts', 'tests/integration/**/*.test.ts'],
           exclude: ['**/node_modules/**', '**/*.e2e.test.ts'],
           environment: 'node',
           testTimeout: 30_000,
         },
       },
       {
+        // Real-browser and real-host tests (Playwright Chromium; DSH where installed). Run `pnpm build` first.
         extends: true,
         test: {
-          name: 'ui',
-          include: ['packages/**/tests/**/*.test.tsx'],
-          environment: 'jsdom',
-          testTimeout: 30_000,
+          name: 'e2e',
+          include: ['tests/e2e/**/*.e2e.test.ts'],
+          environment: 'node',
+          testTimeout: 180_000,
+          hookTimeout: 180_000,
+          fileParallelism: false,
         },
       },
     ],

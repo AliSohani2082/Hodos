@@ -1,0 +1,35 @@
+{
+  "name": "@hodos/chess",
+  "version": "0.1.0",
+  "description": "Hodos chess environment: tactics course, legal-move board, stepwise puzzles with structured hints, optional Stockfish analysis",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "hodos-source": "./src/index.ts",
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": ["lib", "renderer/dist", "cordis.patch.yml", "LICENSE", "README.md"],
+  "engines": {
+    "node": ">=24.9.0",
+    "dsh": ">=0.2.1-rc.3 <0.3.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "@hodos/plugin-sdk": "workspace:*",
+    "chess.js": "1.4.0"
+  },
+  "devDependencies": {
+    "@hodos/testing": "workspace:*"
+  }
+}

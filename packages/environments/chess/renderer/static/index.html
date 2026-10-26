@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chess board</title>
+  <link rel="stylesheet" href="board.css">
+</head>
+<body>
+  <main class="renderer">
+    <p id="prompt" class="prompt" hidden></p>
+    <div class="board-wrap">
+      <div id="board" class="board" role="grid" aria-label="Chess board" aria-describedby="turn keys"></div>
+      <svg id="arrows" class="arrows" viewBox="0 0 8 8" aria-hidden="true" focusable="false"></svg>
+    </div>
+    <div id="promotion" class="promotion" role="group" aria-label="Promote to" hidden></div>
+    <div class="bar">
+      <p id="turn" class="turn"></p>
+      <div class="buttons">
+        <button id="cancel" type="button" hidden>Cancel selection</button>
+        <button id="replay" type="button" hidden>Replay solution</button>
+        <button id="flip" type="button" hidden>Flip board</button>
+      </div>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <p id="history" class="history" hidden></p>
+    <p id="keys" class="sr-only">Arrow keys move between squares. Enter or Space picks up a piece and drops it on a highlighted square. Escape cancels.</p>
+  </main>
+  <script src="renderer.js"></script>
+</body>
+</html>

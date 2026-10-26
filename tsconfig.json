@@ -12,6 +12,9 @@
     },
     {
       "path": "packages/dsh-adapter"
+    },
+    {
+      "path": "packages/environments/chess"
     }
   ]
 }

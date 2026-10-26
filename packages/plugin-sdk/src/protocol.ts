@@ -34,7 +34,20 @@ export interface ConnectMessage {
   readonly protocol: number
 }
 
-/** Messages the host sends on the port. */
+/**
+ * Messages the host sends on the port.
+ *
+ * - `hodos:init` — first message after `hodos:ready`: environment, locale,
+ *   colour scheme and the capabilities granted.
+ * - `hodos:present` — show a new exercise. It is answerable until the host
+ *   sends `hodos:lock` with `locked: true`.
+ * - `hodos:progress` — the server accepted one step of a stepwise exercise.
+ * - `hodos:result` — the attempt was graded; `reveal` only when released.
+ * - `hodos:block` — show a lesson block (read-only).
+ * - `hodos:lock` — stop (true) or resume (false) accepting input, for example
+ *   while an answer is being graded or after the exercise is finished.
+ * - `hodos:clear` — show nothing.
+ */
 export type HostToRendererMessage =
   | {
     readonly type: 'hodos:init'

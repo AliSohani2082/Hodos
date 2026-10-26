@@ -6,6 +6,8 @@
  *  3. Browser halves of DSH bundles → lib/client.js in DSH's client module
  *     format (CommonJS factory; react comes from the DSH platform).
  *  4. Environment renderers → their renderer/dist/ folders (static files).
+ *
+ * Usage: node scripts/build.mjs [types|ui|client|renderers]...  (default: all)
  */
 import { spawnSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -14,35 +16,48 @@ import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const STEPS = ['types', 'ui', 'client', 'renderers']
+const requested = process.argv.slice(2)
+for (const step of requested) {
+  if (!STEPS.includes(step)) {
+    console.error(`unknown build step ${step}; expected one of ${STEPS.join(', ')}`)
+    process.exit(2)
+  }
+}
+const want = step => requested.length === 0 || requested.includes(step)
 const run = (command, args) => {
   const result = spawnSync(command, args, { cwd: root, stdio: 'inherit', shell: false })
   if (result.status !== 0) process.exit(result.status ?? 1)
 }
 
-console.log('• TypeScript (Node packages)')
-run(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '-b', 'tsconfig.json'])
+if (want('types')) {
+  console.log('• TypeScript (Node packages)')
+  run(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '-b', 'tsconfig.json'])
+}
 
-console.log('• Workspace app (@hodos/ui)')
 const ui = join(root, 'packages/ui')
-rmSync(join(ui, 'dist'), { recursive: true, force: true })
-mkdirSync(join(ui, 'dist'), { recursive: true })
-await build({
-  entryPoints: [join(ui, 'src/main.tsx')],
-  outfile: join(ui, 'dist/app.js'),
-  bundle: true,
-  format: 'iife',
-  platform: 'browser',
-  target: 'es2022',
-  jsx: 'automatic',
-  minify: true,
-  sourcemap: false,
-  conditions: ['hodos-source'],
-  define: { 'process.env.NODE_ENV': '"production"' },
-  legalComments: 'linked',
-  logLevel: 'warning',
-})
-copyFileSync(join(ui, 'src/index.html'), join(ui, 'dist/index.html'))
-copyFileSync(join(ui, 'src/app.css'), join(ui, 'dist/app.css'))
+if (want('ui')) {
+  console.log('• Workspace app (@hodos/ui)')
+  rmSync(join(ui, 'dist'), { recursive: true, force: true })
+  mkdirSync(join(ui, 'dist'), { recursive: true })
+  await build({
+    entryPoints: [join(ui, 'src/main.tsx')],
+    outfile: join(ui, 'dist/app.js'),
+    bundle: true,
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2022',
+    jsx: 'automatic',
+    minify: true,
+    sourcemap: false,
+    conditions: ['hodos-source'],
+    define: { 'process.env.NODE_ENV': '"production"' },
+    legalComments: 'linked',
+    logLevel: 'warning',
+  })
+  copyFileSync(join(ui, 'src/index.html'), join(ui, 'dist/index.html'))
+  copyFileSync(join(ui, 'src/app.css'), join(ui, 'dist/app.css'))
+}
 
 /**
  * Bundle a DSH browser half into the client module format: a CommonJS body
@@ -68,11 +83,13 @@ async function clientBundle(entry, outfile, id) {
   writeFileSync(outfile, wrapped)
 }
 
-console.log('• DSH browser halves')
-await clientBundle(join(root, 'packages/dsh-adapter/src/client/index.tsx'), join(root, 'packages/dsh-adapter/lib/client.js'), '@hodos/dsh')
+if (want('client')) {
+  console.log('• DSH browser halves')
+  await clientBundle(join(root, 'packages/dsh-adapter/src/client/index.tsx'), join(root, 'packages/dsh-adapter/lib/client.js'), '@hodos/dsh')
+}
 
 const envRoot = join(root, 'packages/environments')
-if (existsSync(envRoot)) {
+if (want('renderers') && existsSync(envRoot)) {
   for (const name of readdirSync(envRoot)) {
     const dir = join(envRoot, name)
     const manifest = join(dir, 'package.json')
