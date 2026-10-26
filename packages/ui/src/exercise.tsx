@@ -73,7 +73,7 @@ function GenericAnswer(props: { exercise: ExerciseView; disabled: boolean; onSub
       </form>
     )
   }
-  const multiline = exercise.responseKind === 'code' || exercise.responseKind === 'structured'
+  const multiline = exercise.responseKind === 'code' || exercise.responseKind === 'lines' || exercise.responseKind === 'structured'
   return (
     <form className="answer" onSubmit={submit}>
       <label className="field">
@@ -176,7 +176,7 @@ export function ExercisePanel(props: Props): React.ReactElement {
             onResponse={(exerciseId, response) => { if (exerciseId === exercise.id && !finished) void submit(response) }}
           />
         )
-        : <p className="prompt">{exercise.fallbackText}</p>}
+        : <p className={exercise.responseKind === 'lines' || exercise.responseKind === 'code' ? 'prompt prompt-code' : 'prompt'}>{exercise.fallbackText}</p>}
       {exercise.renderer !== null && <details className="text-alternative"><summary>Text version</summary><pre>{exercise.fallbackText}</pre></details>}
       {!finished && <GenericAnswer exercise={exercise} disabled={busy} onSubmit={response => { void submit(response) }} />}
       <div className="controls">

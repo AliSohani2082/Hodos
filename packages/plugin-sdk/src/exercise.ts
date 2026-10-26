@@ -104,8 +104,12 @@ export interface Exercise {
 /** Whether an exercise kind is answered in one submission or in server-driven steps. */
 export type InteractionStyle = 'single' | 'stepwise'
 
-/** What a learner response looks like, for renderers and the plain-text fallback. */
-export type ResponseKind = 'choice' | 'text' | 'moves' | 'code' | 'number' | 'expression' | 'structured'
+/**
+ * What a learner response looks like, for renderers and the plain-text
+ * fallback. `text` is one line and `lines` several (for example a program's
+ * output); both arrive as `{ text }`. `code` arrives as `{ code }`.
+ */
+export type ResponseKind = 'choice' | 'text' | 'lines' | 'moves' | 'code' | 'number' | 'expression' | 'structured'
 
 /** Authoring guidance for an exercise kind, shown to course authors (people or models). */
 export interface KindGuidance {

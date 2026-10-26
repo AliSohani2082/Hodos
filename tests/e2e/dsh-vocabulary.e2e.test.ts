@@ -15,7 +15,7 @@ import { KIND, SKILL, spanishCourse } from '@hodos/language'
 import type { JsonObject } from '@hodos/plugin-sdk'
 import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, startDsh, type DshProcess } from './support/dsh.js'
-import { enterDsh, hodosApp, hodosState, openHodosTab, say, type HodosState } from './support/ui.js'
+import { enterDsh, hodosApp, hodosState, openHodosTab, say, waitForExercise, waitForGrading, type HodosState } from './support/ui.js'
 
 const course = spanishCourse()
 
@@ -33,22 +33,8 @@ function the<T>(value: T | undefined, what: string): T {
 const app = (): FrameLocator => hodosApp(the(page, 'page'))
 const state = (): Promise<HodosState> => hodosState(the(page, 'page'), the(dsh, 'dsh').origin, session)
 
-async function openExercise(): Promise<ExerciseView> {
-  const found: { exercise: ExerciseView | null } = { exercise: null }
-  await expect.poll(async () => {
-    found.exercise = (await state()).exercise
-    return found.exercise !== null
-  }, { timeout: 20_000 }).toBe(true)
-  if (found.exercise === null) throw new Error('no exercise')
-  return found.exercise
-}
-
-async function settled(exercise: ExerciseView): Promise<void> {
-  await expect.poll(async () => {
-    const ex = (await state()).exercise
-    return ex === null || ex.id !== exercise.id || ex.attempt > exercise.attempt
-  }, { timeout: 20_000 }).toBe(true)
-}
+const openExercise = (): Promise<ExerciseView> => waitForExercise(state)
+const settled = (exercise: ExerciseView): Promise<void> => waitForGrading(state, exercise)
 
 /** Answer in the workspace form: a typed text or the option's radio button. */
 async function answer(exercise: ExerciseView, typed?: string): Promise<void> {

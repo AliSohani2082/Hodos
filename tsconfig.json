@@ -21,6 +21,9 @@
     },
     {
       "path": "packages/environments/math"
+    },
+    {
+      "path": "packages/environments/code"
     }
   ]
 }

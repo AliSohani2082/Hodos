@@ -14,6 +14,9 @@ importers:
       '@hodos/chess':
         specifier: workspace:*
         version: link:packages/environments/chess
+      '@hodos/code':
+        specifier: workspace:*
+        version: link:packages/environments/code
       '@hodos/core':
         specifier: workspace:*
         version: link:packages/core
@@ -140,6 +143,12 @@ importers:
       '@hodos/testing':
         specifier: workspace:*
         version: link:../../testing
+
+  packages/environments/code:
+    dependencies:
+      '@hodos/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../plugin-sdk
 
   packages/environments/language:
     dependencies:

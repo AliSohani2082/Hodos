@@ -198,7 +198,8 @@ export async function startMockLlm(script: MockScript, port = 0): Promise<MockLl
 /**
  * The scripted tutor used by the Hodos end-to-end journeys. It starts a
  * journey when the learner states a learning goal, resumes one when asked,
- * reports tool results back as text, and otherwise answers briefly.
+ * lists the courses when asked about courses, reports tool results back as
+ * text, and otherwise answers briefly.
  * @param options - environment hint and self-report for the start call.
  * @returns the script.
  */
@@ -217,6 +218,7 @@ export function tutorScript(options: { environment: string; selfReport?: Readonl
     }
     if (/\b(continue|resume)\b/i.test(said) && request.tools.includes('hodos_resume_learning')) return { tool: 'hodos_resume_learning', input: {} }
     if (/\bstatus\b/i.test(said) && request.tools.includes('hodos_status')) return { tool: 'hodos_status', input: {} }
+    if (/\bcourses\b/i.test(said) && request.tools.includes('hodos_list_courses')) return { tool: 'hodos_list_courses', input: {} }
     if (/\bapprove\b/i.test(said) && request.tools.includes('hodos_approve_path')) return { tool: 'hodos_approve_path', input: {} }
     const draft = /\bdraft (?:a|me a) course (?:about|on) (.+)$/i.exec(said)
     if (draft?.[1] !== undefined && request.tools.includes('hodos_draft_course')) return { tool: 'hodos_draft_course', input: { topic: draft[1].slice(0, 200) } }

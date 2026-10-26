@@ -49,7 +49,7 @@ const DECLARATIVE_SCHEMA: JsonSchema = {
           id: { type: 'string' },
           title: { type: 'string' },
           environment: { type: 'string' },
-          responseKind: { enum: ['choice', 'text', 'moves', 'code', 'number', 'expression', 'structured'] },
+          responseKind: { enum: ['choice', 'text', 'lines', 'moves', 'code', 'number', 'expression', 'structured'] },
           interaction: { enum: ['single', 'stepwise'] },
           grader: { type: 'string' },
           format: {

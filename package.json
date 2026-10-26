@@ -15,6 +15,7 @@
     "test": "node scripts/build.mjs renderers && vitest run --project unit",
     "test:security": "vitest run --project unit -t security",
     "verify:puzzles": "node packages/environments/chess/scripts/verify-puzzles.mjs",
+    "verify:snippets": "node packages/environments/code/scripts/verify-snippets.mjs",
     "pack:dsh": "node scripts/pack-bundles.mjs",
     "clean": "node scripts/clean.mjs",
     "test:e2e": "node scripts/build.mjs && vitest run --project e2e"
@@ -37,6 +38,7 @@
     "@hodos/dsh": "workspace:*",
     "chess.js": "1.4.0",
     "@hodos/language": "workspace:*",
-    "@hodos/math": "workspace:*"
+    "@hodos/math": "workspace:*",
+    "@hodos/code": "workspace:*"
   }
 }

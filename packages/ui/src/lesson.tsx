@@ -49,7 +49,10 @@ function BlockFrame(props: { node: LessonNode; block: Lesson['blocks'][string] }
         initialHeight={360}
         onReady={() => frame.current?.post({ type: 'hodos:block', block: props.node })}
       />
-      <figcaption>{props.block.text}</figcaption>
+      {/* A one-line text version is a caption; a longer one (a program, a table) would repeat the block, so it folds away. */}
+      {props.block.text.includes('\n')
+        ? <details className="text-alternative"><summary>Text version</summary><pre>{props.block.text}</pre></details>
+        : <figcaption>{props.block.text}</figcaption>}
     </figure>
   )
 }

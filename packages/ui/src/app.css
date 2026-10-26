@@ -79,6 +79,7 @@ legend { font-weight: 600; padding: 0 0.3rem; }
 .notice.assessment { border-left: 4px solid var(--checkpoint); padding: 0.4rem 0.6rem; background: color-mix(in srgb, var(--checkpoint) 8%, transparent); }
 .renderer-frame { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); display: block; }
 .prompt { white-space: pre-wrap; font-size: 1.05rem; }
+.prompt-code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.95rem; }
 .text-alternative pre { white-space: pre-wrap; }
 .answer { margin-top: 0.6rem; }
 .choice { display: flex; gap: 0.5rem; align-items: center; padding: 0.3rem 0.2rem; }

@@ -78,3 +78,31 @@ export async function hodosState(page: Page, origin: string, session: string): P
   const body: { data: HodosState } = await response.json()
   return body.data
 }
+
+/**
+ * Wait until the workspace shows an exercise.
+ * @param read - reads the current state.
+ * @returns the exercise.
+ */
+export async function waitForExercise(read: () => Promise<HodosState>): Promise<ExerciseView> {
+  const found: { exercise: ExerciseView | null } = { exercise: null }
+  await expect.poll(async () => {
+    found.exercise = (await read()).exercise
+    return found.exercise !== null
+  }, { timeout: 20_000 }).toBe(true)
+  if (found.exercise === null) throw new Error('no exercise')
+  return found.exercise
+}
+
+/**
+ * Wait until an answer to `exercise` was graded: the exercise moved on, or
+ * its attempt number went up.
+ * @param read - reads the current state.
+ * @param exercise - the exercise as it was before answering.
+ */
+export async function waitForGrading(read: () => Promise<HodosState>, exercise: ExerciseView): Promise<void> {
+  await expect.poll(async () => {
+    const ex = (await read()).exercise
+    return ex === null || ex.id !== exercise.id || ex.attempt > exercise.attempt
+  }, { timeout: 20_000 }).toBe(true)
+}
