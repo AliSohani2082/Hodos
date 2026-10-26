@@ -1,0 +1,4 @@
+# Hodos Math for DeepSeek Harness. Requires the @hodos/dsh bundle.
+- insert:
+    - id: hodos-math
+      name: '@hodos/math'

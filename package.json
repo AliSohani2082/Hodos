@@ -36,6 +36,7 @@
     "playwright": "1.63.0",
     "@hodos/dsh": "workspace:*",
     "chess.js": "1.4.0",
-    "@hodos/language": "workspace:*"
+    "@hodos/language": "workspace:*",
+    "@hodos/math": "workspace:*"
   }
 }

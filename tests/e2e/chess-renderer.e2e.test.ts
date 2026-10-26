@@ -4,69 +4,13 @@
  * driven over the MessagePort protocol the way the workspace drives it.
  * Requires `pnpm build` (renderer/dist) and Playwright's Chromium.
  */
-import { readFileSync, existsSync } from 'node:fs'
-import { createServer, type Server } from 'node:http'
-import { extname, join, normalize, sep } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { chromium, type Browser, type FrameLocator, type Page } from 'playwright'
-import { RENDERER_CSP } from '@hodos/dsh'
 import { rendererRoot } from '@hodos/chess'
-
-const root = rendererRoot()
-const MIME: Readonly<Record<string, string>> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' }
-
-// The host page plays the workspace's part: one MessagePort, every renderer message recorded.
-const HOST = `<!doctype html><html><head><meta charset="utf-8"><title>host</title></head><body>
-<iframe id="f" sandbox="allow-scripts" src="/hodos/env/hodos-chess/chess-board/index.html" style="width:480px;height:720px;border:0"></iframe>
-<script>
-window.received = [];
-var port = null;
-window.hostPost = function (m) { if (port) port.postMessage(m); };
-document.getElementById('f').addEventListener('load', function () {
-  var channel = new MessageChannel();
-  port = channel.port1;
-  channel.port1.onmessage = function (e) { window.received.push(e.data); };
-  document.getElementById('f').contentWindow.postMessage({ type: 'hodos:connect', protocol: 1 }, '*', [channel.port2]);
-});
-</script></body></html>`
-
-function serve(): Promise<Server> {
-  const server = createServer((req, res) => {
-    const url = new URL(req.url ?? '/', 'http://localhost')
-    if (url.pathname === '/') {
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-      res.end(HOST)
-      return
-    }
-    const prefix = '/hodos/env/hodos-chess/chess-board/'
-    if (url.pathname.startsWith(prefix)) {
-      const file = normalize(join(root, decodeURIComponent(url.pathname.slice(prefix.length))))
-      if (file.startsWith(root + sep) && existsSync(file)) {
-        res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream', 'content-security-policy': RENDERER_CSP })
-        res.end(readFileSync(file))
-        return
-      }
-    }
-    res.writeHead(404)
-    res.end()
-  })
-  return new Promise(done => server.listen(0, '127.0.0.1', () => done(server)))
-}
-
-type Message = Readonly<Record<string, unknown>>
-
-async function received(page: Page): Promise<Message[]> {
-  const raw = await page.evaluate('JSON.stringify(window.received)')
-  const parsed: unknown = typeof raw === 'string' ? JSON.parse(raw) : []
-  return Array.isArray(parsed) ? parsed.filter((m): m is Message => typeof m === 'object' && m !== null) : []
-}
+import { openRenderer, post, received, startRendererHost, type RendererHost } from './support/renderer-host.js'
 
 async function responses(page: Page): Promise<unknown[]> {
   return (await received(page)).filter(m => m.type === 'hodos:response')
-}
-
-async function post(page: Page, message: object): Promise<void> {
-  await page.evaluate(`window.hostPost(${JSON.stringify(message)})`)
 }
 
 function exercise(id: string, fen: string, extra: Record<string, unknown> = {}): object {
@@ -84,35 +28,24 @@ function exercise(id: string, fen: string, extra: Record<string, unknown> = {}):
 const FORK = '2q3k1/5ppp/8/3N4/8/8/5PPP/6K1 w - - 0 1'
 const ROYAL = 'r3k3/pp3ppp/8/3N4/8/8/PPP2PPP/6K1 w - - 0 1'
 
-let server: Server | undefined
+let host: RendererHost | undefined
 let browser: Browser | undefined
-let base = ''
 
 beforeAll(async () => {
-  if (!existsSync(join(root, 'renderer.js'))) throw new Error(`build the renderer first (pnpm build): ${root}`)
-  server = await serve()
-  const address = server.address()
-  if (address === null || typeof address === 'string') throw new Error('the test server has no port')
-  base = `http://127.0.0.1:${address.port}`
+  host = await startRendererHost(rendererRoot(), '/hodos/env/hodos-chess/chess-board/')
   browser = await chromium.launch()
 })
 
 afterAll(async () => {
   await browser?.close()
-  await new Promise(done => server === undefined ? done(undefined) : server.close(done))
+  await host?.close()
 })
 
 async function open(): Promise<{ page: Page; board: FrameLocator }> {
-  if (browser === undefined) throw new Error('no browser')
-  const page = await browser.newPage()
-  const errors: string[] = []
-  page.on('pageerror', e => errors.push(e.message))
-  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()) })
-  await page.goto(`${base}/`)
-  await expect.poll(async () => (await received(page)).some(m => m.type === 'hodos:ready'), { timeout: 15_000 }).toBe(true)
-  await post(page, { type: 'hodos:init', protocol: 1, environment: 'chess.board', locale: 'en', colorScheme: 'light', capabilities: ['respond', 'resize'] })
+  if (browser === undefined || host === undefined) throw new Error('not started')
+  const { page, frame, errors } = await openRenderer(browser, host, 'chess.board', ['respond', 'resize'])
   expect(errors).toEqual([])
-  return { page, board: page.frameLocator('#f') }
+  return { page, board: frame }
 }
 
 const square = (board: FrameLocator, name: string) => board.locator(`[data-square="${name}"]`)
