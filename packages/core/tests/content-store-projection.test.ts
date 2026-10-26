@@ -21,7 +21,7 @@ import {
   stampBlockIds,
   validateCourse,
 } from '../src/index.js'
-import { createQuizPlugin, quizCourse } from './support/quiz-plugin.js'
+import { createQuizPlugin, quizCourse } from '@hodos/testing'
 
 const sandbox = new SandboxRunner()
 const registry = new PluginRegistry({ sandbox, logger: { info: () => {}, warn: () => {}, error: () => {} } })

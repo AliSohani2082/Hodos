@@ -12,6 +12,10 @@ import { EXERCISE_MODES, type Exercise, type ExerciseMode, type SkillWeight } fr
 import { isJsonValue, type JsonObject, type JsonValue } from './json.js'
 import type { LessonNode } from './lesson.js'
 
+export type { JsonObject, JsonValue } from './json.js'
+export type { Exercise, ExerciseMode, SkillWeight } from './exercise.js'
+export type { LessonNode } from './lesson.js'
+
 /** Protocol version spoken by this SDK. */
 export const RENDERER_PROTOCOL = 1
 

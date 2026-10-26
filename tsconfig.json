@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/plugin-sdk"
+    },
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/testing"
+    },
+    {
+      "path": "packages/dsh-adapter"
+    }
+  ]
+}

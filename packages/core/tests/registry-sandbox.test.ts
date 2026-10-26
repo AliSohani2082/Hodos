@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { CORE_PLUGIN_API_VERSION, HodosPluginError, SDK_VERSION, type GradeInput, type HodosEnvironmentPlugin } from '@hodos/plugin-sdk'
 import { HodosError, loadDeclarativePlugin, PluginRegistry, SandboxRunner, type RegistryLogger } from '../src/index.js'
-import { createQuizPlugin, quizCourse } from './support/quiz-plugin.js'
+import { createQuizPlugin, quizCourse } from '@hodos/testing'
 
 const sandbox = new SandboxRunner()
 afterAll(() => sandbox.dispose())

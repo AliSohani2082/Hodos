@@ -19,7 +19,11 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["lib", "src", "README.md"],
+  "files": [
+    "lib",
+    "src",
+    "README.md"
+  ],
   "engines": {
     "node": ">=22.13.0"
   },
@@ -28,5 +32,8 @@
     "@markdoc/markdoc": "^0.5.4",
     "quickjs-emscripten": "^0.32.0",
     "ts-fsrs": "5.4.2"
+  },
+  "devDependencies": {
+    "@hodos/testing": "workspace:*"
   }
 }

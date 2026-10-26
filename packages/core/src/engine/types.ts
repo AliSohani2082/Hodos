@@ -106,6 +106,13 @@ export interface JourneyView {
   readonly nextAction: NextAction
 }
 
+/** A renderer the workspace can load in a sandboxed iframe. */
+export interface RendererRef {
+  readonly pluginId: string
+  readonly rendererId: string
+  readonly entry: string
+}
+
 /** A presented exercise with what the workspace needs to render it. */
 export interface ExerciseView extends Exercise {
   readonly title: string
@@ -113,7 +120,7 @@ export interface ExerciseView extends Exercise {
   /** Plain-text projection (no key), for agents and missing renderers. */
   readonly fallbackText: string
   /** Renderer to load, when installed. */
-  readonly renderer: { readonly pluginId: string; readonly rendererId: string; readonly entry: string } | null
+  readonly renderer: RendererRef | null
   readonly responseKind: string
   readonly attemptsAllowed: number
   /** Hints already revealed (released levels only). */
@@ -182,6 +189,8 @@ export interface LessonView {
     readonly tree: LessonNode
     readonly text: string
     readonly checks: ReadonlyArray<{ readonly id: string; readonly answered: boolean; readonly correct: boolean }>
+    /** Plugin blocks by node id: their plain-text meaning and the renderer that can draw them. */
+    readonly blocks: Readonly<Record<string, { readonly type: string; readonly text: string; readonly renderer: RendererRef | null }>>
   }>
   readonly canComplete: boolean
 }

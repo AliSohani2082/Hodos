@@ -1,0 +1,21 @@
+{
+  "name": "@hodos/testing",
+  "version": "0.1.0",
+  "description": "Test support for Hodos and its plugins: a fixture environment plugin and a deterministic, scriptable LLM server for keyless end-to-end tests",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "hodos-source": "./src/index.ts",
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["lib", "src", "LICENSE"],
+  "dependencies": {
+    "@hodos/plugin-sdk": "workspace:*"
+  }
+}

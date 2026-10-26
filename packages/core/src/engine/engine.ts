@@ -65,6 +65,7 @@ import type {
   LessonView,
   NextAction,
   ProgressView,
+  RendererRef,
   SelfReport,
   SkillView,
 } from './types.js'
@@ -716,6 +717,7 @@ export class HodosEngine {
       const entry = {
         id, title, origin, tree, text: lessonPlainText(tree, blocks),
         checks: lessonChecks(parsed.tree).map(c => ({ id: c.id, answered: answers.has(c.id), correct: answers.get(c.id) === true })),
+        blocks: this.pluginBlocks(tree),
       }
       assertNoLeak(entry, lessonServerFragments(parsed.tree, blocks).filter(s => s.length >= MIN_SECRET_LENGTH), 'lesson view')
       lessons.push(entry)
@@ -730,6 +732,32 @@ export class HodosEngine {
     const courseChecks = lessons.filter(l => l.origin === 'course').flatMap(l => l.checks)
     const canComplete = !this.config.requireLessonChecks || courseChecks.every(c => c.answered)
     return { skillId, lessons, canComplete }
+  }
+
+  /** Plugin blocks of a projected lesson tree with their text and renderer. */
+  private pluginBlocks(tree: LessonNode): Record<string, { type: string; text: string; renderer: RendererRef | null }> {
+    const out: Record<string, { type: string; text: string; renderer: RendererRef | null }> = {}
+    const lookup = blockLookup(this.registry)
+    const walk = (node: LessonNode): void => {
+      const block = this.registry.block(node.type)
+      if (block !== undefined) {
+        const def = lookup.block(node.type)
+        let text = `[${node.type}]`
+        try {
+          text = def?.fallbackText(node) ?? text
+        } catch (_error) {
+          // A failing projection degrades to the block name.
+        }
+        const renderer = block.spec.renderer === undefined ? undefined : this.registry.renderer(block.spec.renderer)
+        out[node.id] = {
+          type: node.type, text,
+          renderer: renderer === undefined || renderer.pluginId !== block.pluginId ? null : { pluginId: renderer.pluginId, rendererId: renderer.spec.id, entry: renderer.spec.entry },
+        }
+      }
+      node.children?.forEach(walk)
+    }
+    walk(tree)
+    return out
   }
 
   private findCheck(course: LoadedCourse, learnerId: string, lessonId: string, checkId: string): LessonNode | null {
@@ -895,13 +923,10 @@ export class HodosEngine {
   nextExercise(actor: Actor, request: { journeyId?: string } = {}): ExerciseView | null {
     let journey = this.journeyFor(actor, request.journeyId)
     const course = this.loadCourse(journey.courseId, journey.courseVersion)
-    const open = this.store.openPresentations(actor.learnerId).find(p => p.journeyId === journey.id)
     const st = journey.state
-    const modeNow: ExerciseMode | null = st.phase === 'diagnostic' ? 'diagnostic'
-      : st.phase === 'reviewing' ? 'review'
-        : st.phase === 'learning' && st.stage === 'checkpoint' ? 'checkpoint'
-          : st.phase === 'learning' && (st.stage === 'practice' || st.stage === 'remedial') ? 'practice' : null
-    if (open !== undefined && open.mode === modeNow && course.items.has(open.itemId)) return this.exerciseView(open, course)
+    const modeNow = exerciseModeOf(st)
+    const open = this.openPresentation(actor, journey, course)
+    if (open !== null) return this.exerciseView(open, course)
 
     switch (modeNow) {
       case 'diagnostic': {
@@ -977,6 +1002,26 @@ export class HodosEngine {
       case null:
         return null
     }
+  }
+
+  private openPresentation(actor: Actor, journey: JourneyRecord, course: LoadedCourse): PresentationRecord | null {
+    const modeNow = exerciseModeOf(journey.state)
+    const open = this.store.openPresentations(actor.learnerId).find(p => p.journeyId === journey.id)
+    return open !== undefined && open.mode === modeNow && course.items.has(open.itemId) ? open : null
+  }
+
+  /**
+   * The open exercise of the current stage, without presenting a new one
+   * (read-only; for workspace refreshes).
+   * @param actor - the learner.
+   * @param journeyId - optional journey id.
+   * @returns the exercise, or null.
+   */
+  currentExercise(actor: Actor, journeyId?: string): ExerciseView | null {
+    const journey = this.journeyFor(actor, journeyId)
+    const course = this.loadCourse(journey.courseId, journey.courseVersion)
+    const open = this.openPresentation(actor, journey, course)
+    return open === null ? null : this.exerciseView(open, course)
   }
 
   private rng(actor: Actor, journey: JourneyRecord): ReturnType<typeof seededRandom> {
@@ -1644,6 +1689,15 @@ export class HodosEngine {
       evidence,
     }
   }
+}
+
+/** The exercise mode the journey's current stage presents, if any. */
+function exerciseModeOf(st: JourneyState): ExerciseMode | null {
+  if (st.phase === 'diagnostic') return 'diagnostic'
+  if (st.phase === 'reviewing') return 'review'
+  if (st.phase !== 'learning') return null
+  if (st.stage === 'checkpoint') return 'checkpoint'
+  return st.stage === 'practice' || st.stage === 'remedial' ? 'practice' : null
 }
 
 function startOfUtcDay(now: Date): string {

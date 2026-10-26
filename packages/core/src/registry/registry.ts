@@ -438,6 +438,11 @@ export class PluginRegistry {
     return this.kinds.get(id)
   }
 
+  /** Ids of the registered exercise kinds. */
+  kindIds(): string[] {
+    return [...this.kinds.keys()]
+  }
+
   /** @param name - block name. @returns the block, or undefined. */
   block(name: string): RegisteredBlock | undefined {
     return this.blocks.get(name)

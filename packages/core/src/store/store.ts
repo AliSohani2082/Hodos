@@ -409,6 +409,11 @@ export class HodosStore {
     return row === undefined ? undefined : { learnerId: brandId<'LearnerId'>(str(row, 'learner_id')), journeyId: optStr(row, 'journey_id') }
   }
 
+  /** @param journeyId - journey. @returns the host sessions bound to it. */
+  sessionsForJourney(journeyId: string): string[] {
+    return this.all('SELECT session_id FROM session_bindings WHERE journey_id = ? ORDER BY bound_at DESC', journeyId).map(r => str(r, 'session_id'))
+  }
+
   // ---- courses ----
 
   /** @param course - course version to insert or replace (same id and version). */

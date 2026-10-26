@@ -18,7 +18,7 @@ import {
   type ExerciseView,
   type ManualClock,
 } from '../src/index.js'
-import { correctResponse, createQuizPlugin, quizCourse, wrongResponse, type QuizOptions } from './support/quiz-plugin.js'
+import { correctResponse, createQuizPlugin, quizCourse, wrongResponse, type QuizOptions } from '@hodos/testing'
 
 const sandbox = new SandboxRunner()
 afterAll(() => sandbox.dispose())
