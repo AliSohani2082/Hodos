@@ -20,6 +20,9 @@ importers:
       '@hodos/dsh':
         specifier: workspace:*
         version: link:packages/dsh-adapter
+      '@hodos/language':
+        specifier: workspace:*
+        version: link:packages/environments/language
       '@hodos/plugin-sdk':
         specifier: workspace:*
         version: link:packages/plugin-sdk
@@ -134,6 +137,12 @@ importers:
       '@hodos/testing':
         specifier: workspace:*
         version: link:../../testing
+
+  packages/environments/language:
+    dependencies:
+      '@hodos/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../plugin-sdk
 
   packages/plugin-sdk:
     dependencies:

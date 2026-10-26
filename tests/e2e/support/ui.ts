@@ -4,6 +4,7 @@
  */
 import { expect } from 'vitest'
 import type { FrameLocator, Locator, Page } from 'playwright'
+import type { CheckpointView, ExerciseView, JourneyView } from '@hodos/core'
 
 /** DSH's chat composer. */
 export function composer(page: Page): Locator {
@@ -45,7 +46,8 @@ export async function say(page: Page, text: string): Promise<void> {
 export async function openHodosTab(page: Page): Promise<string> {
   const sidebar = page.getByRole('button', { name: 'Open right sidebar' })
   if (await sidebar.count() > 0) await sidebar.click()
-  await page.getByText('Hodos learning').first().click()
+  // Exact match: the tutor's chat messages mention "Hodos learning" too.
+  await page.getByText('Hodos learning', { exact: true }).first().click()
   const src = await page.locator('iframe[title="Hodos"]').getAttribute('src', { timeout: 20_000 })
   const session = new URL(src ?? '', 'http://x').searchParams.get('session') ?? ''
   expect(session).not.toBe('')
@@ -55,4 +57,24 @@ export async function openHodosTab(page: Page): Promise<string> {
 /** The Hodos workspace inside the DSH sidebar. */
 export function hodosApp(page: Page): FrameLocator {
   return page.frameLocator('iframe[title="Hodos"]')
+}
+
+/** What the workspace reads from the Hodos API, as far as tests look at it. */
+export interface HodosState {
+  readonly journey: JourneyView | null
+  readonly exercise: ExerciseView | null
+  readonly checkpoint: CheckpointView | null
+}
+
+/**
+ * Read the workspace state through Hodos's API with the browser's DSH sign-in cookie.
+ * @param page - a page that opened DSH.
+ * @param origin - DSH's origin.
+ * @param session - the DSH session id.
+ */
+export async function hodosState(page: Page, origin: string, session: string): Promise<HodosState> {
+  const response = await page.request.get(`${origin}/hodos/api/v1/state?session=${encodeURIComponent(session)}`)
+  expect(response.status()).toBe(200)
+  const body: { data: HodosState } = await response.json()
+  return body.data
 }

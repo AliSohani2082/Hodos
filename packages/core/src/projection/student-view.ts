@@ -51,7 +51,7 @@ export interface ReleaseState {
  * @param visible - other values already visible to the learner in this view.
  * @returns secret fragments to scan for.
  */
-export function secretFragments(item: ExerciseItem, kind: RegisteredKind | undefined, release: ReleaseState, visible: readonly (JsonValue | null | undefined)[] = []): string[] {
+export function secretFragments(item: ExerciseItem, kind: RegisteredKind | undefined, release: ReleaseState, visible: readonly (JsonValue | null | undefined)[] = [], releasedMisconceptions: readonly string[] = []): string[] {
   const candidates: string[] = []
   if (!release.answer) {
     // Misconception ids the item declares are labels shown with their feedback, not answers.
@@ -62,7 +62,7 @@ export function secretFragments(item: ExerciseItem, kind: RegisteredKind | undef
     const keyJson = JSON.stringify(item.key)
     if (typeof item.key === 'object' && item.key !== null) candidates.push(keyJson)
     if (item.explanation !== undefined) candidates.push(item.explanation)
-    for (const text of Object.values(item.misconceptionFeedback ?? {})) candidates.push(text)
+    for (const [id, text] of Object.entries(item.misconceptionFeedback ?? {})) if (!releasedMisconceptions.includes(id)) candidates.push(text)
   }
   for (const h of item.hints ?? []) if (h.level > release.hintLevel) candidates.push(h.text)
   if (kind !== undefined) {
@@ -102,6 +102,24 @@ function occurs(text: string, lower: string, secret: string): boolean {
   const escaped = secret.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const flags = secret.length >= 6 ? 'iu' : 'u'
   return new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, flags).test(text)
+}
+
+/**
+ * The misconception feedback a grade releases. A detected misconception's own
+ * feedback is released by the detection; the key, unreleased hints and
+ * explanations, and the feedback of other misconceptions stay secret, so
+ * feedback that reveals any of them is withheld.
+ * @param item - the stored item.
+ * @param kind - its kind.
+ * @param release - what is released for the presentation.
+ * @param visible - other values the learner sees (see {@link secretFragments}).
+ * @param detected - misconception ids the grader reported.
+ * @returns the feedback to show, and the secrets for scanning the whole reply.
+ */
+export function releaseMisconceptionFeedback(item: ExerciseItem, kind: RegisteredKind | undefined, release: ReleaseState, visible: readonly (JsonValue | null | undefined)[], detected: readonly string[]): { feedback: string[]; secrets: string[] } {
+  const secrets = secretFragments(item, kind, release, visible, detected)
+  const texts = [...new Set(detected.map(m => item.misconceptionFeedback?.[m]).filter((t): t is string => typeof t === 'string'))]
+  return { feedback: texts.filter(t => scanForLeaks(t, secrets).length === 0), secrets }
 }
 
 /**

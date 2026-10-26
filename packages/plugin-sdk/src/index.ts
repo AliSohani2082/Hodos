@@ -19,3 +19,5 @@ export * from './plugin.js'
 export * from './host.js'
 export * from './schema.js'
 export * from './version.js'
+/** @experimental Speech contracts; no implementation ships. */
+export * from './speech.js'

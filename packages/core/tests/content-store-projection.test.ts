@@ -17,6 +17,7 @@ import {
   projectLessonForStudent,
   SandboxRunner,
   scanForLeaks,
+  releaseMisconceptionFeedback,
   secretFragments,
   stampBlockIds,
   validateCourse,
@@ -233,6 +234,22 @@ describe('student-view projection and leak guard', () => {
     const after = secretFragments(steps, registry.kind(steps.kind), { hintLevel: 0, answer: false }, [{ entered: ['multiply'] }])
     expect(after).not.toContain('multiply')
     expect(after).toContain('fourteen')
+  })
+
+  it('releases the feedback of a detected misconception, never one that names the answer', () => {
+    const mixed = course.items.find(i => i.misconceptionFeedback?.['left-to-right'] !== undefined)!
+    const kind = registry.kind(mixed.kind)
+    const closed = { hintLevel: 0, answer: false }
+    expect(secretFragments(mixed, kind, closed)).toContain('Multiplication comes before addition.')
+    const released = releaseMisconceptionFeedback(mixed, kind, closed, [], ['left-to-right'])
+    expect(released.feedback).toEqual(['Multiplication comes before addition.'])
+    expect(released.secrets).not.toContain('Multiplication comes before addition.')
+    expect(releaseMisconceptionFeedback(mixed, kind, closed, [], []).feedback).toEqual([])
+    // Feedback that would reveal the unreleased explanation is withheld, even word for word.
+    const leaky = { ...mixed, misconceptionFeedback: { 'left-to-right': mixed.explanation ?? '' } }
+    expect(releaseMisconceptionFeedback(leaky, kind, closed, [], ['left-to-right']).feedback).toEqual([])
+    const hinting = { ...mixed, misconceptionFeedback: { 'left-to-right': `Remember: ${mixed.hints?.at(-1)?.text ?? ''}` } }
+    expect(releaseMisconceptionFeedback(hinting, kind, closed, [], ['left-to-right']).feedback).toEqual([])
   })
 
   it('does not treat words of the always-visible item id and skill ids as secrets', () => {

@@ -49,7 +49,7 @@ import {
   type SkillState,
 } from '../mastery/skill-state.js'
 import { selectItem } from '../practice/select.js'
-import { assertNoLeak, MIN_SECRET_LENGTH, presentExercise, scanForLeaks, secretFragments } from '../projection/student-view.js'
+import { assertNoLeak, MIN_SECRET_LENGTH, presentExercise, releaseMisconceptionFeedback, scanForLeaks, secretFragments } from '../projection/student-view.js'
 import { initialJourneyState, transition, type JourneyEvent, type JourneyState } from '../protocol/journey.js'
 import { hashSeed, seededRandom } from '../random.js'
 import type { PluginRegistry } from '../registry/registry.js'
@@ -1237,9 +1237,7 @@ export class HodosEngine {
         this.store.securityEvent('feedback-redacted', actor.learnerId, { kind: item.kind }, at)
         feedback = grade.correct ? 'Correct.' : 'Not quite. Try again or ask for a hint.'
       }
-      const misconceptionFeedback = grade.misconceptions
-        .map(m => item.misconceptionFeedback?.[m])
-        .filter((t): t is string => typeof t === 'string' && scanForLeaks(t, secrets).length === 0)
+      const { feedback: misconceptionFeedback, secrets: outbound } = releaseMisconceptionFeedback(item, kind, { hintLevel: p.hintLevel, answer: released }, [progress, request.response], grade.misconceptions)
       view = {
         presentationId: p.id,
         status: grade.correct ? 'correct' : grade.score > 0 ? 'partial' : 'incorrect',
@@ -1256,7 +1254,7 @@ export class HodosEngine {
         stuck,
         ...(skillView === undefined ? {} : { skill: skillView }),
       }
-      assertNoLeak(view, secrets, 'attempt feedback')
+      assertNoLeak(view, outbound, 'attempt feedback')
     }
     if (p.journeyId !== null) {
       const journey = this.store.journey(p.journeyId)
