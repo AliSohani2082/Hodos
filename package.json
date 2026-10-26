@@ -34,6 +34,7 @@
     "@hodos/testing": "workspace:*",
     "@hodos/plugin-sdk": "workspace:*",
     "playwright": "1.63.0",
-    "@hodos/dsh": "workspace:*"
+    "@hodos/dsh": "workspace:*",
+    "chess.js": "1.4.0"
   }
 }

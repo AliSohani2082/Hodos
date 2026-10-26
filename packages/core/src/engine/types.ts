@@ -96,9 +96,15 @@ export interface JourneyView {
   readonly phase: JourneyPhase
   readonly stage: SkillStage | null
   readonly activeSkill: SkillView | null
+  /** Skills still to learn, in order (the active one first). */
   readonly path: readonly SkillView[]
   readonly completed: readonly string[]
+  /** Skills finished on this journey, in the order they were completed. */
+  readonly completedSkills: readonly SkillView[]
+  /** Skill ids the diagnostic placed out. */
   readonly diagnosedKnown: readonly string[]
+  /** The same skills with their titles, for display. */
+  readonly knownSkills: ReadonlyArray<{ readonly id: string; readonly title: string }>
   readonly pathApproved: boolean
   readonly progress: { readonly mastered: number; readonly total: number; readonly percent: number }
   readonly environments: ReadonlyArray<{ readonly id: string; readonly available: boolean }>

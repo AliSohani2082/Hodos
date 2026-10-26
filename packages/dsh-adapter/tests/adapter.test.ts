@@ -217,6 +217,25 @@ describe('Hodos DSH plugin', () => {
     expect(h.hodos.store.journey(result.ref)?.learnerId).toBe(h.hodos.ownerLearner())
   })
 
+  it('keeps the journey readable while its environment is missing', async () => {
+    const h = await harness()
+    h.agents.push(fakeAgent('sess-1'))
+    await call(h, 'hodos_start_learning', { goal: 'arithmetic multiplication', skip_diagnostic: true })
+    await call(h, 'hodos_approve_path', {})
+    const ui = h.hodos.uiActor('sess-1')
+    for (const l of h.hodos.engine.lesson(ui).lessons) for (const c of l.checks) h.hodos.engine.answerCheck(ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
+    await call(h, 'hodos_complete_lesson', {})
+    await h.hodos.registry.unregister('hodos-quiz')
+    const missing = await api(h, 'GET', 'state')
+    expect(missing.status).toBe(200)
+    const data = missing.json?.data as { journey: { environments: unknown[] } | null; exercise: unknown }
+    expect(data.journey?.environments).toEqual([{ id: 'quiz.card', available: false }])
+    expect(data.exercise).toBeNull()
+    const next = await api(h, 'POST', 'exercise/next', {})
+    expect(next.json?.error?.code).toBe('UNAVAILABLE')
+    expect(next.json?.error?.message).toContain('your progress is saved')
+  })
+
   it('relays practice answers as assisted and refuses relayed checkpoint answers', async () => {
     const h = await harness()
     h.agents.push(fakeAgent('sess-1'))

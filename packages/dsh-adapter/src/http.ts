@@ -150,6 +150,16 @@ function orNull<T>(read: () => T): T | null {
   }
 }
 
+/** Like {@link orNull}, for reads that fail while an environment plugin is missing. */
+function unlessUnavailable<T>(read: () => T): T | null {
+  try {
+    return read()
+  } catch (error) {
+    if (error instanceof HodosError && error.code === 'UNAVAILABLE') return null
+    throw error
+  }
+}
+
 type Route = (actor: Actor, body: JsonObject, query: URLSearchParams) => unknown
 
 function routes(deps: HttpDeps): Record<string, Route> {
@@ -161,7 +171,8 @@ function routes(deps: HttpDeps): Record<string, Route> {
       const journey = orNull(() => engine.journey(actor))
       return {
         journey,
-        exercise: journey === null ? null : engine.currentExercise(actor),
+        // A missing environment leaves the journey readable; the exercise waits until it is back.
+        exercise: journey === null ? null : unlessUnavailable(() => engine.currentExercise(actor)),
         checkpoint: journey === null ? null : engine.checkpointStatus(actor),
         catalog: engine.catalog(),
         drafts: engine.drafts(),

@@ -77,8 +77,9 @@ function PathFooter(props: { journey: JourneyView }): React.ReactElement {
         <div className="progress-fill" style={{ width: `${journey.progress.percent}%` }} />
       </div>
       <ol className="skills">
+        {journey.completedSkills.map(s => <SkillChip key={s.id} skill={s} />)}
         {journey.path.map(s => <SkillChip key={s.id} skill={s} />)}
-        {journey.diagnosedKnown.map(id => <li key={id} className="skill status-known" title="Placed out by the diagnostic">{id} · known</li>)}
+        {journey.knownSkills.map(k => <li key={k.id} className="skill status-known" title="Placed out by the diagnostic"><span className="skill-title">{k.title}</span> <span className="skill-status">known</span></li>)}
       </ol>
       <span className="summary">{journey.progress.mastered}/{journey.progress.total} mastered{journey.dueReviews > 0 ? ` · ${journey.dueReviews} due for review` : ''}</span>
     </footer>
@@ -186,6 +187,8 @@ export function App(): React.ReactElement {
     if (state === null || busy) return
     const needsExercise = mode === 'diagnostic' || mode === 'practice' || mode === 'checkpoint' || mode === 'review' || mode === 'remedial'
     if (!needsExercise || state.exercise !== null || mode === 'remedial') return
+    // A missing environment cannot present exercises; the warning explains, and the journey waits.
+    if (state.journey?.environments.some(e => !e.available) === true) return
     if (lastAttempt !== null && lastAttempt.status !== 'continue' && lastAttempt.canRetry === false && mode === 'practice') return
     setBusy(true)
     api.nextExercise().then(() => refresh()).catch((e: unknown) => setError(e instanceof ApiError ? e.message : 'Could not load the next exercise.')).finally(() => setBusy(false))
@@ -232,7 +235,7 @@ export function App(): React.ReactElement {
           {journey !== null && mode === 'planning' && (
             <section className="plan" aria-labelledby="plan-title">
               <h2 id="plan-title">Your path</h2>
-              {journey.diagnosedKnown.length > 0 && <p>You already know: {journey.diagnosedKnown.join(', ')}.</p>}
+              {journey.knownSkills.length > 0 && <p>You already know: {journey.knownSkills.map(k => k.title).join(', ')}.</p>}
               <ol>{journey.path.map(s => <li key={s.id}>{s.title}</li>)}</ol>
               <button type="button" disabled={busy} onClick={() => { void act(() => api.approvePath(), 'Path approved.') }}>Start this path</button>
             </section>

@@ -74,7 +74,8 @@ export function summarizeRequest(raw: JsonObject, index: number): MockRequest {
   for (const m of messages) {
     for (const b of blocks(m.content)) if (b.type === 'tool_use' && typeof b.id === 'string' && typeof b.name === 'string') toolNames.set(b.id, b.name)
   }
-  const last = messages.at(-1)
+  // DeepSeek Harness may append a trailing `system` message, so the turn's input is the last user message.
+  const last = [...messages].reverse().find(m => m.role === 'user')
   const lastBlocks = last === undefined ? [] : blocks(last.content)
   const toolResults = lastBlocks.filter(b => b.type === 'tool_result').map(b => ({
     name: typeof b.tool_use_id === 'string' ? toolNames.get(b.tool_use_id) ?? 'unknown' : 'unknown',
@@ -82,7 +83,7 @@ export function summarizeRequest(raw: JsonObject, index: number): MockRequest {
     isError: b.is_error === true,
   }))
   const userTexts = messages.filter(m => m.role === 'user').map(m => textOf(m.content)).filter(t => t !== '')
-  const lastText = last?.role === 'user' ? textOf(last.content) : ''
+  const lastText = last === undefined ? '' : textOf(last.content)
   const system = typeof raw.system === 'string' ? raw.system : blocks(raw.system).map(b => (typeof b.text === 'string' ? b.text : '')).join('\n')
   return {
     index,
@@ -181,7 +182,8 @@ export function tutorScript(options: { environment: string; selfReport?: Readonl
   return request => {
     const result = request.toolResults[0]
     if (result !== undefined) return { text: `[${result.name}${result.isError ? ' failed' : ''}] ${result.text.slice(0, 400)}` }
-    const said = request.lastUserText ?? ''
+    // DeepSeek Harness appends a runtime-context block to the learner's message; the request is the first line.
+    const said = (request.lastUserText ?? '').split('\n')[0] ?? ''
     if (/\b(teach me|i want to learn|learn)\b/i.test(said) && request.tools.includes('hodos_start_learning')) {
       return {
         text: 'Let me set up a learning path for you.',

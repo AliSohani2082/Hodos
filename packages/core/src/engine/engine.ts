@@ -494,7 +494,9 @@ export class HodosEngine {
       activeSkill: st.activeSkill === null ? null : views.get(st.activeSkill) ?? null,
       path: pathViews,
       completed: st.completed,
+      completedSkills: st.completed.flatMap(id => { const v = views.get(id); return v === undefined ? [] : [v] }),
       diagnosedKnown: st.diagnosedKnown,
+      knownSkills: st.diagnosedKnown.map(id => ({ id, title: course.graph.has(id) ? course.graph.get(id).title : id })),
       pathApproved: st.pathApproved,
       progress: { mastered, total: learnable.length, percent: learnable.length === 0 ? 100 : Math.round((100 * mastered) / learnable.length) },
       environments: course.spec.environments.map(id => ({ id, available: envs.has(id) })),
@@ -864,7 +866,7 @@ export class HodosEngine {
 
   private present(actor: Actor, journey: JourneyRecord | null, course: LoadedCourse, item: ExerciseItem, skillId: string, mode: ExerciseMode, extra: { checkpointId?: string; diagnosticId?: string; tutorContact?: boolean } = {}): ExerciseView {
     const kind = this.registry.kind(item.kind)
-    if (kind === undefined) throw new HodosError('UNAVAILABLE', `the ${item.kind} environment is not installed; your progress is saved and resumes when it is`)
+    if (kind === undefined) throw kindUnavailable(item.kind)
     const record: PresentationRecord = {
       id: this.ids.next('prs'), learnerId: actor.learnerId, journeyId: journey?.id ?? null, courseId: course.record.id, courseVersion: course.record.version,
       itemId: item.id, skillId, mode, status: 'open', attempts: 0, firstCorrect: null, hintLevel: 0, hintsAtLastAttempt: 0, lastHintAt: null,
@@ -880,7 +882,7 @@ export class HodosEngine {
     const item = course.items.get(p.itemId)
     if (item === undefined) throw new HodosError('NOT_FOUND', `item ${p.itemId} is no longer in the course`)
     const kind = this.registry.kind(item.kind)
-    if (kind === undefined) throw new HodosError('UNAVAILABLE', `the ${item.kind} environment is not installed; your progress is saved and resumes when it is`, { kind: item.kind })
+    if (kind === undefined) throw kindUnavailable(item.kind)
     const policy = MODE_POLICY[p.mode]
     const authored = (item.hints ?? []).length
     const ceiling = Math.min(policy.maxHintLevel, p.mode === 'practice' ? this.config.hintPacing.practiceMaxLevel : policy.maxHintLevel, authored)
@@ -1112,7 +1114,7 @@ export class HodosEngine {
     const item = course.items.get(p.itemId)
     if (item === undefined) throw new HodosError('NOT_FOUND', 'item missing')
     const kind = this.registry.kind(item.kind)
-    if (kind === undefined) throw new HodosError('UNAVAILABLE', `the ${item.kind} environment is not installed; your progress is saved`)
+    if (kind === undefined) throw kindUnavailable(item.kind)
 
     if (p.mode === 'diagnostic' && typeof request.response === 'object' && request.response !== null && !Array.isArray(request.response) && request.response.dontKnow === true) {
       return this.recordDiagnostic(actor, p, course, item, kind.pluginId, kind.pluginVersion, 'dont-know', null)
@@ -1713,6 +1715,11 @@ export class HodosEngine {
       evidence,
     }
   }
+}
+
+/** The error for an exercise whose environment plugin is not installed. */
+function kindUnavailable(kind: string): HodosError {
+  return new HodosError('UNAVAILABLE', `this exercise (${kind}) needs an environment plugin that is not installed; your progress is saved and resumes when it is`, { kind })
 }
 
 /** The exercise mode the journey's current stage presents, if any. */
