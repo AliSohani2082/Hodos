@@ -67,7 +67,18 @@ What follows from these:
 - **An Anthropic API key** from [Claude Console](https://platform.claude.com/) is the method Anthropic recommends for anything built on the Agent SDK. The bundle removes credential-shaped variables from the environment it inherits, so a key meant for Claude Code has to go in the provider's `env` setting (see its README). Keep that configuration out of version control.
 - **Do not share one sign-in** with other people through a Harness you host: that is routing requests through plan credentials on behalf of others.
 
-Tests cover Hodos's side of this path with a fake provider named `claude-code`: the configured provider is used, the prompt carries the authoring guide, and the result is stored as a draft with `generated` provenance. Hodos's tests cannot exercise a real Claude sign-in.
+What is tested:
+
+- **Unit test** (`packages/dsh-adapter/tests/adapter.test.ts`): a fake provider named `claude-code`. It checks that the configured provider is used, that the prompt carries the authoring guide, and that the result is stored as a draft with `generated` provenance.
+- **End-to-end test** (`tests/e2e/dsh-claude-drafting.e2e.test.ts`, opt-in with `HODOS_E2E_CLAUDE_CODE=1`): a real DeepSeek Harness 0.2.1-rc.3 with the real `@deepseek-ai/dsh-subagent-claude-code` bundle installed from npm.
+  1. The tutor calls `hodos_draft_course`.
+  2. DSH runs the bundled Claude Code binary.
+  3. Claude Code calls a local stand-in for Anthropic's API, configured through the provider's `env` with a dummy key.
+  4. The answer becomes a draft in the workspace.
+
+  The test runs Claude Code with a throwaway HOME, so no sign-in on the machine is visible to it, and it asserts that only the dummy key was sent.
+
+Neither test exercises a real Claude sign-in or Anthropic's servers. That last step happens on your machine with your own sign-in.
 
 ## The course inbox
 

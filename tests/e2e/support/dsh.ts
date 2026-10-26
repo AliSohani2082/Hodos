@@ -46,6 +46,17 @@ export interface DshHome {
   patch(name: string, yaml: string): string
 }
 
+/** Proxy settings for registry installs only (the running Harness gets none). */
+function registryEnv(): NodeJS.ProcessEnv {
+  const out: NodeJS.ProcessEnv = {}
+  for (const name of Object.keys(process.env)) {
+    if (!/^(https?_proxy|no_proxy|node_extra_ca_certs|ssl_cert_file|npm_config_(https?_proxy|noproxy|cafile|registry|userconfig))$/i.test(name)) continue
+    const value = process.env[name]
+    if (value !== undefined) out[name] = value
+  }
+  return out
+}
+
 function baseEnv(home: DshHome): NodeJS.ProcessEnv {
   return {
     // `dsh plugin add` runs pnpm, so the runner's PATH (which carries no credentials) is kept.
@@ -57,8 +68,9 @@ function baseEnv(home: DshHome): NodeJS.ProcessEnv {
 }
 
 /**
- * Create a Harness home and link-install the given bundle directories into the `web` profile.
- * @param bundles - package directories, e.g. packages/dsh-adapter.
+ * Create a Harness home and install bundles into the `web` profile.
+ * @param bundles - repository package directories (link-installed, e.g. packages/dsh-adapter)
+ *   or npm specifiers starting with `@` (installed from the registry).
  * @returns the home.
  */
 export function prepareHome(bundles: readonly string[]): DshHome {
@@ -77,7 +89,8 @@ export function prepareHome(bundles: readonly string[]): DshHome {
   for (const dir of [home.home, home.userHome, home.workspace]) mkdirSync(dir, { recursive: true })
   writeFileSync(home.pickerPatch, PICKER_PATCH)
   for (const bundle of bundles) {
-    const result = spawnSync(DSH_BIN, ['plugin', '--profile', 'web', 'add', resolve(ROOT, bundle)], { env: baseEnv(home), encoding: 'utf8', timeout: 180_000 })
+    const target = bundle.startsWith('@') ? bundle : resolve(ROOT, bundle)
+    const result = spawnSync(DSH_BIN, ['plugin', '--profile', 'web', 'add', target], { env: { ...baseEnv(home), ...registryEnv() }, encoding: 'utf8', timeout: 600_000 })
     if (result.status !== 0) throw new Error(`dsh plugin add ${bundle} failed:\n${result.stdout}\n${result.stderr}`)
   }
   return home

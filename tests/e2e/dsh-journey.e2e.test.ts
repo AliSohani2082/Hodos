@@ -20,6 +20,7 @@ import type { CheckpointView, ExerciseView, JourneyView } from '@hodos/core'
 import type { ExerciseItem, JsonObject } from '@hodos/plugin-sdk'
 import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, startDsh, type DshHome, type DshProcess } from './support/dsh.js'
+import { enterDsh as enter, hodosApp, openHodosTab as openTab, say as sayIn } from './support/ui.js'
 
 const GOAL = 'Teach me chess tactics. I know the basic rules but struggle with knight forks.'
 const course = tacticsCourse()
@@ -43,9 +44,9 @@ function the<T>(value: T | undefined, what: string): T {
   return value
 }
 
-/** The Hodos workspace inside the DSH sidebar (or opened directly). */
+/** The Hodos workspace inside the DSH sidebar. */
 function app(): FrameLocator {
-  return the(page, 'page').frameLocator('iframe[title="Hodos"]')
+  return hodosApp(the(page, 'page'))
 }
 
 function board(workspace: FrameLocator): FrameLocator {
@@ -154,47 +155,16 @@ async function shot(name: string): Promise<void> {
   if (dir !== undefined && page !== undefined) await page.screenshot({ path: `${dir}/${name}.png` })
 }
 
-/** DSH's chat composer. */
-function composer(): ReturnType<Page['locator']> {
-  return the(page, 'page').locator('[data-composer-input="true"]')
+function enterDsh(url: string): Promise<void> {
+  return enter(the(page, 'page'), url)
 }
 
-/**
- * Open DSH and get to a usable composer: dismiss the preview notice and, on
- * first use, pick the session workspace in DSH's in-browser directory picker.
- */
-async function enterDsh(url: string): Promise<void> {
-  const p = the(page, 'page')
-  await p.goto(url)
-  await p.waitForLoadState('networkidle')
-  await expect.poll(async () => {
-    const notice = p.getByRole('button', { name: 'Continue' })
-    if (await notice.count() > 0) await notice.click()
-    if (await composer().getAttribute('contenteditable') === 'true') return true
-    const choose = p.getByRole('button', { name: 'Choose workspace' })
-    if (await choose.count() > 0) {
-      await choose.first().click()
-      await p.getByRole('button', { name: 'Open' }).click()
-    }
-    return await composer().getAttribute('contenteditable') === 'true'
-  }, { timeout: 30_000, interval: 1_000 }).toBe(true)
-}
-
-async function say(text: string): Promise<void> {
-  await expect.poll(() => composer().getAttribute('contenteditable')).toBe('true')
-  await composer().click()
-  await composer().fill(text)
-  await the(page, 'page').keyboard.press('Enter')
+function say(text: string): Promise<void> {
+  return sayIn(the(page, 'page'), text)
 }
 
 async function openHodosTab(): Promise<void> {
-  const p = the(page, 'page')
-  const sidebar = p.getByRole('button', { name: 'Open right sidebar' })
-  if (await sidebar.count() > 0) await sidebar.click()
-  await p.getByText('Hodos learning').first().click()
-  const src = await p.locator('iframe[title="Hodos"]').getAttribute('src', { timeout: 20_000 })
-  session = new URL(src ?? '', 'http://x').searchParams.get('session') ?? ''
-  expect(session).not.toBe('')
+  session = await openTab(the(page, 'page'))
 }
 
 describe.skipIf(!DSH_AVAILABLE)('demo journey in DeepSeek Harness', () => {
