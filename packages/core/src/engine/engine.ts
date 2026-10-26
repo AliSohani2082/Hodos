@@ -21,10 +21,11 @@ import {
   type LearningLoop,
   type LessonNode,
   type SkillSpec,
+  validateCourseShape,
 } from '@hodos/plugin-sdk'
 import { systemClock, type Clock } from '../clock.js'
 import { blockLookup, validateCourse } from '../content/course.js'
-import { lessonChecks, lessonPlainText, parseLesson, projectLessonForStudent, stampBlockIds } from '../content/lesson.js'
+import { lessonChecks, lessonPlainText, lessonServerFragments, parseLesson, projectLessonForStudent, stampBlockIds } from '../content/lesson.js'
 import { chooseStrategy, DEFAULT_DIAGNOSTIC_CONFIG, Diagnostic, type DiagnosticConfig, type DiagnosticNode } from '../diagnostic/diagnostic.js'
 import { HodosError } from '../errors.js'
 import { SkillGraph } from '../graph/skill-graph.js'
@@ -45,7 +46,7 @@ import {
   type SkillState,
 } from '../mastery/skill-state.js'
 import { selectItem } from '../practice/select.js'
-import { assertNoLeak, presentExercise, scanForLeaks, secretFragments } from '../projection/student-view.js'
+import { assertNoLeak, MIN_SECRET_LENGTH, presentExercise, scanForLeaks, secretFragments } from '../projection/student-view.js'
 import { initialJourneyState, transition, type JourneyEvent, type JourneyState } from '../protocol/journey.js'
 import { hashSeed, seededRandom } from '../random.js'
 import type { PluginRegistry } from '../registry/registry.js'
@@ -344,6 +345,7 @@ export class HodosEngine {
       ...(e.itemFacts.options === undefined ? {} : { options: e.itemFacts.options }),
       guessable: e.itemFacts.guessable,
       countsForMastery: e.countsForMastery,
+      ...(e.itemFacts.advisory === true ? { advisory: true } : {}),
       ...(e.latencyMs === null ? {} : { latencyMs: e.latencyMs }),
       ...(e.itemFacts.expectedTimeSec === undefined ? {} : { expectedTimeSec: e.itemFacts.expectedTimeSec }),
       ...(e.confidence === null ? {} : { confidence: e.confidence }),
@@ -711,10 +713,12 @@ export class HodosEngine {
       }
       const answers = this.store.checkAnswers(actor.learnerId, id)
       const tree = projectLessonForStudent(parsed.tree, blocks)
-      lessons.push({
+      const entry = {
         id, title, origin, tree, text: lessonPlainText(tree, blocks),
         checks: lessonChecks(parsed.tree).map(c => ({ id: c.id, answered: answers.has(c.id), correct: answers.get(c.id) === true })),
-      })
+      }
+      assertNoLeak(entry, lessonServerFragments(parsed.tree, blocks).filter(s => s.length >= MIN_SECRET_LENGTH), 'lesson view')
+      lessons.push(entry)
     }
     for (const l of course.spec.lessons.filter(x => x.skillId === skillId)) add(l.id, l.title, 'course', l.source)
     for (const o of this.store.overlays(actor.learnerId, skillId)) add(o.id, o.title, 'overlay', o.source)
@@ -725,9 +729,7 @@ export class HodosEngine {
     }
     const courseChecks = lessons.filter(l => l.origin === 'course').flatMap(l => l.checks)
     const canComplete = !this.config.requireLessonChecks || courseChecks.every(c => c.answered)
-    const view: LessonView = { skillId, lessons, canComplete }
-    this.guardJourneySecrets(view, course, 'lesson view')
-    return view
+    return { skillId, lessons, canComplete }
   }
 
   private findCheck(course: LoadedCourse, learnerId: string, lessonId: string, checkId: string): LessonNode | null {
@@ -847,6 +849,7 @@ export class HodosEngine {
     const item = course.items.get(p.itemId)
     if (item === undefined) throw new HodosError('NOT_FOUND', `item ${p.itemId} is no longer in the course`)
     const kind = this.registry.kind(item.kind)
+    if (kind === undefined) throw new HodosError('UNAVAILABLE', `the ${item.kind} environment is not installed; your progress is saved and resumes when it is`, { kind: item.kind })
     const policy = MODE_POLICY[p.mode]
     const authored = (item.hints ?? []).length
     const ceiling = Math.min(policy.maxHintLevel, p.mode === 'practice' ? this.config.hintPacing.practiceMaxLevel : policy.maxHintLevel, authored)
@@ -854,7 +857,7 @@ export class HodosEngine {
       presentationId: p.id, item, kind, mode: p.mode, attempt: p.attempts + 1,
       hintsAvailable: Math.max(0, ceiling - p.hintLevel), progress: p.progress,
     })
-    const renderer = kind === undefined ? undefined : this.registry.rendererFor(kind.spec.environment)
+    const renderer = this.registry.rendererFor(kind.spec.environment)
     let checkpoint: ExerciseView['checkpoint']
     if (p.checkpointId !== null) {
       const c = this.store.checkpoint(p.checkpointId)
@@ -867,17 +870,17 @@ export class HodosEngine {
     }
     const view: ExerciseView = {
       ...exercise,
-      title: kind?.spec.title ?? item.kind,
+      title: kind.spec.title,
       skillTitle: course.graph.has(p.skillId) ? course.graph.get(p.skillId).title : p.skillId,
       fallbackText: this.registry.fallbackText(item.kind, exercise.payload),
       renderer: renderer === undefined ? null : { pluginId: renderer.pluginId, rendererId: renderer.spec.id, entry: renderer.spec.entry },
-      responseKind: kind?.spec.responseKind ?? 'structured',
+      responseKind: kind.spec.responseKind,
       attemptsAllowed: policy.attemptsPerItem,
       hints: (item.hints ?? []).filter(h => h.level <= p.hintLevel).sort((a, b) => a.level - b.level).map(h => ({ level: h.level, text: h.text })),
       ...(checkpoint === undefined ? {} : { checkpoint }),
       ...(diagnostic === undefined ? {} : { diagnostic }),
     }
-    assertNoLeak(view, secretFragments(item, kind, { hintLevel: p.hintLevel, answer: p.released }), 'exercise view')
+    assertNoLeak(view, secretFragments(item, kind, { hintLevel: p.hintLevel, answer: p.released }, [p.progress]), 'exercise view')
     return view
   }
 
@@ -1077,14 +1080,23 @@ export class HodosEngine {
         const step = await this.registry.step({ ...input, progress: p.progress })
         if (step.status === 'continue') {
           const latest = this.ownedPresentation(actor, p.id)
-          if (latest.status !== 'open' || latest.attempts !== p.attempts) throw new HodosError('CONFLICT', 'this exercise changed; reload it')
+          // Another step was submitted while this one was being graded.
+          if (latest.status !== 'open' || latest.attempts !== p.attempts || JSON.stringify(latest.progress) !== JSON.stringify(p.progress)) {
+            throw new HodosError('CONFLICT', 'this exercise changed; reload it')
+          }
           this.store.updatePresentation({ ...latest, progress: step.progress })
+          const secrets = secretFragments(item, kind, { hintLevel: p.hintLevel, answer: p.released }, [step.progress, request.response])
+          let message = step.message
+          if (message !== undefined && scanForLeaks(message, secrets).length > 0) {
+            this.store.securityEvent('feedback-redacted', actor.learnerId, { kind: item.kind }, this.now().toISOString())
+            message = undefined
+          }
           const view: AttemptView = {
             presentationId: p.id, status: 'continue', mode: p.mode, progress: step.progress,
-            ...(step.message === undefined ? {} : { message: step.message }),
+            ...(message === undefined ? {} : { message }),
             canRetry: true, attemptsLeft: policy.attemptsPerItem - p.attempts, hintsAvailable: this.exerciseView(latest, course).hintsAvailable, stuck: false,
           }
-          assertNoLeak(view, secretFragments(item, kind, { hintLevel: p.hintLevel, answer: p.released }), 'step result')
+          assertNoLeak(view, secrets, 'step result')
           return view
         }
         grade = step.grade
@@ -1093,8 +1105,8 @@ export class HodosEngine {
         grade = await this.registry.grade(input)
       }
     } catch (error) {
-      if (error instanceof HodosError && (error.code === 'INVALID_INPUT' || error.code === 'UNAVAILABLE') && /grader|sandbox|result|hook/.test(error.message)) {
-        this.store.securityEvent('grader-rejected', actor.learnerId, { kind: item.kind, reason: error.message.slice(0, 200) }, this.now().toISOString())
+      if (error instanceof HodosError && typeof error.details?.grader === 'string') {
+        this.store.securityEvent('grader-rejected', actor.learnerId, { kind: item.kind, grader: error.details.grader, reason: String(error.details.reason ?? 'error') }, this.now().toISOString())
         this.emit({ type: 'security', learnerId: actor.learnerId, kind: 'grader-rejected' })
         throw new HodosError('UNAVAILABLE', 'grading failed for this exercise; your attempt was not counted')
       }
@@ -1126,6 +1138,8 @@ export class HodosEngine {
       skills: skillFacts, difficulty: item.difficulty, calibratedB: this.store.calibration(item.id)?.b ?? item.difficulty, guessable: format.guessable,
       ...(format.options === undefined ? {} : { options: format.options }),
       ...(item.expectedTimeSec === undefined ? {} : { expectedTimeSec: item.expectedTimeSec }),
+      // Checkpoint correctness never rests on an AI judgment alone.
+      ...(this.registry.graderInfo(item.kind)?.method === 'ai-rubric' ? { advisory: true } : {}),
     }
     const latency = request.latencyMs !== undefined && Number.isFinite(request.latencyMs) && request.latencyMs >= 0 ? Math.round(request.latencyMs) : null
 
@@ -1167,7 +1181,7 @@ export class HodosEngine {
         ...(skillView === undefined || checkpointView.status === 'active' ? {} : { skill: skillView }),
       }
     } else {
-      const secrets = secretFragments(item, kind, { hintLevel: p.hintLevel, answer: released })
+      const secrets = secretFragments(item, kind, { hintLevel: p.hintLevel, answer: released }, [progress, request.response])
       let feedback = policy.graderFeedback ? grade.feedback : undefined
       if (feedback !== undefined && scanForLeaks(feedback, secrets).length > 0) {
         this.store.securityEvent('feedback-redacted', actor.learnerId, { kind: item.kind }, at)
@@ -1473,7 +1487,15 @@ export class HodosEngine {
     const course = this.loadCourse(journey.courseId, journey.courseVersion)
     const open = this.store.openPresentations(actor.learnerId).find(p => p.journeyId === journey?.id)
     let exercise: ExerciseView | null = null
-    if (open !== undefined && course.items.has(open.itemId)) exercise = this.exerciseView(open, course)
+    let unavailable = false
+    if (open !== undefined && course.items.has(open.itemId)) {
+      try {
+        exercise = this.exerciseView(open, course)
+      } catch (error) {
+        if (!(error instanceof HodosError && error.code === 'UNAVAILABLE')) throw error
+        unavailable = true
+      }
+    }
     const mode = exercise?.mode ?? (view.stage === 'checkpoint' ? 'checkpoint' : view.phase === 'diagnostic' ? 'diagnostic' : null)
     const policy = mode === null ? null : MODE_POLICY[mode]
     const misconceptions = view.activeSkill === null ? [] : Object.entries(this.stateOf(actor.learnerId, course, view.activeSkill.id).misconceptions)
@@ -1485,6 +1507,7 @@ export class HodosEngine {
       `Next action: ${describeAction(view.nextAction)}.`,
       misconceptions.length === 0 ? '' : `Recent misconceptions: ${misconceptions.join(', ')}.`,
       exercise === null ? '' : `Current ${exercise.mode} exercise (${exercise.title}, attempt ${exercise.attempt}, hints revealed ${exercise.hints.length}): ${exercise.fallbackText}`,
+      unavailable ? 'The environment for the current exercise is not installed; the learner\'s progress is saved and resumes once it is.' : '',
       policy === null ? '' : policy.tutorMayHelp
         ? 'Tutor policy: you may explain concepts and use hodos_request_hint for graded help; never state the answer directly — the learner must produce it.'
         : `Tutor policy: the learner is in ${mode} mode. Do NOT give hints, solutions or evaluations of candidate answers until it is finished; offer encouragement only. Messages you exchange now are recorded as assistance.`,
@@ -1500,7 +1523,7 @@ export class HodosEngine {
     }
     if (exercise !== null && open !== undefined) {
       const item = course.items.get(open.itemId)
-      if (item !== undefined) assertNoLeak({ text, data }, secretFragments(item, this.registry.kind(item.kind), { hintLevel: open.hintLevel, answer: open.released }), 'tutor context')
+      if (item !== undefined) assertNoLeak({ text, data }, secretFragments(item, this.registry.kind(item.kind), { hintLevel: open.hintLevel, answer: open.released }, [open.progress]), 'tutor context')
     }
     return { text, data }
   }
@@ -1540,11 +1563,20 @@ export class HodosEngine {
    * Validate and store a course proposed by the tutor agent (or a subagent).
    * Proposed courses are drafts until the learner approves them in the workspace.
    * @param actor - proposer.
-   * @param course - the proposed course.
+   * @param proposal - the proposed course (untrusted model output).
    * @returns validation findings and whether it was stored as a draft.
    */
-  async proposeCourse(actor: Actor, course: CourseSpec): Promise<{ stored: boolean; courseId: string; version: string; errors: string[]; warnings: string[] }> {
+  async proposeCourse(actor: Actor, proposal: unknown): Promise<{ stored: boolean; courseId: string; version: string; errors: string[]; warnings: string[] }> {
     this.limiter.take(actor.learnerId, 'generate')
+    const shape = validateCourseShape(proposal)
+    if (shape.length > 0) {
+      const field = (name: string): string => {
+        const v = typeof proposal === 'object' && proposal !== null && !Array.isArray(proposal) ? (proposal as Record<string, unknown>)[name] : undefined
+        return typeof v === 'string' ? v.slice(0, 64) : ''
+      }
+      return { stored: false, courseId: field('id'), version: field('version'), errors: shape.slice(0, 20).map(d => `${d.code}: ${d.message}`), warnings: [] }
+    }
+    const course = proposal as CourseSpec // structure checked by validateCourseShape above
     const findings = await validateCourse(course, this.registry, { requireCoverage: false })
     const errors = findings.filter(f => f.severity === 'error').map(f => `${f.code}: ${f.message}`)
     const warnings = findings.filter(f => f.severity === 'warning').map(f => `${f.code}: ${f.message}`)
@@ -1593,8 +1625,8 @@ export class HodosEngine {
   // ---------------------------------------------------------------- data rights
 
   /**
-   * Export the learner's own data through the student-view projection: no
-   * answer keys, no grader internals.
+   * Export the learner's own data: their responses, scores, journeys and
+   * skill states. No answer keys, hints, grader feedback or grader internals.
    * @param actor - the learner.
    * @returns JSON export.
    */
@@ -1604,25 +1636,13 @@ export class HodosEngine {
       at: e.createdAt, itemId: e.itemId, mode: e.mode, attempt: e.attempt, response: e.response,
       score: e.grade.score, correct: e.grade.correct, misconceptions: [...e.grade.misconceptions], hintLevel: e.hintLevel, assisted: e.assisted,
     }))
-    const data: JsonObject = {
+    // Built from an allowlist of the learner's own records: no keys, hints, feedback or grader details.
+    return {
       learner: learner === undefined ? null : { id: learner.id, displayName: learner.displayName, createdAt: learner.createdAt },
       journeys: this.store.journeys(actor.learnerId).map(j => ({ id: j.id, goal: j.goalText, course: j.courseId, phase: j.state.phase, completed: [...j.state.completed] })),
       skills: [...this.states(actor.learnerId).values()].map(s => ({ skillId: s.skillId, pMastered: round(s.pMastered), gateOpen: s.gateOpen, due: s.card?.due ?? null })),
       evidence,
     }
-    const secrets: string[] = []
-    for (const c of this.store.courses()) {
-      for (const item of c.spec.items) secrets.push(...secretFragments(item, this.registry.kind(item.kind), { hintLevel: 0, answer: false }))
-    }
-    // Learner responses are their own data; a correct response equals the key, so only non-response fields are scanned.
-    assertNoLeak({ ...data, evidence: evidence.map(({ response: _r, ...rest }) => rest) }, secrets, 'data export')
-    return data
-  }
-
-  private guardJourneySecrets(value: unknown, course: LoadedCourse, where: string): void {
-    const secrets: string[] = []
-    for (const item of course.spec.items) secrets.push(...secretFragments(item, this.registry.kind(item.kind), { hintLevel: 0, answer: false }))
-    assertNoLeak(value, secrets, where)
   }
 }
 

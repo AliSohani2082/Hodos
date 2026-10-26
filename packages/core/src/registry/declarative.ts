@@ -111,14 +111,28 @@ const validateDescription = compileSchema(DECLARATIVE_SCHEMA, 'declarative/schem
  */
 async function inside(root: string, relativePath: string): Promise<string> {
   if (isAbsolute(relativePath)) throw new HodosPluginError('INVALID_CONTENT', `path ${relativePath} must be relative to the plugin directory`)
-  const real = await realpath(resolve(root, relativePath))
-  const rel = relative(root, real)
-  if (rel.startsWith('..') || isAbsolute(rel)) throw new HodosPluginError('INVALID_CONTENT', `path ${relativePath} resolves outside the plugin directory`)
+  const escapes = (path: string): boolean => {
+    const rel = relative(root, path)
+    return rel.startsWith('..') || isAbsolute(rel)
+  }
+  const lexical = resolve(root, relativePath)
+  if (escapes(lexical)) throw new HodosPluginError('INVALID_CONTENT', `path ${relativePath} resolves outside the plugin directory`)
+  let real: string
+  try {
+    real = await realpath(lexical)
+  } catch (_missing) {
+    // Report the plugin-relative path only.
+    throw new HodosPluginError('INVALID_CONTENT', `path ${relativePath} does not exist in the plugin directory`)
+  }
+  // Symlinks are followed before the check, so a link cannot point outside either.
+  if (escapes(real)) throw new HodosPluginError('INVALID_CONTENT', `path ${relativePath} resolves outside the plugin directory`)
   return real
 }
 
 async function readCapped(path: string, cap: number): Promise<string> {
-  const info = await stat(path)
+  const info = await stat(path).catch(() => {
+    throw new HodosPluginError('INVALID_CONTENT', `${path} cannot be read`)
+  })
   if (!info.isFile()) throw new HodosPluginError('INVALID_CONTENT', `${path} is not a file`)
   if (info.size > cap) throw new HodosPluginError('INVALID_CONTENT', `${path} exceeds ${cap} bytes`)
   return readFile(path, 'utf8')

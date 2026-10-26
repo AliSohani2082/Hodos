@@ -7,7 +7,7 @@
  * @module @hodos/core/content/course
  */
 import type { CourseSpec, Diagnostic, LessonNode } from '@hodos/plugin-sdk'
-import { isSemver } from '@hodos/plugin-sdk'
+import { isSemver, validateCourseShape } from '@hodos/plugin-sdk'
 import { validateSkillGraph } from '../graph/skill-graph.js'
 import type { PluginRegistry, RegisteredBlock } from '../registry/registry.js'
 import { parseLesson, type BlockDefinition, type BlockLookup } from './lesson.js'
@@ -47,12 +47,14 @@ export const MIN_PRACTICE_ITEMS = 3
 
 /**
  * Validate a course against the installed plugins.
- * @param course - the course (untrusted).
+ * @param course - the course (untrusted; its structure is checked first).
  * @param registry - installed plugins.
  * @param options - strictness.
  * @returns findings; the course is usable when none is an error.
  */
 export async function validateCourse(course: CourseSpec, registry: PluginRegistry, options: CourseValidationOptions): Promise<Diagnostic[]> {
+  const shape = validateCourseShape(course)
+  if (shape.length > 0) return [...shape]
   const out: Diagnostic[] = []
   const err = (code: string, message: string, target?: string): void => {
     out.push({ severity: 'error', code, message, ...(target === undefined ? {} : { target }) })

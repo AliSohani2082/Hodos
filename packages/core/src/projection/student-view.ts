@@ -41,16 +41,23 @@ export interface ReleaseState {
 
 /**
  * Collect the secrets that must not appear in a payload at this release state.
- * Fragments already visible in the projected payload are excluded.
+ * Fragments already visible in the projected payload, or in other values the
+ * learner legitimately sees (their own responses, the board after the steps
+ * played so far), are excluded.
  * @param item - the stored item.
  * @param kind - its kind (for schema-driven payload stripping).
  * @param release - what is released.
+ * @param visible - other values already visible to the learner in this view.
  * @returns secret fragments to scan for.
  */
-export function secretFragments(item: ExerciseItem, kind: RegisteredKind | undefined, release: ReleaseState): string[] {
+export function secretFragments(item: ExerciseItem, kind: RegisteredKind | undefined, release: ReleaseState, visible: readonly (JsonValue | null | undefined)[] = []): string[] {
   const candidates: string[] = []
   if (!release.answer) {
-    stringLeaves(item.key, candidates)
+    // Misconception ids the item declares are labels shown with their feedback, not answers.
+    const labels = new Set(Object.keys(item.misconceptionFeedback ?? {}))
+    const keyLeaves: string[] = []
+    stringLeaves(item.key, keyLeaves)
+    candidates.push(...keyLeaves.filter(s => !labels.has(s)))
     const keyJson = JSON.stringify(item.key)
     if (typeof item.key === 'object' && item.key !== null) candidates.push(keyJson)
     if (item.explanation !== undefined) candidates.push(item.explanation)
@@ -65,8 +72,8 @@ export function secretFragments(item: ExerciseItem, kind: RegisteredKind | undef
     const visibleSet = new Set(visible)
     for (const s of all) if (!visibleSet.has(s)) candidates.push(s)
   }
-  const visibleText = JSON.stringify(projectPayload(item, kind))
-  return [...new Set(candidates)].filter(s => s.length >= MIN_SECRET_LENGTH && !visibleText.includes(s))
+  const visibleText = JSON.stringify([projectPayload(item, kind), ...visible.filter(v => v !== undefined)])
+  return [...new Set(candidates)].filter(s => s.length >= MIN_SECRET_LENGTH && !visibleText.includes(s) && !visibleText.includes(JSON.stringify(s).slice(1, -1)))
 }
 
 /**
@@ -79,7 +86,21 @@ export function scanForLeaks(value: unknown, secrets: readonly string[]): string
   if (secrets.length === 0) return []
   const text = typeof value === 'string' ? value : JSON.stringify(value) ?? ''
   const lower = text.toLowerCase()
-  return secrets.filter(s => text.includes(s) || (s.length >= 6 && lower.includes(s.toLowerCase())))
+  return secrets.filter(secret => {
+    // A secret can appear raw (string payloads) or JSON-escaped (serialized objects).
+    const forms = new Set([secret, JSON.stringify(secret).slice(1, -1)])
+    return [...forms].some(s => occurs(text, lower, s))
+  })
+}
+
+const LONG_SECRET = 8
+
+function occurs(text: string, lower: string, secret: string): boolean {
+  if (secret.length >= LONG_SECRET) return text.includes(secret) || lower.includes(secret.toLowerCase())
+  // Short fragments must stand alone, so random ids and longer words do not trigger false positives.
+  const escaped = secret.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const flags = secret.length >= 6 ? 'iu' : 'u'
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, flags).test(text)
 }
 
 /**

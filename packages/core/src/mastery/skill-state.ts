@@ -151,6 +151,8 @@ export interface ItemObservation {
   readonly guessable: boolean
   /** False for retries after a wrong first attempt (first-miss rule, ADR-0005). */
   readonly countsForMastery: boolean
+  /** Graded by an advisory method (AI rubric): informs estimates, never counts as a checkpoint success. */
+  readonly advisory?: boolean
   readonly latencyMs?: number
   readonly expectedTimeSec?: number
   readonly confidence?: 'sure' | 'unsure'
@@ -267,7 +269,7 @@ export function applyItemObservation(
     const misconceptions = { ...prev.misconceptions }
     for (const m of obs.misconceptions) misconceptions[m] = { count: (misconceptions[m]?.count ?? 0) + 1, last: at }
     const unassistedSuccess = obs.countsForMastery && !obs.assisted && e >= config.checkpointSuccessEvidence
-    const checkpointSuccesses = obs.mode === 'checkpoint' && unassistedSuccess
+    const checkpointSuccesses = obs.mode === 'checkpoint' && unassistedSuccess && obs.advisory !== true
       && !prev.checkpointSuccesses.some(c => c.itemId === obs.itemId)
       ? [...prev.checkpointSuccesses, { itemId: obs.itemId, guessable: obs.guessable }]
       : prev.checkpointSuccesses

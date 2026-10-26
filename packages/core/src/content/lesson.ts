@@ -334,6 +334,37 @@ export function lessonPlainText(tree: LessonNode, blocks: BlockLookup): string {
   return out.join('\n\n')
 }
 
+function leaves(value: JsonValue | undefined, out: string[], depth = 0): void {
+  if (depth > 32 || value === undefined || value === null) return
+  if (typeof value === 'string') out.push(value)
+  else if (Array.isArray(value)) value.forEach(v => leaves(v, out, depth + 1))
+  else if (typeof value === 'object') Object.values(value).forEach(v => leaves(v, out, depth + 1))
+}
+
+/**
+ * Text that the student-view projection removes from a lesson (check answers,
+ * explanations, server-only plugin attributes). Used as leak-guard secrets for
+ * the lesson's own outbound views; a lesson may of course teach anything else.
+ * @param tree - the full (server-side) lesson tree.
+ * @param blocks - plugin blocks.
+ * @returns withheld strings.
+ */
+export function lessonServerFragments(tree: LessonNode, blocks: BlockLookup): string[] {
+  const out: string[] = []
+  const walk = (node: LessonNode): void => {
+    const def = CORE_BLOCKS.get(node.type) ?? blocks.block(node.type)
+    if (def !== undefined) {
+      const visible = JSON.stringify(stripServerFields(def.attributes, node.attributes) ?? {})
+      const all: string[] = []
+      leaves(node.attributes, all)
+      for (const s of all) if (!visible.includes(JSON.stringify(s))) out.push(s)
+    }
+    node.children?.forEach(walk)
+  }
+  walk(tree)
+  return [...new Set(out)]
+}
+
 /**
  * Collect the formative check blocks of a lesson (for grading and lesson completion).
  * @param tree - the full (server-side) lesson tree.

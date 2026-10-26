@@ -138,6 +138,8 @@ export interface ItemFacts {
   readonly guessable: boolean
   readonly options?: number
   readonly expectedTimeSec?: number
+  /** Graded by an advisory method (AI rubric): cannot count as a checkpoint success. */
+  readonly advisory?: boolean
 }
 
 /** One append-only evidence record (a graded attempt). */

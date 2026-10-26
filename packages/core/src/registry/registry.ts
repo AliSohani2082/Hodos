@@ -19,6 +19,7 @@ import {
   formatDiagnostics,
   HodosPluginError,
   isJsonValue,
+  validateContentPackShape,
   validateManifest,
   type ContentGeneratorSpec,
   type ContentPack,
@@ -28,6 +29,7 @@ import {
   type GradeInput,
   type GradeResult,
   type GraderSpec,
+  type GradingMethod,
   type HodosEnvironmentManifest,
   type HodosEnvironmentPlugin,
   type HodosPluginContext,
@@ -355,7 +357,7 @@ export class PluginRegistry {
     for (const p of c.packs) {
       if (!CONTRIBUTION_ID.test(p.id)) err('registry/bad-id', `invalid content pack id ${p.id}`)
       if (!declared(caps.contentPacks, p.id)) err('registry/undeclared', `content pack ${p.id} is not declared in the manifest`)
-      if (!isJsonValue(JSON.parse(JSON.stringify(p)))) err('registry/content', `content pack ${p.id} is not plain JSON`)
+      for (const d of validateContentPackShape(p)) err('registry/content', `content pack ${p.id}: ${d.message}`)
     }
 
     for (const g of c.generators) {
@@ -497,16 +499,42 @@ export class PluginRegistry {
    */
   async grade(input: GradeInput): Promise<GradeResult> {
     const { grader } = this.graderFor(input.kind)
-    let raw: unknown
-    if (grader.trusted && grader.spec.grade !== undefined) {
-      const grade = grader.spec.grade
-      raw = await withTimeout(Promise.resolve().then(() => grade(input)), this.options.hookTimeoutMs ?? 5000, `grader ${grader.spec.id}`)
-    } else if (grader.spec.sandbox !== undefined) {
-      raw = await this.options.sandbox.call('grade', grader.spec.sandbox.source, input)
-    } else {
+    return this.runGrader(grader.spec.id, 'grade', async () => {
+      if (grader.trusted && grader.spec.grade !== undefined) {
+        const grade = grader.spec.grade
+        return withTimeout(Promise.resolve().then(() => grade(input)), this.options.hookTimeoutMs ?? 5000, `grader ${grader.spec.id}`)
+      }
+      if (grader.spec.sandbox !== undefined) return this.options.sandbox.call('grade', grader.spec.sandbox.source, input)
       throw new HodosError('UNAVAILABLE', `grader ${grader.spec.id} cannot grade single responses`)
+    }, raw => validateGradeResult(raw, input.skills))
+  }
+
+  /**
+   * Run a grader hook and validate its output. Any failure becomes one fixed
+   * error: grader messages can quote the answer key, so they go to the server
+   * log only and never to the learner, the model or the HTTP client.
+   */
+  private async runGrader<T>(graderId: string, hook: 'grade' | 'step', invoke: () => Promise<unknown>, validate: (raw: unknown) => T): Promise<T> {
+    try {
+      return validate(await invoke())
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      const reason = /did not finish|exceeded/.test(message) ? 'timeout'
+        : error instanceof HodosError && error.code === 'INVALID_INPUT' && /rejected|oversized|invalid JSON|not plain JSON/.test(message) ? 'malformed-result' : 'error'
+      this.options.logger.warn(`grader ${graderId} ${hook} failed (${reason}): ${message.slice(0, 300)}`)
+      throw new HodosError('UNAVAILABLE', `grader ${graderId} failed; the attempt was not counted`, { grader: graderId, reason })
     }
-    return validateGradeResult(raw, input.skills)
+  }
+
+  /**
+   * The grader of an exercise kind.
+   * @param kindId - kind id.
+   * @returns its id, method and trust, or undefined when not installed.
+   */
+  graderInfo(kindId: string): { id: string; method: GradingMethod; trusted: boolean } | undefined {
+    const kind = this.kinds.get(kindId)
+    const grader = kind === undefined ? undefined : this.graders.get(kind.spec.grader)
+    return grader === undefined ? undefined : { id: grader.spec.id, method: grader.spec.method, trusted: grader.trusted }
   }
 
   /**
@@ -517,16 +545,14 @@ export class PluginRegistry {
    */
   async step(input: StepInput): Promise<StepResult> {
     const { grader } = this.graderFor(input.kind)
-    let raw: unknown
-    if (grader.trusted && grader.spec.step !== undefined) {
-      const step = grader.spec.step
-      raw = await withTimeout(Promise.resolve().then(() => step(input)), this.options.hookTimeoutMs ?? 5000, `grader ${grader.spec.id}`)
-    } else if (grader.spec.sandbox !== undefined) {
-      raw = await this.options.sandbox.call('step', grader.spec.sandbox.source, input)
-    } else {
+    return this.runGrader(grader.spec.id, 'step', async () => {
+      if (grader.trusted && grader.spec.step !== undefined) {
+        const step = grader.spec.step
+        return withTimeout(Promise.resolve().then(() => step(input)), this.options.hookTimeoutMs ?? 5000, `grader ${grader.spec.id}`)
+      }
+      if (grader.spec.sandbox !== undefined) return this.options.sandbox.call('step', grader.spec.sandbox.source, input)
       throw new HodosError('UNAVAILABLE', `grader ${grader.spec.id} cannot grade steps`)
-    }
-    return validateStepResult(raw, input.skills)
+    }, raw => validateStepResult(raw, input.skills))
   }
 
   /**
