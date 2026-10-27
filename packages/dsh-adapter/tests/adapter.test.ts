@@ -12,10 +12,12 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
+import type { LearnerId } from '@hodos/core'
 import { correctResponse, createQuizPlugin, quizCourse, wrongResponse } from '@hodos/testing'
 import * as plugin from '../src/index.js'
 import { GLOBAL_TOOL_NAMES, RENDERER_CSP, SESSION_TOOL_NAMES } from '../src/index.js'
 import type { HodosService } from '../src/service.js'
+import { noticeFor } from '../src/tutor-sessions.js'
 
 /** What a DSH tool guard sees of a call (the part these tests use). */
 type FakeGuard = (execution: { readonly name: string }) => string | undefined
@@ -342,6 +344,22 @@ describe('Hodos DSH plugin', () => {
     expect(h.hodos.store.presentation(ex?.id ?? '')?.tutorContact).toBe(false)
     h.root.events.emit('session/event', { id: 'sess-1' }, userMessage)
     expect(h.hodos.store.presentation(ex?.id ?? '')?.tutorContact).toBe(true)
+  })
+
+  it('reports workspace answers to the tutor without revealing assessment results', () => {
+    const answered = { type: 'attempt', learnerId: 'learner:local' as LearnerId, journeyId: 'j1', skillId: 'quiz.add', hintLevel: 0, channel: 'ui' } as const
+    const practice = noticeFor({ ...answered, mode: 'practice', status: 'incorrect' })
+    expect(practice?.text).toContain('answered a practice exercise: incorrect')
+    expect(practice?.wake).toBe(false)
+    for (const mode of ['checkpoint', 'diagnostic']) {
+      for (const status of ['correct', 'incorrect', 'recorded'] as const) {
+        const notice = noticeFor({ ...answered, mode, status })
+        expect(notice?.text, mode).toContain('result withheld until the end')
+        expect(`${notice?.text ?? ''} ${notice?.summary ?? ''}`, `${mode} ${status}`).not.toMatch(/correct|recorded/)
+      }
+    }
+    // The tutor already knows what it relayed itself.
+    expect(noticeFor({ ...answered, channel: 'agent', mode: 'practice', status: 'correct' })).toBeNull()
   })
 
   it('tells the tutor about workspace activity with bounded notices', async () => {

@@ -140,12 +140,14 @@ export function noticeFor(event: EngineEvent): { learnerId: LearnerId; journeyId
     case 'attempt': {
       // The agent already knows about its own relayed attempts.
       if (event.channel !== 'ui' || event.journeyId === null) return null
-      const what = event.mode === 'checkpoint' || event.mode === 'diagnostic' ? 'answered an assessment item (result withheld until the end)' : `answered a ${event.mode} exercise: ${event.status}`
+      // Results of placement and checkpoint items stay withheld, in the summary too.
+      const assessment = event.mode === 'checkpoint' || event.mode === 'diagnostic'
+      const what = assessment ? 'answered an assessment item (result withheld until the end)' : `answered a ${event.mode} exercise: ${event.status}`
       return {
         learnerId: event.learnerId,
         journeyId: event.journeyId,
         text: `[Hodos] The learner ${what} on skill ${event.skillId} in the workspace${event.hintLevel > 0 ? ` after ${event.hintLevel} hint level(s)` : ''}.`,
-        summary: `Learner ${event.status} on ${event.skillId}`,
+        summary: assessment ? `Learner answered an assessment item on ${event.skillId}` : `Learner ${event.status} on ${event.skillId}`,
         wake: false,
       }
     }

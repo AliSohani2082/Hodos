@@ -87,6 +87,8 @@ async function diagnose(env: Env): Promise<void> {
     expect(result.status).toBe('recorded')
     expect(result.feedback).toBeUndefined()
     expect(result.explanation).toBeUndefined()
+    // The host hears about the answer, not its result.
+    expect(env.events.at(-1)).toMatchObject({ type: 'attempt', mode: 'diagnostic', status: 'recorded', channel: 'ui' })
   }
   throw new Error('diagnostic did not finish')
 }

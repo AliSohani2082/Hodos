@@ -1293,6 +1293,8 @@ export class HodosEngine {
     })
     let after = this.store.journey(journey.id) ?? journey
     if (session.isComplete()) after = this.finishDiagnostic(after, session, record.id, actor.channel)
+    // Placement answers are reported like any other, without their result.
+    this.emit({ type: 'attempt', learnerId: actor.learnerId, journeyId: p.journeyId, skillId: p.skillId, mode: 'diagnostic', status: 'recorded', hintLevel: 0, channel: actor.channel })
     return {
       presentationId: p.id, status: 'recorded', mode: 'diagnostic', canRetry: false, attemptsLeft: 0, hintsAvailable: 0, stuck: false,
       nextAction: this.nextAction(after, course),
