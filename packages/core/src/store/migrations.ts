@@ -209,4 +209,64 @@ CREATE TABLE security_events (
 );
 `,
   },
+  {
+    version: 2,
+    name: 'learning sessions',
+    sql: `
+CREATE TABLE learn_sessions (
+  id TEXT PRIMARY KEY,
+  learner_id TEXT NOT NULL REFERENCES learners(id),
+  host_session_id TEXT UNIQUE,
+  goal TEXT NOT NULL,
+  phase TEXT NOT NULL CHECK (phase IN ('probe', 'plan', 'teach', 'closed')),
+  assessment_json TEXT,
+  plan_json TEXT,
+  plan_source TEXT,
+  plan_version INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX learn_sessions_learner ON learn_sessions(learner_id, updated_at);
+CREATE TABLE learn_questions (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT NOT NULL UNIQUE,
+  session_id TEXT NOT NULL REFERENCES learn_sessions(id),
+  role TEXT NOT NULL CHECK (role IN ('probe', 'predict', 'check', 'review')),
+  node_id TEXT,
+  prompt TEXT NOT NULL,
+  details TEXT,
+  body_json TEXT NOT NULL,
+  origin TEXT NOT NULL CHECK (origin IN ('model', 'bank')),
+  status TEXT NOT NULL CHECK (status IN ('open', 'answered', 'superseded')),
+  progress_json TEXT,
+  response_json TEXT,
+  answer_text TEXT,
+  thinking TEXT,
+  verdict_json TEXT,
+  asked_at TEXT NOT NULL,
+  answered_at TEXT
+);
+CREATE INDEX learn_questions_session ON learn_questions(session_id, seq);
+CREATE TABLE learn_transcript (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id TEXT NOT NULL REFERENCES learn_sessions(id),
+  role TEXT NOT NULL CHECK (role IN ('teacher', 'learner')),
+  text TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX learn_transcript_session ON learn_transcript(session_id, seq);
+CREATE TABLE learn_node_states (
+  session_id TEXT NOT NULL REFERENCES learn_sessions(id),
+  node_id TEXT NOT NULL,
+  learner_id TEXT NOT NULL REFERENCES learners(id),
+  p_mastered REAL NOT NULL,
+  card_json TEXT,
+  due_at TEXT,
+  observations INTEGER NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (session_id, node_id)
+);
+CREATE INDEX learn_node_states_due ON learn_node_states(learner_id, due_at);
+`,
+  },
 ]

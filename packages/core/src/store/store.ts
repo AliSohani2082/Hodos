@@ -15,42 +15,7 @@ import { brandId, type JourneyId, type LearnerId } from '../ids.js'
 import type { SkillState } from '../mastery/skill-state.js'
 import type { JourneyEvent, JourneyState } from '../protocol/journey.js'
 import { MIGRATIONS, type Migration } from './migrations.js'
-
-type Row = Record<string, unknown>
-
-function str(row: Row, col: string): string {
-  const v = row[col]
-  if (typeof v !== 'string') throw new HodosError('INTERNAL', `stored column ${col} is not text`)
-  return v
-}
-function optStr(row: Row, col: string): string | null {
-  const v = row[col]
-  return typeof v === 'string' ? v : null
-}
-function num(row: Row, col: string): number {
-  const v = row[col]
-  if (typeof v === 'number') return v
-  if (typeof v === 'bigint') return Number(v)
-  throw new HodosError('INTERNAL', `stored column ${col} is not numeric`)
-}
-function optNum(row: Row, col: string): number | null {
-  const v = row[col]
-  return typeof v === 'number' ? v : typeof v === 'bigint' ? Number(v) : null
-}
-/**
- * A JSON column. Every `*_json` column is written by this module from a typed
- * value, so each read site asserts the type it wrote.
- */
-function json(row: Row, col: string): unknown {
-  try {
-    return JSON.parse(str(row, col))
-  } catch (error) {
-    throw new HodosError('INTERNAL', `stored column ${col} holds invalid JSON: ${error instanceof Error ? error.message : String(error)}`)
-  }
-}
-function optJson(row: Row, col: string): unknown {
-  return optStr(row, col) === null ? null : json(row, col)
-}
+import { json, num, optJson, optNum, optStr, str, type Row, type SqlRunner } from './rows.js'
 
 /** Stored learner. */
 export interface LearnerRecord {
@@ -355,6 +320,13 @@ export class HodosStore {
     } finally {
       this.depth = 0
     }
+  }
+
+  /** Statements on this database for the repositories that share it (core-internal). */
+  readonly sql: SqlRunner = {
+    run: (sql, ...params) => this.run(sql, ...params),
+    get: (sql, ...params) => this.get(sql, ...params),
+    all: (sql, ...params) => this.all(sql, ...params),
   }
 
   private run(sql: string, ...params: SQLInputValue[]): void {
