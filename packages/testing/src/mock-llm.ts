@@ -7,7 +7,7 @@
  */
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import type { JsonObject, JsonValue } from '@hodos/plugin-sdk'
+import { isJsonValue, type JsonObject, type JsonValue } from '@hodos/plugin-sdk'
 
 /** A tool result found in the request's last message. */
 export interface MockToolResult {
@@ -199,7 +199,8 @@ export async function startMockLlm(script: MockScript, port = 0): Promise<MockLl
  * The scripted tutor used by the Hodos end-to-end journeys. It starts a
  * journey when the learner states a learning goal, resumes one when asked,
  * lists the courses when asked about courses, reports tool results back as
- * text, and otherwise answers briefly.
+ * text, and otherwise answers briefly. "Call the tool <name> with <JSON
+ * object>" makes it call that tool, so tests can probe the tool policy.
  * @param options - environment hint and self-report for the start call.
  * @returns the script.
  */
@@ -222,6 +223,12 @@ export function tutorScript(options: { environment: string; selfReport?: Readonl
     if (/\bapprove\b/i.test(said) && request.tools.includes('hodos_approve_path')) return { tool: 'hodos_approve_path', input: {} }
     const draft = /\bdraft (?:a|me a) course (?:about|on) (.+)$/i.exec(said)
     if (draft?.[1] !== undefined && request.tools.includes('hodos_draft_course')) return { tool: 'hodos_draft_course', input: { topic: draft[1].slice(0, 200) } }
+    // Tests probe the tool policy with "Call the tool <name> with <JSON object>", offered or not.
+    const probe = /^call the tool ([\w-]+) with (\{.*\})$/i.exec(said)
+    if (probe?.[1] !== undefined && probe[2] !== undefined) {
+      const input: unknown = JSON.parse(probe[2])
+      if (isJsonValue(input) && typeof input === 'object' && input !== null && !Array.isArray(input)) return { tool: probe[1], input }
+    }
     return { text: 'Keep going in the Hodos workspace; ask me if you get stuck.' }
   }
 }

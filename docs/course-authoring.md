@@ -42,7 +42,9 @@ DeepSeek Harness ships an optional bundle, **Claude Code subagent** (`@deepseek-
    A DeepSeek Harness patch replaces the whole `config` of the row; it does not merge into it. So restate `dataDir` and any other Hodos settings you changed. Check the result with `dsh --profile web --patch <file> --dump-config`.
 
    With an empty `delegateProvider`, Hodos uses the first provider DeepSeek Harness lists.
-4. Ask the tutor for a course on a topic that no installed course covers. The tutor calls `hodos_draft_course`. The subagent receives the authoring guide and answers with a course. Hodos validates it and keeps it as a draft for you to approve.
+4. In a chat that is not running a learning journey, ask for a course on a topic that no installed course covers. The agent calls `hodos_draft_course`. The subagent receives the authoring guide and answers with a course. Hodos validates it and keeps it as a draft for you to approve.
+
+   A chat that is running a journey cannot draft: under the default `tutorTools: restricted`, a tutoring session keeps only Hodos's own tools and may not start subagents, since a subagent can have shell, file and network tools. The tutor can still write a course itself with `hodos_propose_course`.
 
 Each delegation spends one unit of a small per-learner budget: three per day by default. Keep the provider's default `permissionMode` (`dontAsk`). The drafting task needs no tools, so do not use `bypassPermissions` for it.
 

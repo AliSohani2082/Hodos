@@ -3,7 +3,10 @@
  *
  * - The session gets the Hodos session tools (registered in the agent's own
  *   scope) and, under the `restricted` policy, loses every other tool: a
- *   learner-facing tutor has no shell, filesystem, network or credential tools.
+ *   learner-facing tutor has no shell, filesystem, network or credential tools,
+ *   and cannot start subagents (which may have them). Global tools are hidden
+ *   with a restriction; tools other plugins register in the agent's own scope
+ *   (DSH's `subagent`) cannot be hidden, so a guard refuses to run them.
  * - Every message the learner types in a bound session marks open exercises
  *   and an active checkpoint as assisted (tutor contact).
  * - Workspace activity reaches the tutor as rate-limited notices.
@@ -27,6 +30,9 @@ declare module '@deepseek-ai/dsh-llm' {
 
 /** Longest notice text sent to the model. */
 const MAX_NOTICE_CHARS = 600
+
+/** Hodos tools that start a subagent: not offered to a restricted tutor. */
+const DELEGATING_TOOLS: ReadonlySet<string> = new Set(['hodos_draft_course'])
 
 /** Binds sessions to Hodos and keeps tutor sessions consistent across restarts. */
 export class TutorSessions {
@@ -57,9 +63,14 @@ export class TutorSessions {
     if (agent === undefined) return
     const disposers: Array<() => void> = []
     try {
-      for (const tool of this.sessionTools()) disposers.push(agent.ctx.tools.register(tool))
-      // Only Hodos's own global tools stay visible; scoped session tools are always visible.
-      if (this.hodos.config.tutorTools === 'restricted') disposers.push(agent.ctx.tools.restrict({ allow: this.hodos.globalTools() }))
+      const sessionTools = this.sessionTools()
+      for (const tool of sessionTools) disposers.push(agent.ctx.tools.register(tool))
+      if (this.hodos.config.tutorTools === 'restricted') {
+        const globals = this.hodos.globalTools().filter(name => !DELEGATING_TOOLS.has(name))
+        disposers.push(agent.ctx.tools.restrict({ allow: globals }))
+        const allowed = new Set([...globals, ...sessionTools.map(tool => tool.name)])
+        disposers.push(agent.ctx.tools.guard(execution => (allowed.has(execution.name) ? undefined : `${execution.name} is not available in a learning session; use the Hodos tools.`)))
+      }
     } catch (error) {
       for (const dispose of disposers.toReversed()) dispose()
       this.hodos.logger.error(`could not set up tutor session ${sessionId}: ${error instanceof Error ? error.message : String(error)}`)

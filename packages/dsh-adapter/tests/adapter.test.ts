@@ -16,14 +16,22 @@ import * as plugin from '../src/index.js'
 import { GLOBAL_TOOL_NAMES, SESSION_TOOL_NAMES } from '../src/index.js'
 import type { HodosService } from '../src/service.js'
 
+/** What a DSH tool guard sees of a call (the part these tests use). */
+type FakeGuard = (execution: { readonly name: string }) => string | undefined
+
 interface FakeAgent {
   readonly id: string
   readonly scoped: Map<string, ToolDefinition>
   readonly restrictions: Array<{ allow?: readonly string[] }>
+  readonly guards: FakeGuard[]
   readonly injected: unknown[]
   readonly followups: unknown[]
   readonly ctx: {
-    tools: { register(def: ToolDefinition): () => void; restrict(filter: { allow?: readonly string[] }): () => void }
+    tools: {
+      register(def: ToolDefinition): () => void
+      restrict(filter: { allow?: readonly string[] }): () => void
+      guard(guard: FakeGuard): () => void
+    }
   }
   inject(message: unknown): void
   followup(message: unknown): void
@@ -32,14 +40,16 @@ interface FakeAgent {
 function fakeAgent(id: string): FakeAgent {
   const scoped = new Map<string, ToolDefinition>()
   const restrictions: Array<{ allow?: readonly string[] }> = []
+  const guards: FakeGuard[] = []
   const injected: unknown[] = []
   const followups: unknown[] = []
   return {
-    id, scoped, restrictions, injected, followups,
+    id, scoped, restrictions, guards, injected, followups,
     ctx: {
       tools: {
         register(def) { scoped.set(def.name, def); return () => { scoped.delete(def.name) } },
         restrict(filter) { restrictions.push(filter); return () => { restrictions.splice(restrictions.indexOf(filter), 1) } },
+        guard(guard) { guards.push(guard); return () => { guards.splice(guards.indexOf(guard), 1) } },
       },
     },
     inject(message) { injected.push(message) },
@@ -173,6 +183,13 @@ describe('Hodos DSH plugin', () => {
     expect(requests[0]?.request.prompt[0]?.text).toContain('# Hodos course authoring guide')
     expect(h.hodos.engine.drafts()).toEqual([expect.objectContaining({ id: 'quiz-drafted', origin: 'agent' })])
     for (const item of h.hodos.store.course('quiz-drafted', '0.1.0')?.spec.items ?? []) expect(item.provenance).toEqual({ source: 'generated' })
+
+    // Once the session becomes a restricted tutoring session, drafting (a subagent) is neither offered nor run.
+    const tutor = fakeAgent('sess-2')
+    h.agents.push(tutor)
+    await call(h, 'hodos_start_learning', { goal: 'arithmetic', skip_diagnostic: true }, 'sess-2')
+    expect(tutor.restrictions[0]?.allow).not.toContain('hodos_draft_course')
+    expect(tutor.guards.map(guard => guard({ name: 'hodos_draft_course' })).find(reason => reason !== undefined)).toContain('not available in a learning session')
   })
 
   it('registers the global tools, the prompt section and the learner context', async () => {
@@ -192,6 +209,11 @@ describe('Hodos DSH plugin', () => {
     expect(started.text).toContain('Hodos learning')
     expect([...agent.scoped.keys()].toSorted()).toEqual([...SESSION_TOOL_NAMES].toSorted())
     expect(agent.restrictions).toEqual([{ allow: expect.arrayContaining([...GLOBAL_TOOL_NAMES]) as unknown as string[] }])
+    // Tools that other plugins put in the agent's own scope (DSH's `subagent`) cannot be hidden: the guard refuses them.
+    const refused = (name: string): string | undefined => agent.guards.map(guard => guard({ name })).find(reason => reason !== undefined)
+    expect(agent.guards).toHaveLength(1)
+    for (const name of [...SESSION_TOOL_NAMES, ...GLOBAL_TOOL_NAMES]) expect(refused(name), name).toBeUndefined()
+    for (const name of ['subagent', 'subagent_fork', 'bash', 'web_fetch']) expect(refused(name), name).toContain('not available in a learning session')
     expect(h.hodos.isTutorSession('sess-1')).toBe(true)
     // The learner context now appears in the prompt of this session only.
     const context = h.contexts[0]
@@ -212,6 +234,7 @@ describe('Hodos DSH plugin', () => {
     await call(h, 'hodos_start_learning', { goal: 'arithmetic', skip_diagnostic: true })
     expect(agent.scoped.size).toBe(SESSION_TOOL_NAMES.length)
     expect(agent.restrictions).toEqual([])
+    expect(agent.guards).toEqual([])
   })
 
   it('takes identity from the calling session, never from arguments', async () => {
