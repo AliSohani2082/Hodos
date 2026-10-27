@@ -3,17 +3,18 @@
  * (tools, agents, system prompt, web server, connection). The real-host
  * journey runs in `e2e/` against an installed DeepSeek Harness.
  */
-import { mkdtempSync } from 'node:fs'
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
+import { cpSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs'
+import { createServer, request, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { correctResponse, createQuizPlugin, quizCourse, wrongResponse } from '@hodos/testing'
 import * as plugin from '../src/index.js'
-import { GLOBAL_TOOL_NAMES, SESSION_TOOL_NAMES } from '../src/index.js'
+import { GLOBAL_TOOL_NAMES, RENDERER_CSP, SESSION_TOOL_NAMES } from '../src/index.js'
 import type { HodosService } from '../src/service.js'
 
 /** What a DSH tool guard sees of a call (the part these tests use). */
@@ -130,6 +131,25 @@ async function call(h: Harness, name: string, args: Record<string, unknown>, ses
   if (tool === undefined) throw new Error(`tool ${name} is not visible in ${sessionId ?? 'a session-less call'}`)
   const value = await tool.execute(args, exec(sessionId))
   return value as { text: string; ref?: string }
+}
+
+/** The sample declarative plugin, which has a renderer. */
+const EXAMPLE_PLUGIN = fileURLToPath(new URL('../../../examples/binary-numbers', import.meta.url))
+
+/** GET (or another method) with the path sent exactly as written, as a browser or attacker may send it. */
+function rawRequest(url: string, path: string, method = 'GET'): Promise<{ status: number; csp: string | undefined }> {
+  const { hostname, port } = new URL(url)
+  return new Promise((resolve, reject) => {
+    const req = request({ hostname, port, path, method, headers: { cookie: 'dsh=ok' } }, res => {
+      res.resume()
+      res.on('end', () => {
+        const csp = res.headers['content-security-policy']
+        resolve({ status: res.statusCode ?? 0, csp: typeof csp === 'string' ? csp : undefined })
+      })
+    })
+    req.on('error', reject)
+    req.end()
+  })
 }
 
 async function api(h: Harness, method: 'GET' | 'POST', path: string, body?: unknown, options: { session?: string; cookie?: string; type?: string } = {}): Promise<{ status: number; json: { data?: unknown; error?: { code: string; message: string } } | null; headers: Headers }> {
@@ -355,6 +375,28 @@ describe('Hodos workspace API', () => {
     expect((await api(h, 'GET', 'state', undefined, { cookie: 'nope' })).status).toBe(401)
     const app = await fetch(`${h.url}/hodos/app/`, { headers: { cookie: 'nope' } })
     expect(app.status).toBe(401)
+  })
+
+  it('security: serves renderer files only from inside the renderer folder', async () => {
+    const base = mkdtempSync(join(tmpdir(), 'hodos-renderer-'))
+    const dir = join(base, 'plugin')
+    cpSync(EXAMPLE_PLUGIN, dir, { recursive: true })
+    writeFileSync(join(base, 'secret.js'), 'learner data')
+    symlinkSync(join(base, 'secret.js'), join(dir, 'renderer', 'leak.js'))
+    const h = await harness({ pluginDirs: [dir] })
+    await waitFor(() => h.hodos.registry.renderer('binary-bits') !== undefined, 'the example renderer')
+    const at = '/hodos/env/example-binary/binary-bits'
+    const served = await rawRequest(h.url, `${at}/bits.js`)
+    expect(served).toEqual({ status: 200, csp: RENDERER_CSP })
+    for (const path of [
+      `${at}/%2e%2e%2fgrader.js`, // the plugin folder above the renderer root
+      `${at}/..%2f..%2fsecret.js`, // outside the plugin
+      `${at}/leak.js`, // a symbolic link out of the renderer root
+      `${at}/bits.js%00.css`,
+      `${at}/`,
+      '/hodos/env/another-plugin/binary-bits/bits.js', // a renderer id under someone else's plugin id
+    ]) expect((await rawRequest(h.url, path)).status, path).toBe(404)
+    expect((await rawRequest(h.url, `${at}/bits.js`, 'POST')).status).toBe(404)
   })
 
   it('requires JSON bodies, bounds their size and validates fields', async () => {

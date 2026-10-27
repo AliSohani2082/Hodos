@@ -1,11 +1,14 @@
 /**
- * The tools of a tutoring session in a real DeepSeek Harness. Before a
- * journey starts, the chat has the profile's tools (shell, files, web,
- * subagents). Once the session is bound to a journey under the default
- * `restricted` policy, the model is offered only Hodos's tools, plus DSH's
- * `subagent`, which DSH registers in the agent's own scope where no
- * restriction reaches. Hodos's guard refuses to run it, and a hidden tool
- * cannot be called at all.
+ * Security boundaries in a real DeepSeek Harness.
+ *
+ * - Tools: before a journey starts, the chat has the profile's tools (shell,
+ *   files, web, subagents). Once the session is bound to a journey under the
+ *   default `restricted` policy, the model is offered only Hodos's tools, plus
+ *   DSH's `subagent`, which DSH registers in the agent's own scope where no
+ *   restriction reaches. Hodos's guard refuses to run it, and a hidden tool
+ *   cannot be called at all.
+ * - Routes: the Hodos API and workspace answer only requests that carry
+ *   DeepSeek Harness's sign-in.
  *
  * Needs `pnpm build` and HODOS_DSH_BIN; skipped otherwise.
  */
@@ -40,7 +43,7 @@ async function resultOf(name: string): Promise<MockToolResult> {
   return the(found.result, `the result of ${name}`)
 }
 
-describe.skipIf(!DSH_AVAILABLE)('tools of a tutoring session in DeepSeek Harness', () => {
+describe.skipIf(!DSH_AVAILABLE)('security boundaries in DeepSeek Harness', () => {
   beforeAll(async () => {
     mock = await startMockLlm(tutorScript({ environment: 'chess' }))
     dsh = await startDsh(prepareHome(['packages/dsh-adapter', 'packages/environments/chess']), mock.url)
@@ -81,5 +84,15 @@ describe.skipIf(!DSH_AVAILABLE)('tools of a tutoring session in DeepSeek Harness
   it('does not run a hidden tool the tutor names anyway', async () => {
     await say(the(page, 'page'), 'Call the tool bash with {"command":"id"}')
     expect((await resultOf('bash')).isError).toBe(true)
+  })
+
+  it('answers the API and the workspace only with DeepSeek Harness\'s sign-in', async () => {
+    const origin = the(dsh, 'dsh').origin
+    for (const path of ['/hodos/api/v1/state?session=probe', '/hodos/app/']) {
+      // No cookie: what another local program or a page on another site would send.
+      expect((await fetch(`${origin}${path}`)).status, path).toBe(401)
+      // The signed-in browser gets through.
+      expect((await the(page, 'page').request.get(`${origin}${path}`)).status(), path).toBe(200)
+    }
   })
 })
