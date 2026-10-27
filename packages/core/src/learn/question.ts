@@ -118,12 +118,15 @@ export interface QuestionReveal {
 export type QuestionForm =
   | { readonly type: 'choice'; readonly multi: boolean; readonly options: readonly ChoiceOption[] }
   | { readonly type: 'explain' }
-  | { readonly type: 'interface'; readonly kind: string; readonly environment: string; readonly payload: JsonValue; readonly text: string }
+  | { readonly type: 'interface'; readonly kind: string; readonly environment: string; readonly responseKind: string; readonly interaction: 'single' | 'stepwise'; readonly payload: JsonValue; readonly text: string }
 
 /** What a plugin kind must provide for interface questions; the registry supplies it. */
 export interface InterfaceKind {
   readonly environment: string
   readonly title: string
+  /** How the learner answers (choice, text, moves, code…), for a generic answer form. */
+  readonly responseKind: string
+  readonly interaction: 'single' | 'stepwise'
   /** The student-view projection of a payload (server-only fields removed). */
   project(payload: JsonValue): JsonValue
   /** The plain-text view of a payload. */
@@ -171,6 +174,7 @@ export function readChoiceBody(input: Record<string, unknown>, problems: string[
   }
   if (raw.length < QUESTION_LIMITS.minOptions || raw.length > QUESTION_LIMITS.maxOptions) problems.push(`options must have ${QUESTION_LIMITS.minOptions} to ${QUESTION_LIMITS.maxOptions} entries`)
   const options: ChoiceOption[] = []
+  const derived = new Set<number>()
   raw.forEach((entry, i) => {
     const o = obj(entry)
     const label = typeof entry === 'string' ? entry.trim() : typeof o?.label === 'string' ? o.label.trim() : ''
@@ -179,15 +183,26 @@ export function readChoiceBody(input: Record<string, unknown>, problems: string[
       return
     }
     if (label.length > QUESTION_LIMITS.optionChars) problems.push(`option ${i + 1} is longer than ${QUESTION_LIMITS.optionChars} characters`)
-    const given = typeof o?.value === 'string' && o.value.trim() !== '' ? o.value.trim() : slugValue(label, i)
+    const explicit = typeof o?.value === 'string' && o.value.trim() !== ''
+    const given = explicit ? (o.value as string).trim() : slugValue(label, i)
     if (given.length > QUESTION_LIMITS.valueChars) problems.push(`option ${i + 1}'s value is longer than ${QUESTION_LIMITS.valueChars} characters`)
+    if (!explicit) derived.add(options.length)
     options.push({ value: given, label })
   })
-  const values = new Set<string>()
-  for (const o of options) {
-    if (values.has(o.value)) problems.push(`two options share the value "${o.value}"; values must be unique`)
-    values.add(o.value)
-  }
+  const values = new Set(options.filter((_, i) => !derived.has(i)).map(o => o.value))
+  const seen = new Set<string>()
+  options.forEach((o, i) => {
+    if (!derived.has(i)) {
+      if (seen.has(o.value)) problems.push(`two options share the value "${o.value}"; values must be unique`)
+      seen.add(o.value)
+      return
+    }
+    // A value derived from a label (math often slugs alike) gets a suffix instead of failing.
+    let value = o.value
+    for (let n = 2; values.has(value); n += 1) value = `${o.value}-${n}`
+    values.add(value)
+    options[i] = { value, label: o.label }
+  })
   const labels = new Set<string>()
   for (const o of options) {
     if (labels.has(o.label)) problems.push(`two options read "${o.label}"; options must differ`)
@@ -319,6 +334,8 @@ export function questionForm(id: string, body: QuestionBody, kinds: ReadonlyMap<
         type: 'interface',
         kind: body.kind,
         environment: kind?.environment ?? 'unavailable',
+        responseKind: kind?.responseKind ?? 'text',
+        interaction: kind?.interaction ?? 'single',
         payload: kind === undefined ? null : kind.project(body.payload),
         text: kind === undefined ? 'This question needs an environment that is no longer installed.' : kind.text(body.payload),
       }

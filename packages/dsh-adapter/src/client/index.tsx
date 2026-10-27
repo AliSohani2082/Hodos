@@ -1,7 +1,8 @@
 /**
- * Browser half of the Hodos DSH plugin: a right-sidebar tab type ("Hodos
- * learning") whose body is the Hodos workspace, served by the host half at
- * `/hodos/app/` and bound to the session the tab is open in.
+ * Browser half of the Hodos DSH plugin: two right-sidebar tab types, "Hodos"
+ * (the chat's learning or practice session) and "Knowledge graph" (the
+ * learner's graph). Both bodies are the Hodos app, served by the host half at
+ * `/hodos/app/` and bound to the chat the tab is open in.
  *
  * Built by `scripts/build.mjs` into DSH's client module format; `react` is
  * the platform's copy (injected `require`), everything else is bundled.
@@ -9,8 +10,10 @@
  */
 import * as React from 'react'
 
-/** Tab type id; also the slot key of the tab body. */
+/** Tab type id of the session panel; also the slot key of its body. */
 export const TAB_ID = 'hodos/workspace'
+/** Tab type id of the knowledge graph. */
+export const GRAPH_TAB_ID = 'hodos/graph'
 
 /** Structural view of the DSH client services this module uses. */
 interface ClientContext {
@@ -30,27 +33,37 @@ interface ClientContext {
 }
 
 /**
- * The workspace iframe. It is same-origin first-party content (the Hodos
- * app); environment renderers inside it run in their own sandboxed iframes.
- * It has no sandbox: it needs scripts and its same-origin API (authenticated
- * by the Harness cookie), and a sandbox that allows both is no boundary.
+ * The Hodos app in a frame. It is same-origin first-party content: it needs
+ * scripts and its same-origin API (authenticated by the Harness cookie), and
+ * a sandbox that allows both is no boundary. Environment renderers inside it
+ * run in their own sandboxed iframes.
  */
-export function Workspace(props: { sessionId?: string }): React.ReactElement {
-  const src = `/hodos/app/?session=${encodeURIComponent(props.sessionId ?? '')}`
+function frame(view: 'workspace' | 'graph', sessionId: string | undefined, title: string): React.ReactElement {
+  const src = `/hodos/app/?${view === 'graph' ? 'view=graph&' : ''}session=${encodeURIComponent(sessionId ?? '')}`
   return React.createElement('iframe', {
     src,
-    title: 'Hodos',
-    'data-testid': 'hodos-workspace',
+    title,
+    'data-testid': view === 'graph' ? 'hodos-graph' : 'hodos-workspace',
     referrerPolicy: 'same-origin',
     style: { width: '100%', height: '100%', border: 0, display: 'block' },
   })
+}
+
+/** The session panel. */
+export function Workspace(props: { sessionId?: string }): React.ReactElement {
+  return frame('workspace', props.sessionId, 'Hodos')
+}
+
+/** The knowledge graph. */
+export function KnowledgeGraph(props: { sessionId?: string }): React.ReactElement {
+  return frame('graph', props.sessionId, 'Hodos knowledge graph')
 }
 
 /** Services this client plugin needs. */
 export const inject = ['slots', 'sidebarRightTabs']
 
 /**
- * Register the tab type and its body.
+ * Register the tab types and their bodies.
  * @param ctx - client plugin context.
  */
 export function apply(ctx: ClientContext): void {
@@ -58,11 +71,22 @@ export function apply(ctx: ClientContext): void {
     id: TAB_ID,
     kind: 'hodos',
     title: () => 'Hodos',
-    guide: [{ id: 'learn', order: 50, title: () => 'Hodos learning', description: () => 'Adaptive lessons, practice and checkpoints' }],
+    guide: [{ id: 'learn', order: 50, title: () => 'Hodos learning', description: () => 'Learn anything: probe, plan and teach, with questions here' }],
   }), 'hodos tab type')
+  ctx.effect(() => ctx.sidebarRightTabs.register({
+    id: GRAPH_TAB_ID,
+    kind: 'hodos-graph',
+    title: () => 'Knowledge graph',
+    guide: [{ id: 'graph', order: 51, title: () => 'Knowledge graph', description: () => 'Everything you learned, as ideas and how they follow from each other' }],
+  }), 'hodos graph tab type')
   ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
     name: 'sidebar.right.pane.tab',
     key: TAB_ID,
     inject: sessionId => ({ sessionId }),
   }, Workspace)), 'hodos tab body')
+  ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
+    name: 'sidebar.right.pane.tab',
+    key: GRAPH_TAB_ID,
+    inject: sessionId => ({ sessionId }),
+  }, KnowledgeGraph)), 'hodos graph tab body')
 }

@@ -328,6 +328,8 @@ export class LearnService {
       out.set(id, {
         environment: kind.spec.environment,
         title: kind.spec.title,
+        responseKind: kind.spec.responseKind,
+        interaction: kind.spec.interaction,
         project: payload => stripServerFields(kind.spec.payloadSchema, payload) ?? null,
         text: payload => this.registry.fallbackText(id, payload),
       })
@@ -397,15 +399,17 @@ export class LearnService {
     })
   }
 
-  /** Validate an interface question with its plugin and check its visible text for the key. */
+  /** Validate an interface question with its plugin and check the tutor's text for the answer. */
   private async checkInterface(id: string, body: InterfaceBody, nodeId: string | undefined, visibleText: readonly string[]): Promise<string[]> {
     const item = interfaceItem(id, body, nodeId)
     const problems = diagnosticProblems(await this.registry.validateItem(item))
     if (problems.length > 0) return problems
-    const kind = this.registry.kind(body.kind)
-    const secrets = secretFragments(item, kind, { hintLevel: 0, answer: false })
-    const form = questionForm(id, body, this.interfaceKinds())
-    if (scanForLeaks([...visibleText, form], secrets).length > 0) return ['the question text or the visible part of the payload gives away the key; keep the answer out of what the learner sees']
+    // What the payload shows is the plugin's projection (server-only fields removed); the key itself
+    // never leaves the server. The question text is the tutor's own and may name a theme as a hint
+    // ("find the fork"); it must not contain the answer, which is what a distinctive key fragment is.
+    const secrets = secretFragments(item, this.registry.kind(body.kind), { hintLevel: 0, answer: false })
+    const distinctive = secrets.filter(f => f.length >= 8 || /[^\p{L}\s]/u.test(f))
+    if (scanForLeaks(visibleText.join('\n'), distinctive).length > 0) return ['the question text gives away the answer; keep the answer out of what the learner sees']
     return []
   }
 

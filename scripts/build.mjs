@@ -11,6 +11,7 @@
  */
 import { spawnSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
@@ -57,6 +58,12 @@ if (want('ui')) {
   })
   copyFileSync(join(ui, 'src/index.html'), join(ui, 'dist/index.html'))
   copyFileSync(join(ui, 'src/app.css'), join(ui, 'dist/app.css'))
+  // KaTeX's stylesheet and its WOFF2 fonts (the stylesheet lists WOFF2 first; browsers that load it skip the rest).
+  const katex = dirname(createRequire(join(ui, 'package.json')).resolve('katex/package.json'))
+  copyFileSync(join(katex, 'dist/katex.min.css'), join(ui, 'dist/katex.css'))
+  copyFileSync(join(katex, 'LICENSE'), join(ui, 'dist/katex.LICENSE.txt'))
+  mkdirSync(join(ui, 'dist/fonts'), { recursive: true })
+  for (const font of readdirSync(join(katex, 'dist/fonts'))) if (font.endsWith('.woff2')) copyFileSync(join(katex, 'dist/fonts', font), join(ui, 'dist/fonts', font))
 }
 
 /**

@@ -114,15 +114,24 @@ describe('choice questions', () => {
     expect(body).toEqual({ type: 'choice', options: [{ value: 'six', label: 'Six' }, { value: 'b', label: 'Two' }, { value: 'three', label: 'Three' }], correct: ['six'], multi: false })
   })
 
+  it('keeps values derived from labels unique, while explicit duplicates are an error', () => {
+    const body = readChoiceBody({ options: ["$f'(g(x))g'(x)$", "$f'(g(x)) + g'(x)$", { label: 'other', value: 'f-g-x-g-x-2' }], correct: "$f'(g(x)) + g'(x)$" }, [])
+    expect(body?.options.map(o => o.value)).toEqual(['f-g-x-g-x', 'f-g-x-g-x-3', 'f-g-x-g-x-2'])
+    expect(body?.correct).toEqual(['f-g-x-g-x-3'])
+  })
+
   it('collects every authoring problem', () => {
     const problems: string[] = []
     expect(readChoiceBody({ options: ['A', 'A', { value: 'x' }], correct: ['zzz'] }, problems)).toBeUndefined()
     expect(problems).toEqual(expect.arrayContaining([
       'option 3 needs a label',
-      'two options share the value "a"; values must be unique',
+      'two options read "A"; options must differ',
       'correct names "zzz", which is not one of the options; use an option\'s value',
       'correct is required: commit to the right answer before asking',
     ]))
+    const explicit: string[] = []
+    readChoiceBody({ options: [{ label: 'A', value: 'x' }, { label: 'B', value: 'x' }], correct: 'x' }, explicit)
+    expect(explicit).toContain('two options share the value "x"; values must be unique')
     const more: string[] = []
     readChoiceBody({ options: ['A', 'B'], correct: ['A', 'B'] }, more)
     expect(more).toContain('a single-answer question has exactly one correct option; set multi to true for several')
@@ -304,7 +313,10 @@ describe('learning sessions', () => {
     const invalid = await rejection(env.learn.ask(sessionId, { form: 'interface', role: 'check', nodeId: 'chain-rule', prompt: 'Pick one', input: { kind: 'quiz.choice', payload, key: { correct: 'z' } } }))
     expect(invalid.message).toMatch(/quiz\/key: the correct option is not one of the options/)
     const leaky = await rejection(env.learn.ask(sessionId, { form: 'interface', role: 'check', nodeId: 'chain-rule', prompt: 'Hint: the product mistake is tempting', input: { kind: 'quiz.text', payload: { prompt: 'Name the rule' }, key: { answer: 'the product mistake' } } }))
-    expect(leaky.message).toMatch(/gives away the key/)
+    expect(leaky.message).toMatch(/question text gives away the answer/)
+    // A plain word of the key (a theme, a hint) may appear in the tutor's question.
+    const hinted = await env.learn.ask(sessionId, { form: 'interface', role: 'predict', nodeId: 'chain-rule', prompt: 'Think about the chain: name the rule', input: { kind: 'quiz.text', payload: { prompt: 'Name the rule' }, key: { answer: 'chain', accept: ['chain rule'] } } })
+    expect(hinted.status).toBe('open')
 
     const q = await env.learn.ask(sessionId, { form: 'interface', role: 'check', nodeId: 'chain-rule', prompt: 'Pick the chain rule', input: { kind: 'quiz.choice', payload, key: { correct: 'a' }, explanation: 'Differentiate the outside, keep the inside.' } })
     const open = env.learn.openQuestion(sessionId)

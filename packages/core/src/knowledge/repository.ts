@@ -98,12 +98,12 @@ export class GraphRepository {
    * Every live proposition of a learner, merged from its assertions: the
    * first assertion is its birth; later phrasings join its aliases.
    * @param learnerId - learner.
-   * @returns propositions, oldest first.
+   * @returns propositions in the order they were created.
    */
   propositions(learnerId: string): GraphProposition[] {
     const rows = this.sql.all(`SELECT p.id, p.name, p.statement, p.created_at, a.source_id, a.anchor, a.statement AS said, a.aliases_json
       FROM kg_propositions p JOIN kg_assertions a ON a.proposition_id = p.id
-      WHERE p.learner_id = ? ORDER BY p.created_at, p.id, a.seq`, learnerId)
+      WHERE p.learner_id = ? ORDER BY p.created_at, p.rowid, a.seq`, learnerId)
     const out = new Map<string, { id: string; name: string; statement: string; createdAt: string; aliases: Set<string>; provenance: ProvenancePoint[] }>()
     for (const row of rows) {
       const id = str(row, 'id')
@@ -144,7 +144,7 @@ export class GraphRepository {
   chains(learnerId: string): GraphChain[] {
     const rows = this.sql.all(`SELECT c.id, c.premises_json, c.conclusion_id, c.created_at, s.source_id
       FROM kg_chains c LEFT JOIN kg_chain_sources s ON s.chain_id = c.id
-      WHERE c.learner_id = ? ORDER BY c.created_at, c.id, s.created_at, s.source_id`, learnerId)
+      WHERE c.learner_id = ? ORDER BY c.created_at, c.rowid, s.created_at, s.source_id`, learnerId)
     const out = new Map<string, { id: string; premises: string[]; conclusion: string; createdAt: string; sources: string[] }>()
     for (const row of rows) {
       const id = str(row, 'id')

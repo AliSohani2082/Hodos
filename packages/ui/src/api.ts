@@ -1,56 +1,66 @@
 /**
  * Client for the Hodos workspace API (`/hodos/api/v1`). Same-origin, cookie
- * authenticated by DeepSeek Harness; the DSH session the workspace is shown
- * in travels as the `session` query parameter.
+ * authenticated by DeepSeek Harness; the DSH chat the panel is shown in
+ * travels as the `session` query parameter.
  */
 import type {
-  AttemptView,
-  CheckAnswerView,
-  CheckpointView,
-  ExerciseView,
-  HintView,
-  JourneyView,
-  LessonView,
-  ProgressView,
-  SelfReport,
+  GraphSnapshot,
+  PracticeView,
+  QuestionView,
+  SessionSummary,
+  SessionView,
 } from '@hodos/core'
 import type { JsonValue } from '@hodos/plugin-sdk/protocol'
 
-/** A course in the catalog. */
-export interface CatalogEntry {
-  readonly id: string
-  readonly version: string
-  readonly title: string
-  readonly description: string
-  readonly environments: readonly string[]
-  readonly available: boolean
-  readonly goal: string
-  readonly skills: ReadonlyArray<{ readonly id: string; readonly title: string; readonly kind: string }>
-}
+/** What a chat is to Hodos. */
+export type ChatBinding =
+  | { readonly kind: 'learn'; readonly sessionId: string; readonly phase: string }
+  | { readonly kind: 'practice'; readonly sessionId: string; readonly closed: boolean }
 
-/** A draft course awaiting the learner's decision. */
+/** A draft course (question bank) awaiting the learner's decision. */
 export interface DraftEntry {
   readonly id: string
   readonly version: string
   readonly title: string
   readonly description: string
-  /** `agent`: proposed by the tutor or a subagent; `import`: a file from the course inbox. */
   readonly origin: 'agent' | 'import'
-  /** The proposing channel, or `inbox:<file name>` for imports. */
   readonly proposedBy: string
-  readonly skills: ReadonlyArray<{ readonly id: string; readonly title: string; readonly kind: string; readonly requires: readonly string[] }>
   readonly lessons: number
   readonly items: number
 }
 
-/** Everything the workspace shows at once. */
+/** A plan node due for review. */
+export interface DueReview {
+  readonly sessionId: string
+  readonly goal: string
+  readonly nodeId: string
+  readonly title: string
+  readonly dueAt: string
+}
+
+/** Everything the panel shows for one chat. */
 export interface WorkspaceState {
-  readonly journey: JourneyView | null
-  readonly exercise: ExerciseView | null
-  readonly checkpoint: CheckpointView | null
-  readonly catalog: readonly CatalogEntry[]
+  readonly binding: ChatBinding | null
+  readonly learn: SessionView | null
+  readonly practice: PracticeView | null
+  readonly sessions: readonly SessionSummary[]
+  readonly practiceSessions: ReadonlyArray<{ readonly id: string; readonly title: string; readonly status: string; readonly hostSessionId: string | null; readonly updatedAt: string }>
+  readonly reviews: readonly DueReview[]
+  /** A model is available for background work (graph extraction, notes import). */
+  readonly model: boolean
   readonly drafts: readonly DraftEntry[]
 }
+
+/** An installed renderer for an environment. */
+export interface RendererEntry {
+  readonly environment: string
+  readonly renderer: { readonly pluginId: string; readonly rendererId: string; readonly entry: string; readonly capabilities: readonly string[] } | null
+}
+
+/** The result of answering. */
+export type AnswerResult =
+  | { readonly status: 'continue'; readonly question: QuestionView; readonly message?: string }
+  | { readonly status: 'answered'; readonly question: QuestionView }
 
 /** An API failure with the server's stable code. */
 export class ApiError extends Error {
@@ -59,23 +69,28 @@ export class ApiError extends Error {
   }
 }
 
-/** Every API response: `{ data }` on success, `{ error }` otherwise. */
 interface ApiEnvelope {
   readonly data?: unknown
   readonly error?: { readonly code?: string; readonly message?: string; readonly retryAfterSec?: number }
 }
 
-const session = new URLSearchParams(window.location.search).get('session') ?? ''
+const params = new URLSearchParams(window.location.search)
+const session = params.get('session') ?? ''
 
-/** The DSH session this workspace belongs to ('' outside a session). */
-export function currentSession(): string {
+/** The DSH chat this panel belongs to ('' outside a chat). */
+export function currentChat(): string {
   return session
 }
 
-async function call<T>(method: 'GET' | 'POST', path: string, body?: Record<string, JsonValue | undefined>, query: Record<string, string> = {}): Promise<T> {
-  const params = new URLSearchParams(query)
-  if (session !== '') params.set('session', session)
-  const response = await fetch(`/hodos/api/v1/${path}?${params.toString()}`, {
+/** Which view the panel shows: the workspace or the knowledge graph. */
+export function currentView(): 'workspace' | 'graph' {
+  return params.get('view') === 'graph' ? 'graph' : 'workspace'
+}
+
+async function call<T>(method: 'GET' | 'POST', path: string, body?: Record<string, JsonValue | undefined>): Promise<T> {
+  const query = new URLSearchParams()
+  if (session !== '') query.set('session', session)
+  const response = await fetch(`/hodos/api/v1/${path}?${query.toString()}`, {
     method,
     credentials: 'same-origin',
     headers: method === 'POST' ? { 'content-type': 'application/json' } : {},
@@ -97,24 +112,25 @@ async function call<T>(method: 'GET' | 'POST', path: string, body?: Record<strin
 /** The workspace API. */
 export const api = {
   state: () => call<WorkspaceState>('GET', 'state'),
-  start: (goal: string, options: { courseId?: string; selfReport?: SelfReport[]; skipDiagnostic?: boolean } = {}) =>
-    call<JourneyView>('POST', 'journeys', {
-      goal,
-      ...(options.courseId === undefined ? {} : { courseId: options.courseId }),
-      ...(options.selfReport === undefined ? {} : { selfReport: options.selfReport.map(r => ({ level: r.level, ...(r.skill === undefined ? {} : { skill: r.skill }), ...(r.skillId === undefined ? {} : { skillId: r.skillId }) })) }),
-      ...(options.skipDiagnostic === undefined ? {} : { skipDiagnostic: options.skipDiagnostic }),
-    }),
-  resume: () => call<JourneyView | null>('POST', 'journey/resume'),
-  approvePath: () => call<JourneyView>('POST', 'journey/approve'),
-  skipDiagnostic: () => call<JourneyView>('POST', 'journey/skip-diagnostic'),
-  lesson: (skillId?: string) => call<LessonView>('GET', 'lesson', undefined, skillId === undefined ? {} : { skill: skillId }),
-  answerCheck: (lessonId: string, checkId: string, optionId: string) => call<CheckAnswerView>('POST', 'lesson/check', { lessonId, checkId, optionId }),
-  completeLesson: () => call<JourneyView>('POST', 'lesson/complete'),
-  nextExercise: () => call<ExerciseView | null>('POST', 'exercise/next'),
-  hint: (presentationId: string) => call<HintView>('POST', 'exercise/hint', { presentationId }),
-  submit: (presentationId: string, response: JsonValue, latencyMs: number) => call<AttemptView>('POST', 'exercise/submit', { presentationId, response, latencyMs }),
-  startCheckpoint: () => call<CheckpointView>('POST', 'checkpoint/start'),
-  startReview: () => call<JourneyView>('POST', 'review/start'),
-  progress: () => call<ProgressView>('GET', 'progress'),
+  renderers: () => call<RendererEntry[]>('GET', 'renderers'),
+  startLearning: (goal: string) => call<SessionView>('POST', 'learn/start', { goal }),
+  answer: (questionId: string, answer: { response?: JsonValue; dontKnow?: boolean; thinking?: string }) => call<AnswerResult>('POST', 'learn/answer', { questionId, ...answer }),
+  closeLearning: (sessionId: string) => call<{ ok: true }>('POST', 'learn/close', { sessionId }),
+  extract: (sessionId: string) => call<{ started: true }>('POST', 'learn/extract', { sessionId }),
+  graph: () => call<GraphSnapshot>('GET', 'graph'),
+  importNotes: (title: string, text: string) => call<{ started: true }>('POST', 'graph/import', { title, text }),
+  deleteProposition: (propositionId: string) => call<{ propositions: number; chains: number }>('POST', 'graph/delete', { propositionId }),
+  removeSource: (sourceId: string, mode: 'preserve-graph' | 'delete-nodes') => call<{ propositions: number; chains: number }>('POST', 'graph/remove-source', { sourceId, mode }),
+  startPractice: (targets: readonly string[], title?: string) => call<PracticeView>('POST', 'practice/start', { targets: [...targets], ...(title === undefined ? {} : { title }) }),
+  thinking: (problemId: string, text: string) => call<PracticeView>('POST', 'practice/thinking', { problemId, text }),
+  dismiss: (problemId: string) => call<PracticeView>('POST', 'practice/dismiss', { problemId }),
+  nextProblem: (sessionId: string) => call<{ ok: true }>('POST', 'practice/next', { sessionId }),
+  closePractice: (sessionId: string) => call<{ ok: true }>('POST', 'practice/close', { sessionId }),
   decideDraft: (courseId: string, version: string, approve: boolean) => call<{ ok: true }>('POST', 'drafts/decide', { courseId, version, approve }),
+}
+
+/** A failure in words for the learner. */
+export function errorText(error: unknown): string {
+  if (!(error instanceof ApiError)) return 'Hodos is not reachable.'
+  return error.code === 'UNAUTHORIZED' ? 'Your DeepSeek Harness session has expired; reload the page.' : error.message
 }
