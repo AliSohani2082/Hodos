@@ -181,14 +181,13 @@ importers:
         version: link:../plugin-sdk
 
   packages/ui:
-    dependencies:
-      '@hodos/plugin-sdk':
-        specifier: workspace:*
-        version: link:../plugin-sdk
     devDependencies:
       '@hodos/core':
         specifier: workspace:*
         version: link:../core
+      '@hodos/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
       react:
         specifier: 18.3.1
         version: 18.3.1

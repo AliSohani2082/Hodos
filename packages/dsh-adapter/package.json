@@ -20,6 +20,7 @@
     "lib",
     "app",
     "cordis.patch.yml",
+    "LICENSE",
     "README.md",
     "bin"
   ],

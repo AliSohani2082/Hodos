@@ -6,7 +6,7 @@ Hodos teaches from courses: a skill graph, one lesson per skill and exercise ite
 |---|---|---|
 | Shipped content pack | Plugin authors (for example the chess tactics course) | Registered with its environment plugin |
 | Course inbox | You, or Claude Code with the `hodos-course` skill | `hodos course submit` places a file in `<dataDir>/inbox`; the running service imports it as a draft |
-| Drafting in DeepSeek Harness | The tutor agent (`hodos_propose_course`) or a subagent (`hodos_draft_course`) | Proposed through the Hodos tools; stored as a draft |
+| Drafting in DeepSeek Harness | The tutor agent (`hodos_propose_course`), or a subagent (`hodos_draft_course`) from a chat that is not running a learning journey | Proposed through the Hodos tools; stored as a draft |
 
 Hodos sets the provenance of every proposed item itself (`generated` or `imported`); a "verified" claim inside a proposal is dropped. The workspace says that proposed content is not independently verified.
 
@@ -73,7 +73,7 @@ What is tested:
 
 - **Unit test** (`packages/dsh-adapter/tests/adapter.test.ts`): a fake provider named `claude-code`. It checks that the configured provider is used, that the prompt carries the authoring guide, and that the result is stored as a draft with `generated` provenance.
 - **End-to-end test** (`tests/e2e/dsh-claude-drafting.e2e.test.ts`, opt-in with `HODOS_E2E_CLAUDE_CODE=1`): a real DeepSeek Harness 0.2.1-rc.3 with the real `@deepseek-ai/dsh-subagent-claude-code` bundle installed from npm.
-  1. The tutor calls `hodos_draft_course`.
+  1. The agent of a chat with no learning journey calls `hodos_draft_course`.
   2. DSH runs the bundled Claude Code binary.
   3. Claude Code calls a local stand-in for Anthropic's API, configured through the provider's `env` with a dummy key.
   4. The answer becomes a draft in the workspace.

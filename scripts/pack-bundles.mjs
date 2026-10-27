@@ -4,7 +4,8 @@
  *
  * Output in dist-packages/:
  *  - one tarball per DeepSeek Harness bundle (@hodos/dsh and the
- *    environments), installed with `dsh plugin add /absolute/path/to/it.tgz`;
+ *    environments), installed with
+ *    `dsh plugin --profile <name> add /absolute/path/to/it.tgz`;
  *  - the plugin-author libraries (@hodos/plugin-sdk, @hodos/testing).
  *
  * The @hodos packages are not on a registry, so each tarball carries the ones
@@ -169,5 +170,5 @@ for (const s of summary) {
   const carries = s.bundled.length === 0 ? '' : `, carries ${s.bundled.join(', ')}`
   console.log(`  ${s.file.slice(OUT.length + 1)}  ${(s.bytes / 1024).toFixed(0)} KiB${carries}`)
 }
-console.log('\nInstall into DeepSeek Harness (absolute paths; @hodos/dsh first):')
-for (const s of summary.filter(x => x.bundle)) console.log(`  dsh plugin add ${s.file}`)
+console.log('\nInstall into a DeepSeek Harness profile (here `web`), @hodos/dsh first:')
+for (const s of summary.filter(x => x.bundle)) console.log(`  dsh plugin --profile web add ${s.file}`)

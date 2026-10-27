@@ -14,7 +14,7 @@ The MIT components exist so that third parties can write plugins without taking 
 ## Rules for contributors
 
 - **Default is AGPL-3.0.** A file or package is AGPL unless it sits in one of the MIT components above.
-- **Each MIT package carries its own license.** When the SDK, contracts and reference plugins are created (M1), each package directory gets a copy of [`LICENSE-MIT`](LICENSE-MIT) named `LICENSE`, and `"license": "MIT"` in its `package.json`. That keeps the license visible when the package is published to npm on its own.
+- **Each package carries its own license.** Every package directory has a `LICENSE` file, listed in its `package.json` `files`: a copy of [`LICENSE-MIT`](LICENSE-MIT) for the MIT packages (with `"license": "MIT"`), a copy of [`LICENSE`](LICENSE) for the AGPL ones (`@hodos/core`, `@hodos/dsh`, `@hodos/ui`). That keeps the license visible in every tarball, including the copies bundled inside the `pnpm pack:dsh` tarballs.
 - **MIT code must not depend on AGPL code.** The AGPL core may depend on the MIT packages. The reverse would make the SDK effectively AGPL.
 - **SPDX identifiers.** Use `AGPL-3.0-only` for core packages and `MIT` for the MIT ones. The PRD says "AGPL-3.0" without "or later", so `-only` is the literal reading. Switching to `AGPL-3.0-or-later` is a one-line change per package while the project has a single copyright holder, and much harder later.
 - **Spikes are throwaway.** Code under [`spikes/`](spikes/) is AGPL like the rest of the repo by default and is not published. Findings go into an [ADR](docs/adr/).
