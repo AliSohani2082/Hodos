@@ -1,10 +1,10 @@
 /**
  * Driving DeepSeek Harness's web UI from Playwright: first-run screens, the
- * chat composer and the Hodos sidebar tab.
+ * chat composer and the Hodos sidebar tabs.
  */
 import { expect } from 'vitest'
 import type { APIResponse, FrameLocator, Locator, Page } from 'playwright'
-import type { CheckpointView, ExerciseView, JourneyView } from '@hodos/core'
+import type { PracticeView, QuestionView, SessionView } from '@hodos/core'
 
 /** DSH's chat composer. */
 export function composer(page: Page): Locator {
@@ -40,23 +40,50 @@ export async function say(page: Page, text: string): Promise<void> {
 }
 
 /**
- * Open the "Hodos learning" tab in the right sidebar.
- * @returns the DSH session id the workspace is shown for.
+ * Open a Hodos tab in the right sidebar by its guide title.
+ * @param page - the DSH page.
+ * @param title - "Hodos learning" or "Knowledge graph".
+ * @param frameTitle - the iframe's title.
+ * @returns the DSH session id the tab is shown for.
  */
-export async function openHodosTab(page: Page): Promise<string> {
+async function openTab(page: Page, title: string, frameTitle: string): Promise<string> {
   const sidebar = page.getByRole('button', { name: 'Open right sidebar' })
   if (await sidebar.count() > 0) await sidebar.click()
-  // Exact match: the tutor's chat messages mention "Hodos learning" too.
-  await page.getByText('Hodos learning', { exact: true }).first().click()
-  const src = await page.locator('iframe[title="Hodos"]').getAttribute('src', { timeout: 20_000 })
+  // Exact match: the tutor's chat messages may mention the title too. With a tab already
+  // open, the list of tab types is behind the strip's "New tab" button.
+  const entry = page.getByText(title, { exact: true }).first()
+  if (!await entry.isVisible()) await page.getByRole('button', { name: 'New tab' }).first().click()
+  await entry.click()
+  const src = await page.locator(`iframe[title="${frameTitle}"]`).getAttribute('src', { timeout: 20_000 })
   const session = new URL(src ?? '', 'http://x').searchParams.get('session') ?? ''
   expect(session).not.toBe('')
   return session
 }
 
-/** The Hodos workspace inside the DSH sidebar. */
+/**
+ * Open the Hodos tab (the chat's learning or practice session).
+ * @returns the DSH session id the panel is shown for.
+ */
+export function openHodosTab(page: Page): Promise<string> {
+  return openTab(page, 'Hodos learning', 'Hodos')
+}
+
+/**
+ * Open the Knowledge graph tab.
+ * @returns the DSH session id the tab is shown for.
+ */
+export function openGraphTab(page: Page): Promise<string> {
+  return openTab(page, 'Knowledge graph', 'Hodos knowledge graph')
+}
+
+/** The Hodos panel inside the DSH sidebar. */
 export function hodosApp(page: Page): FrameLocator {
   return page.frameLocator('iframe[title="Hodos"]')
+}
+
+/** The Knowledge graph tab inside the DSH sidebar. */
+export function graphApp(page: Page): FrameLocator {
+  return page.frameLocator('iframe[title="Hodos knowledge graph"]')
 }
 
 /**
@@ -70,51 +97,40 @@ export async function apiData(response: APIResponse): Promise<unknown> {
   return body.data
 }
 
-/** What the workspace reads from the Hodos API, as far as tests look at it. */
+/** What the panel reads from the Hodos API, as far as tests look at it. */
 export interface HodosState {
-  readonly journey: JourneyView | null
-  readonly exercise: ExerciseView | null
-  readonly checkpoint: CheckpointView | null
+  readonly binding: { readonly kind: string; readonly sessionId: string; readonly phase?: string } | null
+  readonly learn: SessionView | null
+  readonly practice: PracticeView | null
 }
 
 /**
- * Read the workspace state through Hodos's API with the browser's DSH sign-in cookie.
+ * Read the panel state through Hodos's API with the browser's DSH sign-in cookie.
  * @param page - a page that opened DSH.
  * @param origin - DSH's origin.
  * @param session - the DSH session id.
  */
 export async function hodosState(page: Page, origin: string, session: string): Promise<HodosState> {
   const data = await apiData(await page.request.get(`${origin}/hodos/api/v1/state?session=${encodeURIComponent(session)}`))
-  if (typeof data !== 'object' || data === null || !('journey' in data && 'exercise' in data && 'checkpoint' in data)) {
-    throw new Error(`not a workspace state: ${JSON.stringify(data)}`)
+  if (typeof data !== 'object' || data === null || !('binding' in data && 'learn' in data && 'practice' in data)) {
+    throw new Error(`not a panel state: ${JSON.stringify(data)}`)
   }
   return data as HodosState
 }
 
 /**
- * Wait until the workspace shows an exercise.
+ * Wait until the learning session shows an open question.
  * @param read - reads the current state.
- * @returns the exercise.
+ * @param after - ids of questions already seen.
+ * @returns the question.
  */
-export async function waitForExercise(read: () => Promise<HodosState>): Promise<ExerciseView> {
-  const found: { exercise: ExerciseView | null } = { exercise: null }
+export async function waitForQuestion(read: () => Promise<HodosState>, after: ReadonlySet<string> = new Set()): Promise<QuestionView> {
+  const found: { question: QuestionView | null } = { question: null }
   await expect.poll(async () => {
-    found.exercise = (await read()).exercise
-    return found.exercise !== null
-  }, { timeout: 20_000 }).toBe(true)
-  if (found.exercise === null) throw new Error('no exercise')
-  return found.exercise
-}
-
-/**
- * Wait until an answer to `exercise` was graded: the exercise moved on, or
- * its attempt number went up.
- * @param read - reads the current state.
- * @param exercise - the exercise as it was before answering.
- */
-export async function waitForGrading(read: () => Promise<HodosState>, exercise: ExerciseView): Promise<void> {
-  await expect.poll(async () => {
-    const ex = (await read()).exercise
-    return ex === null || ex.id !== exercise.id || ex.attempt > exercise.attempt
-  }, { timeout: 20_000 }).toBe(true)
+    const q = (await read()).learn?.openQuestion ?? null
+    found.question = q !== null && !after.has(q.id) ? q : null
+    return found.question !== null
+  }, { timeout: 60_000 }).toBe(true)
+  if (found.question === null) throw new Error('no question')
+  return found.question
 }

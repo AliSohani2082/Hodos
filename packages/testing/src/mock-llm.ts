@@ -195,40 +195,103 @@ export async function startMockLlm(script: MockScript, port = 0): Promise<MockLl
   }
 }
 
+/** A scripted step of teaching: prose, then one tool call. */
+export interface ScriptedStep {
+  readonly text: string
+  readonly tool: string
+  readonly input: JsonObject
+}
+
+/** What the scripted tutor asks and writes in a learning or practice session. */
+export interface LearningScriptOptions {
+  /** The first probe question (`hodos_probe` input). */
+  readonly probe: JsonObject
+  /** The probe's conclusion (`hodos_probe_done` assessment). */
+  readonly assessment: JsonObject
+  /** The plan map (mermaid). */
+  readonly plan: string
+  /** Teaching steps: the first follows the learner's go-ahead, each next one follows an answer. */
+  readonly steps: readonly ScriptedStep[]
+  /** The practice problem (`hodos_problem` input). */
+  readonly problem?: JsonObject
+  /** The conclusion of a practice problem (`hodos_conclude` input). */
+  readonly conclusion?: JsonObject
+}
+
+/** A tool call parsed from "Call the tool <name> with <JSON object>". */
+function namedCall(said: string): MockReply | null {
+  const probe = /^call the tool ([\w-]+) with (\{.*\})$/i.exec(said)
+  if (probe?.[1] === undefined || probe[2] === undefined) return null
+  const input: unknown = JSON.parse(probe[2])
+  return isJsonValue(input) && typeof input === 'object' && input !== null && !Array.isArray(input) ? { tool: probe[1], input } : null
+}
+
 /**
- * The scripted tutor used by the Hodos end-to-end journeys. It starts a
- * journey when the learner states a learning goal, resumes one when asked,
- * lists the courses when asked about courses, reports tool results back as
- * text, and otherwise answers briefly. "Call the tool <name> with <JSON
- * object>" makes it call that tool, so tests can probe the tool policy.
- * @param options - environment hint and self-report for the start call.
+ * Findings for an extraction request: one proposition per teacher passage
+ * (`[T<n>]` labels), each later one derived from the one before.
+ */
+function extractionReply(prompt: string): string {
+  const passages = [...prompt.matchAll(/\[T(\d+)\]\n([^\n]+)/gu)].map(m => ({ n: m[1] ?? '', text: (m[2] ?? '').trim() }))
+  const propositions = passages.map((p, i) => ({
+    id: `p${i + 1}`,
+    name: p.text.split(/\s+/u).slice(0, 4).join(' ').replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 60) || `Idea ${i + 1}`,
+    statement: (p.text.split(/(?<=\.)\s/u)[0] ?? p.text).slice(0, 300),
+    passage: `T${p.n}`,
+  }))
+  const chains = propositions.slice(1).map((p, i) => ({ premises: [`p${i + 1}`], conclusion: p.id }))
+  return JSON.stringify({ propositions, chains })
+}
+
+/**
+ * A scripted tutor for end-to-end tests of learning and practice sessions in
+ * a real DeepSeek Harness. It reads the conversation the Harness sends:
+ *
+ * - "I want to learn …" → hodos_start_learning; then the probe question;
+ * - the graded answer of the probe → hodos_probe_done, then hodos_plan;
+ * - the learner's go-ahead, then each graded answer → the next teaching step;
+ * - a practice session → hodos_problem; the learner's thinking → hodos_conclude;
+ * - Hodos's background calls (extraction, identity) → valid JSON findings;
+ * - "Call the tool <name> with <JSON object>" → exactly that call, offered or
+ *   not, so tests can probe the tool policy.
+ * @param options - the questions, plan and steps.
  * @returns the script.
  */
-export function tutorScript(options: { environment: string; selfReport?: ReadonlyArray<{ skill: string; level: 'never' | 'heard-of' | 'used-it' }> }): MockScript {
+export function learningScript(options: LearningScriptOptions): MockScript {
   return (request): MockReply => {
-    const result = request.toolResults[0]
-    if (result !== undefined) return { text: `[${result.name}${result.isError ? ' failed' : ''}] ${result.text.slice(0, 400)}` }
+    if (request.system.includes('You are the extraction stage')) return { text: extractionReply(request.lastUserText ?? '') }
+    if (request.system.includes('You are the identity stage')) return { text: '{"links": []}' }
+    // A follow-up from the Hodos panel can share the model message with the result of the
+    // question tool that ended the previous turn, so the message's text is read first.
+    const text = request.lastUserText ?? ''
+    const line = (prefix: string): string | undefined => text.split('\n').find(l => l.startsWith(prefix))
+    const answers = request.userTexts.filter(t => t.includes('[Hodos] Answer to question')).length
+    if (line('[Hodos] Answer to question') !== undefined) {
+      if (request.tools.includes('hodos_probe_done')) return { text: 'I know enough to plan.', tool: 'hodos_probe_done', input: { assessment: options.assessment } }
+      const step = options.steps[answers - 1]
+      return step === undefined ? { text: 'Well done: that completes the plan.' } : step
+    }
+    if (line('[Hodos] The learner started a learning session') !== undefined) return { tool: 'hodos_probe', input: options.probe }
+    if ((line('[Hodos] The learner started a practice session') !== undefined || line('[Hodos] Next problem') !== undefined) && options.problem !== undefined) return { tool: 'hodos_problem', input: options.problem }
+    if (line('Your thinking (problem') !== undefined && options.conclusion !== undefined) return { tool: 'hodos_conclude', input: options.conclusion }
     // DeepSeek Harness appends a runtime-context block to the learner's message; the request is the first line.
-    const said = (request.lastUserText ?? '').split('\n')[0] ?? ''
-    if (/\b(teach me|i want to learn|learn)\b/i.test(said) && request.tools.includes('hodos_start_learning')) {
-      return {
-        text: 'Let me set up a learning path for you.',
-        tool: 'hodos_start_learning',
-        input: { goal: said.slice(0, 300), environment: options.environment, ...(options.selfReport === undefined ? {} : { self_report: [...options.selfReport] }) },
-      }
+    // It is read before tool results: it can share a model message with the result of the call that ended the turn.
+    const said = text.split('\n')[0] ?? ''
+    const named = namedCall(said)
+    if (named !== null) return named
+    const result = request.toolResults[0]
+    if (result !== undefined) {
+      if (result.isError) return { text: `[${result.name} failed] ${result.text.slice(0, 400)}` }
+      if (result.name === 'hodos_start_learning') return { text: 'Let us find out where you are. Your first question is in the Hodos panel.', tool: 'hodos_probe', input: options.probe }
+      if (result.name === 'hodos_probe_done') return { text: 'Now the plan.', tool: 'hodos_plan', input: { mermaid: options.plan } }
+      if (result.name === 'hodos_plan') return { text: 'Here is the plan in the Hodos panel. Say "looks good" when you are ready to start.' }
+      if (result.name === 'hodos_start_practice' && options.problem !== undefined) return { tool: 'hodos_problem', input: options.problem }
+      return { text: `[${result.name}] ${result.text.slice(0, 400)}` }
     }
-    if (/\b(continue|resume)\b/i.test(said) && request.tools.includes('hodos_resume_learning')) return { tool: 'hodos_resume_learning', input: {} }
-    if (/\bstatus\b/i.test(said) && request.tools.includes('hodos_status')) return { tool: 'hodos_status', input: {} }
-    if (/\bcourses\b/i.test(said) && request.tools.includes('hodos_list_courses')) return { tool: 'hodos_list_courses', input: {} }
-    if (/\bapprove\b/i.test(said) && request.tools.includes('hodos_approve_path')) return { tool: 'hodos_approve_path', input: {} }
-    const draft = /\bdraft (?:a|me a) course (?:about|on) (.+)$/i.exec(said)
-    if (draft?.[1] !== undefined && request.tools.includes('hodos_draft_course')) return { tool: 'hodos_draft_course', input: { topic: draft[1].slice(0, 200) } }
-    // Tests probe the tool policy with "Call the tool <name> with <JSON object>", offered or not.
-    const probe = /^call the tool ([\w-]+) with (\{.*\})$/i.exec(said)
-    if (probe?.[1] !== undefined && probe[2] !== undefined) {
-      const input: unknown = JSON.parse(probe[2])
-      if (isJsonValue(input) && typeof input === 'object' && input !== null && !Array.isArray(input)) return { tool: probe[1], input }
+    if (/\b(i want to learn|teach me)\b/i.test(said) && request.tools.includes('hodos_start_learning')) return { tool: 'hodos_start_learning', input: { goal: said.slice(0, 300) } }
+    if (/\blooks good\b/i.test(said) && request.tools.includes('hodos_quiz')) {
+      const step = options.steps[0]
+      if (step !== undefined) return step
     }
-    return { text: 'Keep going in the Hodos workspace; ask me if you get stuck.' }
+    return { text: 'Keep going in the Hodos panel; ask me if you get stuck.' }
   }
 }

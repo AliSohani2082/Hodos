@@ -1,8 +1,9 @@
 /**
  * Course drafting through DeepSeek Harness's own Claude Code subagent
- * (`@deepseek-ai/dsh-subagent-claude-code`): the tutor calls
- * hodos_draft_course, DSH runs the unmodified Claude Code binary through the
- * Agent SDK, and Hodos validates its answer into a draft the learner approves.
+ * (`@deepseek-ai/dsh-subagent-claude-code`): the model calls
+ * hodos_draft_course in an ordinary chat, DSH runs the unmodified Claude Code
+ * binary through the Agent SDK, and Hodos validates its answer into a draft
+ * question bank the learner approves.
  *
  * No Claude account or real key is involved: Claude Code gets a dummy API key
  * and a local mock in place of Anthropic's API through the provider's `env`
@@ -13,7 +14,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { chromium, type Browser, type Page } from 'playwright'
 import { tacticsCourse } from '@hodos/chess'
-import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
+import { learningScript, startMockLlm, type MockLlm } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, startDsh, type DshProcess } from './support/dsh.js'
 import { apiData, enterDsh, hodosApp, openHodosTab, say } from './support/ui.js'
 
@@ -37,7 +38,12 @@ function the<T>(value: T | undefined, what: string): T {
 
 describe.skipIf(!ENABLED)('course drafting through DSH\'s Claude Code subagent', () => {
   beforeAll(async () => {
-    tutor = await startMockLlm(tutorScript({ environment: 'chess' }))
+    tutor = await startMockLlm(learningScript({
+      probe: { question: 'How does a king move?', options: ['One square any way', 'In an L'], correct: 'One square any way' },
+      assessment: { strands: [] },
+      plan: 'graph TD\n  king[The active king]',
+      steps: [],
+    }))
     claude = await startMockLlm(() => ({ text: `Here is the course.\n\`\`\`json\n${JSON.stringify(drafted)}\n\`\`\`` }))
     const home = prepareHome(['packages/dsh-adapter', 'packages/environments/chess', BUNDLE])
     // A patch replaces a row's whole config: restate dataDir for Hodos.
@@ -68,7 +74,7 @@ describe.skipIf(!ENABLED)('course drafting through DSH\'s Claude Code subagent',
   it('drafts a course with Claude Code and keeps it for the learner to approve', async () => {
     const p = the(page, 'page')
     await enterDsh(p, the(dsh, 'dsh').url)
-    await say(p, 'Please draft a course about chess endgame basics')
+    await say(p, 'Call the tool hodos_draft_course with {"topic":"chess endgame basics"}')
     const tool = (): { text: string; isError: boolean } | undefined => the(tutor, 'tutor').requests.flatMap(r => r.toolResults).find(t => t.name === 'hodos_draft_course')
     await expect.poll(() => tool() !== undefined, { timeout: 300_000, interval: 2_000 }).toBe(true)
     expect(tool()?.isError).toBe(false)
@@ -80,10 +86,10 @@ describe.skipIf(!ENABLED)('course drafting through DSH\'s Claude Code subagent',
     for (const call of calls) expect(call.auth).toEqual({ apiKey: TEST_KEY, bearer: false })
     expect(calls.some(c => c.userTexts.some(t => t.includes('# Hodos course authoring guide')))).toBe(true)
 
-    // The draft waits in the workspace for the learner.
+    // The draft waits in the workspace for the learner to approve as a question bank.
     const session = await openHodosTab(p)
     const drafts = await apiData(await p.request.get(`${the(dsh, 'dsh').origin}/hodos/api/v1/drafts?session=${encodeURIComponent(session)}`))
     expect(drafts).toMatchObject([{ id: 'chess.endgame-draft', origin: 'agent' }])
-    await expect.poll(() => hodosApp(p).locator('section.drafts h3').first().textContent(), { timeout: 20_000 }).toContain('Chess endgame basics (draft)')
+    await expect.poll(() => hodosApp(p).locator('ul.drafts strong').first().textContent(), { timeout: 20_000 }).toContain('Chess endgame basics (draft)')
   })
 })

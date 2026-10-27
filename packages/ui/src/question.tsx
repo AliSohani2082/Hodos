@@ -74,6 +74,8 @@ export function OpenQuestion(props: OpenProps): React.ReactElement {
   const frame = useRef<RendererHandle | null>(null)
   const form = q.form
   const renderer = form.type === 'interface' ? props.renderers.get(form.environment) : undefined
+  // A renderer answers for the learner only if it may respond; otherwise it draws and the panel takes the answer.
+  const interactive = renderer?.capabilities.includes('respond') ?? false
 
   const submit = async (answer: { response?: JsonValue; dontKnow?: boolean }): Promise<void> => {
     if (busy) return
@@ -128,25 +130,32 @@ export function OpenQuestion(props: OpenProps): React.ReactElement {
             <textarea value={text} onChange={e => setText(e.target.value)} disabled={busy} rows={6} />
           </label>
         )
-      case 'interface':
-        if (renderer !== undefined) {
+      case 'interface': {
+        const drawn = renderer === undefined
+          ? null
+          : (
+            <RendererFrame
+              ref={frame}
+              renderer={renderer.ref}
+              environment={form.environment}
+              title={`${form.kind} question`}
+              capabilities={renderer.capabilities}
+              onReady={() => frame.current?.post({ type: 'hodos:present', exercise: exerciseOf(q, form) })}
+              onResponse={(exerciseId, response) => { if (exerciseId === q.id) void submit({ response }) }}
+            />
+          )
+        if (drawn !== null && interactive) {
           return (
             <>
-              <RendererFrame
-                ref={frame}
-                renderer={renderer.ref}
-                environment={form.environment}
-                title={`${form.kind} question`}
-                capabilities={renderer.capabilities}
-                onReady={() => frame.current?.post({ type: 'hodos:present', exercise: exerciseOf(q, form) })}
-                onResponse={(exerciseId, response) => { if (exerciseId === q.id) void submit({ response }) }}
-              />
+              {drawn}
               <details className="text-alternative"><summary>Text version</summary><pre>{form.text}</pre></details>
             </>
           )
         }
+        // No renderer, or one that only draws (a diagram, a position): the answer is typed or picked here.
         return (
           <>
+            {drawn}
             <pre className="prompt-text">{form.text}</pre>
             {form.answerField !== null && optionsOf(form.payload).length > 0
               ? (
@@ -168,11 +177,12 @@ export function OpenQuestion(props: OpenProps): React.ReactElement {
               )}
           </>
         )
+      }
       default: return null
     }
   }
 
-  const canSubmit = !busy && (form.type === 'choice' ? selected.length > 0 : form.type === 'explain' ? text.trim() !== '' : renderer === undefined && text.trim() !== '')
+  const canSubmit = !busy && (form.type === 'choice' ? selected.length > 0 : form.type === 'explain' ? text.trim() !== '' : !interactive && text.trim() !== '')
   const submitAnswer = (): void => {
     if (form.type === 'choice') void submit({ response: { selected } })
     else if (form.type === 'explain') void submit({ response: { text } })
@@ -199,7 +209,7 @@ export function OpenQuestion(props: OpenProps): React.ReactElement {
             </label>
             {error !== null && <p className="error" role="alert">{error}</p>}
             <div className="controls">
-              {(form.type !== 'interface' || renderer === undefined) && <button type="submit" className="primary" disabled={!canSubmit}>Submit</button>}
+              {(form.type !== 'interface' || !interactive) && <button type="submit" className="primary" disabled={!canSubmit}>Submit</button>}
               <button type="button" onClick={() => { void submit({ dontKnow: true }) }} disabled={busy}>I don't know</button>
             </div>
           </form>

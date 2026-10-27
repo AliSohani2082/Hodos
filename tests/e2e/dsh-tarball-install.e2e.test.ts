@@ -3,8 +3,8 @@
  * `dsh plugin add <file>.tgz` installs @hodos/dsh and @hodos/chess with the
  * @hodos packages they carry (no registry has them), the installed `hodos`
  * command works outside the Harness, and the Harness runs the installed
- * bundles: the tutor starts the chess course and the workspace presents a
- * placement exercise on the board.
+ * bundles: the tutor starts a learning session and the Hodos panel presents
+ * a chess position on the installed board.
  *
  * Packs with `scripts/pack-bundles.mjs --no-build` (`pnpm test:e2e` builds
  * first). Third-party dependencies install from the npm registry (or a warm
@@ -15,9 +15,9 @@ import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { chromium, type Browser, type FrameLocator, type Page } from 'playwright'
-import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
+import { learningScript, startMockLlm, type MockLlm } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, ROOT, startDsh, type DshHome, type DshProcess } from './support/dsh.js'
-import { enterDsh, hodosApp, hodosState, openHodosTab, say, waitForExercise, type HodosState } from './support/ui.js'
+import { enterDsh, hodosApp, hodosState, openHodosTab, say, waitForQuestion, type HodosState } from './support/ui.js'
 
 let home: DshHome | undefined
 let mock: MockLlm | undefined
@@ -51,7 +51,12 @@ describe.skipIf(!DSH_AVAILABLE)('packed tarballs in DeepSeek Harness', () => {
     const packed = spawnSync(process.execPath, [join(ROOT, 'scripts/pack-bundles.mjs'), '--no-build'], { cwd: ROOT, encoding: 'utf8' })
     if (packed.status !== 0) throw new Error(`pack-bundles failed:\n${packed.stdout}${packed.stderr}`)
     home = prepareHome([tarball('packages/dsh-adapter'), tarball('packages/environments/chess')])
-    mock = await startMockLlm(tutorScript({ environment: 'chess' }))
+    mock = await startMockLlm(learningScript({
+      probe: { question: 'How does a knight move?', options: ['In an L', 'Diagonally', 'One square'], correct: 'In an L' },
+      assessment: { strands: [{ strand: 'tactics', assessment: 'Has not met forks.' }] },
+      plan: 'graph TD\n  fork[The knight fork]',
+      steps: [],
+    }))
     dsh = await startDsh(home, mock.url)
     browser = await chromium.launch()
     page = await browser.newPage({ viewport: { width: 1500, height: 950 } })
@@ -85,17 +90,24 @@ describe.skipIf(!DSH_AVAILABLE)('packed tarballs in DeepSeek Harness', () => {
     expect(run.stdout).toContain('#### `chess.puzzle`: Chess puzzle')
   })
 
-  it('starts the chess course from the chat and presents a placement exercise on the board', async () => {
+  it('starts a learning session from the chat and asks a chess position on the installed board', async () => {
     const p = the(page, 'page')
     await enterDsh(p, the(dsh, 'dsh').url)
     await say(p, 'Teach me chess tactics. I know the basic rules but struggle with knight forks.')
     await expect.poll(() => the(mock, 'mock').requests.some(r => r.toolResults.some(t => t.name === 'hodos_start_learning' && !t.isError)), { timeout: 60_000 }).toBe(true)
     session = await openHodosTab(p)
-    const exercise = await waitForExercise(state)
-    expect(exercise.mode).toBe('diagnostic')
-    await expect.poll(() => app().locator('.mode-banner strong').textContent(), { timeout: 20_000 }).toBe('Placement')
-    // The installed renderer draws every chess exercise's position (interactive for puzzles).
-    const board = app().locator('section.environment-pane iframe.renderer-frame').contentFrame()
+    const probe = await waitForQuestion(state)
+    expect(probe.role).toBe('probe')
+    const puzzle = {
+      question: 'Find the best move.', kind: 'chess.puzzle',
+      payload: { fen: '6k1/3q1p1p/8/8/4N3/8/5PPP/6K1 w - - 0 1', orientation: 'white', prompt: 'White to move and win material.', goal: 'best', plies: 2 },
+      key: { line: ['Nf6+', 'Kf8', 'Nxd7'], theme: 'fork' },
+    }
+    await say(p, `Call the tool hodos_probe_exercise with ${JSON.stringify(puzzle)}`)
+    const exercise = await waitForQuestion(state, new Set([probe.id]))
+    expect(exercise.form).toMatchObject({ type: 'interface', kind: 'chess.puzzle' })
+    // The installed renderer draws the position, interactive like a puzzle.
+    const board = app().locator('iframe.renderer-frame').contentFrame()
     await expect.poll(() => board.locator('[data-square]').count(), { timeout: 20_000 }).toBe(64)
   })
 })

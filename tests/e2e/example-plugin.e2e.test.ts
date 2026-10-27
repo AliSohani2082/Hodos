@@ -3,18 +3,19 @@
  * a real DeepSeek Harness. Its renderer is plain JavaScript speaking the
  * renderer protocol by hand, served under the renderer CSP into a sandboxed
  * iframe. In the Harness the plugin is loaded from the `pluginDirs` setting as
- * untrusted data: its grader runs in the QuickJS sandbox.
+ * untrusted data: its course becomes a question bank the tutor asks from, its
+ * renderer draws the question (it may not answer for the learner, so the
+ * panel takes the typed answer), and its grader runs in the QuickJS sandbox.
  *
  * The Harness part needs `pnpm build` and HODOS_DSH_BIN; skipped otherwise.
  */
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { chromium, type Browser, type FrameLocator, type Page } from 'playwright'
-import { startMockLlm, tutorScript, type MockLlm } from '@hodos/testing'
+import { learningScript, startMockLlm, type MockLlm, type MockToolResult } from '@hodos/testing'
 import { DSH_AVAILABLE, prepareHome, startDsh, type DshProcess } from './support/dsh.js'
 import { openRenderer, post, received, startRendererHost, type RendererHost } from './support/renderer-host.js'
-import { enterDsh, hodosApp, hodosState, openHodosTab, say, waitForExercise, waitForGrading, type HodosState } from './support/ui.js'
-import { jsonObject, jsonString } from '../support/json.js'
+import { enterDsh, hodosApp, hodosState, openHodosTab, say, waitForQuestion, type HodosState } from './support/ui.js'
 
 const PLUGIN = fileURLToPath(new URL('../../examples/binary-numbers', import.meta.url))
 
@@ -78,8 +79,23 @@ describe.skipIf(!DSH_AVAILABLE)('example plugin in DeepSeek Harness (pluginDirs)
   const app = (): FrameLocator => hodosApp(the(page, 'page'))
   const state = (): Promise<HodosState> => hodosState(the(page, 'page'), the(dsh, 'dsh').origin, session)
 
+  /** Wait for the model to receive a new result of a call to `name`. */
+  async function resultOf(name: string, after: number): Promise<MockToolResult> {
+    const found: { result: MockToolResult | undefined } = { result: undefined }
+    await expect.poll(() => {
+      found.result = the(mock, 'mock').requests.slice(after).flatMap(r => r.toolResults).find(t => t.name === name)
+      return found.result !== undefined
+    }, { timeout: 60_000 }).toBe(true)
+    return the(found.result, `the result of ${name}`)
+  }
+
   beforeAll(async () => {
-    mock = await startMockLlm(tutorScript({ environment: 'binary' }))
+    mock = await startMockLlm(learningScript({
+      probe: { question: 'What does the rightmost bit of a binary number count?', options: ['Ones', 'Twos', 'Tens'], correct: 'Ones' },
+      assessment: { strands: [{ strand: 'place value', assessment: 'Reads binary digit by digit.' }] },
+      plan: 'graph TD\n  read[Reading binary numbers]',
+      steps: [],
+    }))
     const home = prepareHome(['packages/dsh-adapter'])
     // A patch replaces a row's whole config: restate dataDir for Hodos.
     const patch = home.patch('example-plugin.yml', `- id: hodos
@@ -97,38 +113,35 @@ describe.skipIf(!DSH_AVAILABLE)('example plugin in DeepSeek Harness (pluginDirs)
     await mock?.close()
   })
 
-  it('loads the plugin as data, teaches with its renderer and grades in the sandbox', async () => {
+  it('loads the plugin as data: the tutor asks from its course, its renderer draws, its grader grades in the sandbox', async () => {
     const p = the(page, 'page')
     await enterDsh(p, the(dsh, 'dsh').url)
     await say(p, 'I want to learn binary numbers')
-    await expect.poll(() => the(mock, 'mock').requests.some(r => r.toolResults.some(t => t.name === 'hodos_start_learning' && !t.isError && t.text.includes('Binary numbers'))), { timeout: 60_000 }).toBe(true)
     session = await openHodosTab(p)
-    for (let n = 0; n < 10; n++) {
-      if ((await state()).journey?.nextAction.type !== 'diagnostic') break
-      const exercise = await waitForExercise(state)
-      await app().getByRole('button', { name: 'I don\'t know' }).click()
-      await waitForGrading(state, exercise)
-    }
-    await app().getByRole('button', { name: 'Start this path' }).click()
-    await expect.poll(() => app().locator('.lesson h2').first().textContent(), { timeout: 20_000 }).toBe('Reading binary numbers')
-    const block = app().locator('figure.block-frame iframe.renderer-frame').first().contentFrame()
-    await expect.poll(() => block.locator('.bits td').allTextContents(), { timeout: 20_000 }).toEqual(['1', '1', '1', '0'])
-    await app().getByRole('radio', { name: '4', exact: true }).check()
-    await app().getByRole('button', { name: 'Check' }).click()
-    await app().getByRole('button', { name: 'Continue to practice' }).click()
+    const probe = await waitForQuestion(state)
 
-    const practice = await waitForExercise(state)
-    const value = jsonString(jsonObject(practice.payload, 'the exercise payload').value, 'the value to convert')
-    const pane = app().locator('section.environment-pane iframe.renderer-frame').contentFrame()
-    await expect.poll(() => pane.locator('.bits td').allTextContents(), { timeout: 20_000 }).toEqual(value.padStart(value.length > 4 ? 8 : 4, '0').split(''))
-    await app().getByLabel('Your answer').fill(value)
-    await app().getByRole('button', { name: 'Submit answer' }).click()
-    await waitForGrading(state, practice)
-    await expect.poll(() => app().locator('.feedback .misconception').first().textContent()).toBe('The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.')
-    const retry = await waitForExercise(state)
-    await app().getByLabel('Your answer').fill(String(parseInt(value, 2)))
-    await app().getByRole('button', { name: 'Submit answer' }).click()
-    await waitForGrading(state, retry)
-    await expect.poll(() => app().locator('.feedback').textContent()).toContain('Correct.')
+    // The course is a question bank: the tutor sees what the learner would see, never the key.
+    const after = the(mock, 'mock').requests.length
+    await say(p, 'Call the tool hodos_bank with {"query":"binary decimal"}')
+    const listing = await resultOf('hodos_bank', after)
+    expect(listing.isError).toBe(false)
+    expect(listing.text).toContain('binary-numbers/read-2 (binary.convert; Binary numbers')
+    expect(listing.text).toContain('What is the binary number 1100 in decimal?')
+    expect(listing.text).not.toContain('answer')
+
+    // Asked: the question ends the tutor's turn and shows in the panel.
+    await say(p, 'Call the tool hodos_probe_exercise with {"question":"Read this binary number.","bank":"binary-numbers/read-2"}')
+    const q = await waitForQuestion(state, new Set([probe.id]))
+    expect(q.form).toMatchObject({ type: 'interface', kind: 'binary.convert', answerField: { name: 'text', type: 'string' } })
+    expect(JSON.stringify(q)).not.toContain('"12"')
+    const bits = app().locator('iframe.renderer-frame').contentFrame()
+    await expect.poll(() => bits.locator('.bits td').allTextContents(), { timeout: 20_000 }).toEqual(['1', '1', '0', '0'])
+
+    // Read as a decimal number: the plugin's grader names the misconception.
+    await app().getByLabel('Your answer', { exact: true }).fill('1100')
+    await app().getByRole('button', { name: 'Submit' }).click()
+    await expect.poll(async () => (await state()).learn?.answered.find(a => a.id === q.id)?.answer?.verdict.outcome, { timeout: 30_000 }).toBe('incorrect')
+    const verdict = (await state()).learn?.answered.find(a => a.id === q.id)?.answer?.verdict
+    expect(verdict).toMatchObject({ outcome: 'incorrect', score: 0, misconceptions: ['read-as-decimal'] })
   })
 })
