@@ -269,4 +269,99 @@ CREATE TABLE learn_node_states (
 CREATE INDEX learn_node_states_due ON learn_node_states(learner_id, due_at);
 `,
   },
+  {
+    version: 3,
+    name: 'knowledge graph and practice sessions',
+    sql: `
+CREATE TABLE kg_sources (
+  id TEXT PRIMARY KEY,
+  learner_id TEXT NOT NULL REFERENCES learners(id),
+  kind TEXT NOT NULL CHECK (kind IN ('session', 'notes')),
+  title TEXT NOT NULL,
+  covered_through INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX kg_sources_learner ON kg_sources(learner_id);
+CREATE TABLE kg_notes (
+  source_id TEXT PRIMARY KEY REFERENCES kg_sources(id) ON DELETE CASCADE,
+  text TEXT NOT NULL
+);
+CREATE TABLE kg_propositions (
+  id TEXT PRIMARY KEY,
+  learner_id TEXT NOT NULL REFERENCES learners(id),
+  name TEXT NOT NULL,
+  statement TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX kg_propositions_learner ON kg_propositions(learner_id, created_at);
+CREATE TABLE kg_assertions (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  proposition_id TEXT NOT NULL REFERENCES kg_propositions(id) ON DELETE CASCADE,
+  source_id TEXT NOT NULL,
+  anchor INTEGER,
+  statement TEXT NOT NULL,
+  aliases_json TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX kg_assertions_proposition ON kg_assertions(proposition_id, seq);
+CREATE INDEX kg_assertions_source ON kg_assertions(source_id);
+CREATE TABLE kg_chains (
+  id TEXT PRIMARY KEY,
+  learner_id TEXT NOT NULL REFERENCES learners(id),
+  chain_key TEXT NOT NULL,
+  premises_json TEXT NOT NULL,
+  conclusion_id TEXT NOT NULL REFERENCES kg_propositions(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL,
+  UNIQUE (learner_id, chain_key)
+);
+CREATE TABLE kg_chain_sources (
+  chain_id TEXT NOT NULL REFERENCES kg_chains(id) ON DELETE CASCADE,
+  source_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (chain_id, source_id)
+);
+CREATE TABLE model_calls (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  learner_id TEXT NOT NULL REFERENCES learners(id),
+  purpose TEXT NOT NULL,
+  ok INTEGER NOT NULL,
+  input_tokens INTEGER,
+  output_tokens INTEGER,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX model_calls_learner ON model_calls(learner_id, created_at);
+CREATE TABLE practice_sessions (
+  id TEXT PRIMARY KEY,
+  learner_id TEXT NOT NULL REFERENCES learners(id),
+  host_session_id TEXT UNIQUE,
+  title TEXT NOT NULL,
+  targets_json TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('active', 'closed')),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX practice_sessions_learner ON practice_sessions(learner_id, updated_at);
+CREATE TABLE practice_problems (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT NOT NULL UNIQUE,
+  session_id TEXT NOT NULL REFERENCES practice_sessions(id),
+  statement TEXT NOT NULL,
+  mode TEXT NOT NULL CHECK (mode IN ('recall', 'discrimination', 'composition')),
+  targets_json TEXT NOT NULL,
+  model_solution TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('active', 'concluded')),
+  conclusion_json TEXT,
+  posed_at TEXT NOT NULL,
+  concluded_at TEXT
+);
+CREATE INDEX practice_problems_session ON practice_problems(session_id, seq);
+CREATE TABLE practice_thinking (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  problem_id TEXT NOT NULL REFERENCES practice_problems(id),
+  text TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+`,
+  },
 ]
