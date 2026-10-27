@@ -22,8 +22,17 @@ export const RENDERER_PROTOCOL = 1
 /** Largest serialized message accepted from a renderer, in characters. */
 export const MAX_RENDERER_MESSAGE_CHARS = 64 * 1024
 
-/** Capabilities a renderer may be granted by the host. */
-export const RENDERER_CAPABILITIES = ['respond', 'resize', 'speech-synthesis'] as const
+/**
+ * Capabilities a renderer may be granted by the host:
+ * - `respond`, `resize`: send responses, ask for a height;
+ * - `speech-synthesis`: speak text with the browser's voices;
+ * - `run-code`: run learner code inside the renderer with WebAssembly in a
+ *   worker (for example Python with Pyodide). The host serves such a
+ *   renderer with a policy that allows WebAssembly, `blob:` workers and
+ *   fetching the renderer's own files; it stays in its opaque origin with no
+ *   cookies and no other network. Granted to trusted plugins only.
+ */
+export const RENDERER_CAPABILITIES = ['respond', 'resize', 'speech-synthesis', 'run-code'] as const
 
 /** One renderer capability. */
 export type RendererCapability = (typeof RENDERER_CAPABILITIES)[number]

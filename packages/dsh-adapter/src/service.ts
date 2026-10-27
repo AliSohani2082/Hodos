@@ -27,6 +27,7 @@ import {
 } from '@hodos/core'
 import type { HodosEnvironmentHost, HodosEnvironmentPlugin } from '@hodos/plugin-sdk'
 import { OWNER_PRINCIPAL, type HodosConfig } from './config.js'
+import { courseBank } from './bank.js'
 import { CourseInbox, INBOX_DIR } from './inbox.js'
 
 /** How often the course inbox is checked for new files. */
@@ -87,7 +88,7 @@ export class HodosService extends Service implements HodosEnvironmentHost {
     })
     this.learnRepo = new LearnRepository(this.store)
     this.graph = new GraphRepository(this.store)
-    this.learn = new LearnService({ repository: this.learnRepo, registry: this.registry, logger: this.logger, theta: THETA_BY_STRICTNESS[config.strictness] })
+    this.learn = new LearnService({ repository: this.learnRepo, registry: this.registry, logger: this.logger, theta: THETA_BY_STRICTNESS[config.strictness], bank: courseBank(this.store, this.registry) })
     this.knowledge = new KnowledgeService({ graph: this.graph, learn: this.learnRepo, model: () => this.model, logger: this.logger, budget: { callsPerDay: config.backgroundCallsPerDay } })
     this.practice = new PracticeService({ store: this.store, graph: this.graph })
     ctx.effect(() => () => {

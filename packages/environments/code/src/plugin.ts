@@ -6,8 +6,8 @@ import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { CORE_PLUGIN_API_VERSION, SDK_VERSION, type HodosEnvironmentPlugin } from '@hodos/plugin-sdk'
 import { codePack, snippets } from './content.js'
-import { createWriteGrader, gradePredict } from './grader.js'
-import { ENVIRONMENT, GRADER_ID, KIND, predictKind, RENDERER_ID, RUNNER_GRADER_ID, snippetBlock, writeKind } from './kinds.js'
+import { createWriteGrader, gradePredict, gradeSandbox } from './grader.js'
+import { ENVIRONMENT, GRADER_ID, KIND, predictKind, RENDERER_ID, RUNNER_GRADER_ID, SANDBOX_ENVIRONMENT, SANDBOX_GRADER_ID, SANDBOX_RENDERER_ID, sandboxKind, snippetBlock, writeKind } from './kinds.js'
 import type { CodeRunner } from './runner.js'
 import { CPYTHON_VERIFICATION } from './verification.js'
 
@@ -47,30 +47,33 @@ export function createCodePlugin(options: CodePluginOptions = {}): HodosEnvironm
   if (runner !== undefined && (!runner.languages.includes('python') || runner.isolation.trim() === '')) {
     throw new Error('the code runner must run python and describe its isolation')
   }
-  const kinds = runner === undefined ? [predictKind] : [predictKind, writeKind]
+  const kinds = runner === undefined ? [predictKind, sandboxKind] : [predictKind, sandboxKind, writeKind]
   return {
     manifest: {
       id: 'hodos-code',
       version: '0.1.0',
       displayName: 'Hodos Code',
       description: runner === undefined
-        ? 'Read and trace Python: predict what short programs print.'
-        : `Read, trace and write Python. Programs run in the host's runner (${runner.isolation}).`,
+        ? 'Read, trace and write Python: predict what programs print, and write programs in a sandbox that runs in your browser.'
+        : `Read, trace and write Python. Programs run in your browser, or in the host's runner (${runner.isolation}) for hidden tests.`,
       requiresCore: `^${CORE_PLUGIN_API_VERSION}`,
       sdkVersion: SDK_VERSION,
       license: 'MIT',
       capabilities: {
-        environments: [ENVIRONMENT],
+        environments: [ENVIRONMENT, SANDBOX_ENVIRONMENT],
         exerciseKinds: kinds.map(k => k.id),
-        graders: runner === undefined ? [GRADER_ID] : [GRADER_ID, RUNNER_GRADER_ID],
+        graders: runner === undefined ? [GRADER_ID, SANDBOX_GRADER_ID] : [GRADER_ID, SANDBOX_GRADER_ID, RUNNER_GRADER_ID],
         lessonBlocks: [snippetBlock.name],
         presets: ['code-reading@1'],
-        renderers: [RENDERER_ID],
+        renderers: [RENDERER_ID, SANDBOX_RENDERER_ID],
         contentPacks: ['python-basics'],
       },
+      // The sandbox renderer runs Python (Pyodide, WebAssembly) in a worker inside its sandboxed frame.
+      rendererPermissions: ['run-code'],
     },
     register(ctx) {
       ctx.registerGrader({ id: GRADER_ID, kinds: [KIND.predict], method: 'deterministic', grade: gradePredict })
+      ctx.registerGrader({ id: SANDBOX_GRADER_ID, kinds: [KIND.sandbox], method: 'self-report', grade: gradeSandbox })
       if (runner !== undefined) {
         ctx.registerGrader({ id: RUNNER_GRADER_ID, kinds: [KIND.write], method: 'oracle', grade: createWriteGrader(runner, options.runnerBudgetMs ?? 4500) })
         ctx.logger.info(`code.write is offered; programs run in the host's runner (${runner.isolation})`)
@@ -84,6 +87,7 @@ export function createCodePlugin(options: CodePluginOptions = {}): HodosEnvironm
         lessonTemplate: 'Explain the rule in two or three sentences, show one code-snippet with its output, then ask one check question. Never show an exercise program\'s output.',
       })
       ctx.registerRenderer({ id: RENDERER_ID, environments: [ENVIRONMENT], root: rendererRoot(), entry: 'index.html', capabilities: ['resize'] })
+      ctx.registerRenderer({ id: SANDBOX_RENDERER_ID, environments: [SANDBOX_ENVIRONMENT], root: rendererRoot(), entry: 'sandbox.html', capabilities: ['respond', 'resize', 'run-code'] })
       ctx.registerContentPack(codePack(cpythonVerifiedIds()))
     },
   }

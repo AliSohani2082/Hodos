@@ -13,11 +13,13 @@ import {
   FEEDBACK,
   FORMAT_CREDIT,
   gradePredict,
+  gradeSandbox,
   importedModules,
   KIND,
   outputLines,
   predictKind,
   RUN_STATUSES,
+  sandboxKind,
   snippetBlock,
   snippets,
   tokenize,
@@ -243,9 +245,9 @@ const malformed = (outcome: unknown): CodeRunner => ({ isolation: 'x', languages
 describe('code-writing exercises (runner contract; no runner ships)', () => {
   it('is not offered without a runner', () => {
     const plugin = createCodePlugin()
-    expect(plugin.manifest.capabilities.exerciseKinds).toEqual([KIND.predict])
-    expect(plugin.manifest.capabilities.graders).toEqual(['code.grader'])
-    expect(createCodePlugin({ runner: tableRunner(() => ok('')) }).manifest.capabilities.exerciseKinds).toEqual([KIND.predict, KIND.write])
+    expect(plugin.manifest.capabilities.exerciseKinds).toEqual([KIND.predict, KIND.sandbox])
+    expect(plugin.manifest.capabilities.graders).toEqual(['code.grader', 'code.sandbox-grader'])
+    expect(createCodePlugin({ runner: tableRunner(() => ok('')) }).manifest.capabilities.exerciseKinds).toEqual([KIND.predict, KIND.sandbox, KIND.write])
     expect(() => createCodePlugin({ runner: { isolation: 'x', languages: ['ruby'], run: () => Promise.resolve([]) } })).toThrow(/python/)
     expect(() => createCodePlugin({ runner: { isolation: ' ', languages: ['python'], run: () => Promise.resolve([]) } })).toThrow(/isolation/)
   })
@@ -305,7 +307,46 @@ describe('code-writing exercises (runner contract; no runner ships)', () => {
   })
 })
 
-describe('security: this package never runs code', () => {
+const sandboxItem: ExerciseItem = {
+  id: 'sandbox-average', kind: KIND.sandbox, skills: [{ skillId: 'average', weight: 1 }], difficulty: 0, modes: ['practice'],
+  payload: {
+    language: 'python', prompt: 'Write average(xs).', starter: 'def average(xs):\n    ...',
+    tests: [{ name: 'three numbers', code: 'assert average([1, 2, 3]) == 2' }, { name: 'one number', code: 'assert average([5]) == 5' }],
+  },
+  key: { solution: 'def average(xs):\n    return sum(xs) / len(xs)' },
+}
+
+describe('code sandbox (Python in the learner\'s browser)', () => {
+  it('validates the starter, the tests and the solution', () => {
+    expect(sandboxKind.validateItem?.(sandboxItem)).toEqual([])
+    const broken = { ...sandboxItem, payload: { ...payloadOf(sandboxItem), tests: [{ name: 'a', code: 'assert f(1) == 1 $' }, { name: 'a', code: 'x = "' }] }, key: { solution: 'def f():\n    return "x' } }
+    // The check is the tokenizer's: unterminated strings and stray characters, not a full parse.
+    expect(sandboxKind.validateItem?.(broken).map(d => d.code)).toEqual(['code/syntax', 'code/syntax', 'code/syntax', 'code/test-name'])
+    const example = sandboxKind.guidance?.example
+    expect(sandboxKind.validateItem?.({ ...sandboxItem, payload: example?.payload ?? null, key: example?.key ?? null })).toEqual([])
+  })
+
+  it('grades the results the browser reported, as a self-report', () => {
+    expect(gradeSandbox(input(sandboxItem, { code: 'def average(xs): ...', results: { passed: 2, total: 2 } }))).toMatchObject({ correct: true, score: 1, feedback: 'All 2 tests passed in your browser.' })
+    expect(gradeSandbox(input(sandboxItem, { code: 'x', results: { passed: 1, total: 2 } }))).toMatchObject({ correct: false, score: 0.5, feedback: '1 of 2 tests passed in your browser.' })
+    const unrun: JsonValue[] = [{ code: 'x' }, { code: 'x', results: { passed: 3, total: 3 } }, { code: 'x', results: { passed: 5, total: 2 } }]
+    for (const response of unrun) {
+      expect(gradeSandbox(input(sandboxItem, response))).toMatchObject({ correct: false, score: 0, feedback: 'Not run: run the tests before you submit.' })
+    }
+    expect(gradeSandbox(input(sandboxItem, { code: '  ', results: { passed: 2, total: 2 } })).score).toBe(0)
+    const plugin = createCodePlugin()
+    expect(plugin.manifest.rendererPermissions).toEqual(['run-code'])
+  })
+
+  it('shows the tests but not the solution until it is revealed', () => {
+    const text = sandboxKind.fallbackText(sandboxItem.payload)
+    expect(text).toContain('assert average([1, 2, 3]) == 2')
+    expect(text).not.toContain('sum(xs) / len(xs)')
+    expect(sandboxKind.reveal?.(sandboxItem)).toBe('def average(xs):\n    return sum(xs) / len(xs)')
+  })
+})
+
+describe('security: the server side of this package never runs code', () => {
   it('imports no process, VM or worker APIs and evaluates nothing', () => {
     const dir = new URL('../src/', import.meta.url)
     for (const file of readdirSync(dir)) {

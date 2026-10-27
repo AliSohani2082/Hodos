@@ -118,7 +118,23 @@ export interface QuestionReveal {
 export type QuestionForm =
   | { readonly type: 'choice'; readonly multi: boolean; readonly options: readonly ChoiceOption[] }
   | { readonly type: 'explain' }
-  | { readonly type: 'interface'; readonly kind: string; readonly environment: string; readonly responseKind: string; readonly interaction: 'single' | 'stepwise'; readonly payload: JsonValue; readonly text: string }
+  | {
+    readonly type: 'interface'
+    readonly kind: string
+    readonly environment: string
+    readonly responseKind: string
+    readonly interaction: 'single' | 'stepwise'
+    /** The one field a plain answer goes in, when the kind's responses are that simple (for forms without a renderer). */
+    readonly answerField: AnswerField | null
+    readonly payload: JsonValue
+    readonly text: string
+  }
+
+/** The single field of a simple response: `{ [name]: value }`. */
+export interface AnswerField {
+  readonly name: string
+  readonly type: 'string' | 'number' | 'integer'
+}
 
 /** What a plugin kind must provide for interface questions; the registry supplies it. */
 export interface InterfaceKind {
@@ -127,6 +143,8 @@ export interface InterfaceKind {
   /** How the learner answers (choice, text, moves, code…), for a generic answer form. */
   readonly responseKind: string
   readonly interaction: 'single' | 'stepwise'
+  /** The one field a plain answer goes in, when responses are that simple. */
+  readonly answerField: AnswerField | null
   /** The student-view projection of a payload (server-only fields removed). */
   project(payload: JsonValue): JsonValue
   /** The plain-text view of a payload. */
@@ -156,6 +174,21 @@ function text(value: unknown, field: string, limit: number, problems: string[], 
 function slugValue(label: string, index: number): string {
   const slug = label.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/gu, '-').replace(/^-+|-+$/gu, '').slice(0, 40)
   return slug === '' ? `option-${index + 1}` : slug
+}
+
+/**
+ * The one field of a kind's response, when its response schema is an object
+ * with a single required string or number property.
+ * @param schema - the kind's response schema.
+ * @returns the field, or null for richer responses.
+ */
+export function answerFieldOf(schema: JsonValue): AnswerField | null {
+  const s = obj(schema)
+  const required = Array.isArray(s?.required) ? s.required.filter((r): r is string => typeof r === 'string') : []
+  const [name] = required
+  if (s?.type !== 'object' || required.length !== 1 || name === undefined) return null
+  const type = obj(obj(s.properties)?.[name])?.type
+  return type === 'string' || type === 'number' || type === 'integer' ? { name, type } : null
 }
 
 /**
@@ -336,6 +369,7 @@ export function questionForm(id: string, body: QuestionBody, kinds: ReadonlyMap<
         environment: kind?.environment ?? 'unavailable',
         responseKind: kind?.responseKind ?? 'text',
         interaction: kind?.interaction ?? 'single',
+        answerField: kind?.answerField ?? null,
         payload: kind === undefined ? null : kind.project(body.payload),
         text: kind === undefined ? 'This question needs an environment that is no longer installed.' : kind.text(body.payload),
       }

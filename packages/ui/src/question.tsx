@@ -8,7 +8,7 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import type { QuestionView, RendererRef } from '@hodos/core'
-import type { Exercise, JsonValue } from '@hodos/plugin-sdk/protocol'
+import { RENDERER_CAPABILITIES, type Exercise, type JsonValue, type RendererCapability } from '@hodos/plugin-sdk/protocol'
 import { api, errorText, type RendererEntry } from './api.js'
 import { InlineMarkdown, Markdown } from './markdown.js'
 import { RendererFrame, type RendererHandle } from './renderer-frame.js'
@@ -34,28 +34,28 @@ function optionsOf(payload: JsonValue): Array<{ id: string; text: string }> {
   return options.flatMap(o => (typeof o === 'object' && o !== null && !Array.isArray(o) && typeof o.id === 'string' && typeof o.text === 'string' ? [{ id: o.id, text: o.text }] : []))
 }
 
-/** A generic answer field for an interface without an installed renderer. */
-function genericResponse(responseKind: string, value: string): JsonValue {
-  switch (responseKind) {
-    case 'choice': return { choice: value }
-    case 'moves': return { move: value.trim() }
-    case 'number': return { value: Number(value) }
-    case 'code': return { code: value }
-    case 'expression': return { expression: value.trim() }
-    case 'structured': {
-      try {
-        return JSON.parse(value) as JsonValue
-      } catch {
-        return { text: value }
-      }
+/** A plain answer for an interface without an installed renderer, in the kind's one response field. */
+function genericResponse(form: InterfaceForm, value: string): JsonValue {
+  const field = form.answerField
+  if (field === null) {
+    try {
+      return JSON.parse(value) as JsonValue
+    } catch {
+      return { text: value }
     }
-    default: return { text: value }
   }
+  return { [field.name]: field.type === 'string' ? value : Number(value) }
+}
+
+/** An installed renderer with the capabilities the host granted it. */
+export interface InstalledRenderer {
+  readonly ref: RendererRef
+  readonly capabilities: readonly RendererCapability[]
 }
 
 interface OpenProps {
   readonly question: QuestionView
-  readonly renderers: ReadonlyMap<string, RendererRef>
+  readonly renderers: ReadonlyMap<string, InstalledRenderer>
   readonly onDone: () => void
   readonly announce: (message: string) => void
 }
@@ -134,10 +134,10 @@ export function OpenQuestion(props: OpenProps): React.ReactElement {
             <>
               <RendererFrame
                 ref={frame}
-                renderer={renderer}
+                renderer={renderer.ref}
                 environment={form.environment}
                 title={`${form.kind} question`}
-                capabilities={['respond', 'resize']}
+                capabilities={renderer.capabilities}
                 onReady={() => frame.current?.post({ type: 'hodos:present', exercise: exerciseOf(q, form) })}
                 onResponse={(exerciseId, response) => { if (exerciseId === q.id) void submit({ response }) }}
               />
@@ -148,7 +148,7 @@ export function OpenQuestion(props: OpenProps): React.ReactElement {
         return (
           <>
             <pre className="prompt-text">{form.text}</pre>
-            {form.responseKind === 'choice' && optionsOf(form.payload).length > 0
+            {form.answerField !== null && optionsOf(form.payload).length > 0
               ? (
                 <fieldset className="options" disabled={busy}>
                   <legend className="sr-only">Choose one answer</legend>
@@ -162,7 +162,7 @@ export function OpenQuestion(props: OpenProps): React.ReactElement {
               )
               : (
                 <label className="field">
-                  <span>{form.responseKind === 'moves' ? 'Your move (e.g. Nf3)' : 'Your answer'}</span>
+                  <span>{form.responseKind === 'moves' ? 'Your move (e.g. Nf3)' : form.answerField === null ? 'Your answer (JSON)' : 'Your answer'}</span>
                   <textarea value={text} onChange={e => setText(e.target.value)} disabled={busy} rows={form.responseKind === 'code' ? 10 : 2} spellCheck={form.responseKind !== 'code'} />
                 </label>
               )}
@@ -176,7 +176,7 @@ export function OpenQuestion(props: OpenProps): React.ReactElement {
   const submitAnswer = (): void => {
     if (form.type === 'choice') void submit({ response: { selected } })
     else if (form.type === 'explain') void submit({ response: { text } })
-    else if (form.type === 'interface') void submit({ response: genericResponse(form.responseKind, text) })
+    else if (form.type === 'interface') void submit({ response: genericResponse(form, text) })
   }
 
   return (
@@ -237,8 +237,8 @@ export function AnsweredQuestion(props: { readonly question: QuestionView }): Re
 }
 
 /** Renderers by environment, loaded once. */
-export function useRenderers(): ReadonlyMap<string, RendererRef> {
-  const [map, setMap] = useState<ReadonlyMap<string, RendererRef>>(new Map())
+export function useRenderers(): ReadonlyMap<string, InstalledRenderer> {
+  const [map, setMap] = useState<ReadonlyMap<string, InstalledRenderer>>(new Map())
   useEffect(() => {
     let live = true
     const load = async (): Promise<void> => {
@@ -249,7 +249,12 @@ export function useRenderers(): ReadonlyMap<string, RendererRef> {
         // Without renderers, interface questions use the text form.
         return
       }
-      if (live) setMap(new Map(list.flatMap(r => (r.renderer === null ? [] : [[r.environment, { pluginId: r.renderer.pluginId, rendererId: r.renderer.rendererId, entry: r.renderer.entry }] as const]))))
+      if (live) {
+        setMap(new Map(list.flatMap(r => (r.renderer === null ? [] : [[r.environment, {
+          ref: { pluginId: r.renderer.pluginId, rendererId: r.renderer.rendererId, entry: r.renderer.entry },
+          capabilities: r.renderer.capabilities.filter((c): c is RendererCapability => (RENDERER_CAPABILITIES as readonly string[]).includes(c)),
+        }] as const]))))
+      }
     }
     void load()
     return () => { live = false }

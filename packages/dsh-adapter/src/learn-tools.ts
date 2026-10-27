@@ -109,6 +109,35 @@ const ROLE = {
   description: 'predict: before teaching a step, the learner commits to what they expect; check: after teaching it, one reasoning step at a time; review: revisiting a node taught earlier.',
 } as const
 const NODE = { type: 'string', required: true, description: 'The id of the plan node this question is about, copied exactly from your plan.' } as const
+const EXERCISE = {
+  bank: { type: 'string', description: 'A verified exercise from a question bank, by its reference from hodos_bank (for example "chess-tactics/fork-3"). Give either bank, or kind + payload + key.' },
+  kind: { type: 'string', description: 'One of the installed kinds listed above.' },
+  payload: { type: 'json', description: 'What the learner sees, in the kind\'s format.' },
+  key: { type: 'json', description: 'The answer key, in the kind\'s format. Never shown before the answer.' },
+  explanation: EXPLANATION,
+} as const
+
+/** The tool's exercise fields as untrusted input for the learning service. */
+function exerciseInput(args: { bank?: string; kind?: string; payload?: unknown; key?: unknown; explanation?: string }): Record<string, unknown> {
+  return args.bank !== undefined && args.bank.trim() !== ''
+    ? { bank: args.bank }
+    : { kind: args.kind, payload: args.payload, key: args.key, explanation: args.explanation }
+}
+
+/** The question-bank listing, offered in every phase when banks exist. */
+function bankTool(hodos: HodosService): ToolDefinition {
+  return defineTool({
+    name: 'hodos_bank',
+    description: 'Search the question banks: exercises from installed courses, checked when the course was made (for example chess positions verified with chess.js). Each entry shows what the learner would see, never the answer. Ask one with the exercise tool\'s `bank` field.',
+    parameters: { query: { type: 'string', description: 'Words to look for (a topic, a skill, a kind); empty lists some of everything.' } },
+    output: { schema: OUTPUT, render },
+    execute: (args, exec) => inLearning(hodos, exec, () => {
+      const entries = hodos.learn.bankEntries(args.query ?? '', 15)
+      if (entries.length === 0) return { text: 'No bank exercises match. Write your own question instead.' }
+      return { text: entries.map(e => `- ${e.ref} (${e.kind}; ${e.course}: ${e.skill}${e.verifiedBy.length > 0 ? `; verified by ${e.verifiedBy.join(', ')}` : ''}): ${e.text}`).join('\n') }
+    }),
+  })
+}
 
 function exerciseDescription(hodos: HodosService, teach: boolean): string {
   const kinds = [...hodos.learn.interfaceKinds().entries()].map(([id, k]) => {
@@ -118,7 +147,7 @@ function exerciseDescription(hodos: HodosService, teach: boolean): string {
     return `- ${id} (${k.title}): ${spec?.guidance?.when ?? ''}${rules}${example}`
   })
   return [
-    `Ask the learner an exercise in an installed environment instead of a multiple-choice question: the environment shows it (a board, an editor, an expression field), validates it before the learner sees it, and grades the answer. ${teach ? 'Tag it with the plan node and role like hodos_quiz.' : 'This is a probe question: no plan node.'} The key stays hidden from the learner until they answer.`,
+    `Ask the learner an exercise in an installed environment instead of a multiple-choice question: the environment shows it (a board, an editor, an expression field), validates it before the learner sees it, and grades the answer. ${teach ? 'Tag it with the plan node and role like hodos_quiz.' : 'This is a probe question: no plan node.'} The key stays hidden from the learner until they answer. Write it yourself (kind + payload + key), or ask a verified one from the question banks by reference (bank; see hodos_bank).`,
     'Installed kinds:',
     ...kinds,
     'ONE question per turn: the call ends your turn.',
@@ -133,6 +162,8 @@ function exerciseDescription(hodos: HodosService, teach: boolean): string {
  */
 export function learningTools(hodos: HodosService, phase: LearnPhase): ToolDefinition[] {
   const hasKinds = hodos.learn.interfaceKinds().size > 0
+  // Offered with the interfaces (installed plugins ship their courses); it says so when nothing matches.
+  const banks = hasKinds ? [bankTool(hodos)] : []
   if (phase === 'closed') return []
   if (phase === 'probe') {
     return [
@@ -153,16 +184,11 @@ export function learningTools(hodos: HodosService, phase: LearnPhase): ToolDefin
       ...(hasKinds ? [defineTool({
         name: 'hodos_probe_exercise',
         description: exerciseDescription(hodos, false),
-        parameters: {
-          question: QUESTION, details: DETAILS,
-          kind: { type: 'string', required: true, description: 'One of the installed kinds listed above.' },
-          payload: { type: 'json', required: true, description: 'What the learner sees, in the kind\'s format.' },
-          key: { type: 'json', required: true, description: 'The answer key, in the kind\'s format. Never shown before the answer.' },
-          explanation: EXPLANATION,
-        },
+        parameters: { question: QUESTION, details: DETAILS, ...EXERCISE },
         output: { schema: OUTPUT, render },
-        execute: (args, exec) => ask(hodos, exec, 'interface', 'probe', args, { kind: args.kind, payload: args.payload, key: args.key, explanation: args.explanation }),
+        execute: (args, exec) => ask(hodos, exec, 'interface', 'probe', args, exerciseInput(args)),
       })] : []),
+      ...banks,
       defineTool({
         name: 'hodos_probe_done',
         description: 'Conclude the probe with your assessment of the learner: every dependency strand the goal rests on, with where their understanding ends on it. The assessment is shown to the learner, and the session moves on to planning. Call it once, when no question is waiting.',
@@ -210,16 +236,11 @@ export function learningTools(hodos: HodosService, phase: LearnPhase): ToolDefin
     ...(hasKinds ? [defineTool({
       name: 'hodos_exercise',
       description: exerciseDescription(hodos, true),
-      parameters: {
-        role: ROLE, nodeId: NODE, question: QUESTION, details: DETAILS,
-        kind: { type: 'string', required: true, description: 'One of the installed kinds listed above.' },
-        payload: { type: 'json', required: true, description: 'What the learner sees, in the kind\'s format.' },
-        key: { type: 'json', required: true, description: 'The answer key, in the kind\'s format. Never shown before the answer.' },
-        explanation: EXPLANATION,
-      },
+      parameters: { role: ROLE, nodeId: NODE, question: QUESTION, details: DETAILS, ...EXERCISE },
       output: { schema: OUTPUT, render },
-      execute: (args, exec) => ask(hodos, exec, 'interface', args.role, args, { kind: args.kind, payload: args.payload, key: args.key, explanation: args.explanation }),
+      execute: (args, exec) => ask(hodos, exec, 'interface', args.role, args, exerciseInput(args)),
     })] : []),
+    ...banks,
   ]
 }
 

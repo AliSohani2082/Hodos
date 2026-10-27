@@ -12,8 +12,8 @@ export { cpythonVerifiedIds, createCodePlugin, rendererRoot, snippetSetHash, typ
 /** Host-neutral factory every Hodos environment package exports. */
 export { createCodePlugin as createPlugin } from './plugin.js'
 export { codePack, FEEDBACK, SKILL, snippets, tracingCourse, type Snippet } from './content.js'
-export { createWriteGrader, FORMAT_CREDIT, gradePredict, OUTPUT_MISCONCEPTIONS } from './grader.js'
-export { ENVIRONMENT, KIND, listing, predictKind, programProblems, snippetBlock, writeKind } from './kinds.js'
+export { createWriteGrader, FORMAT_CREDIT, gradePredict, gradeSandbox, OUTPUT_MISCONCEPTIONS } from './grader.js'
+export { ENVIRONMENT, KIND, listing, predictKind, programProblems, SANDBOX_ENVIRONMENT, SANDBOX_LIMITS, sandboxKind, sandboxTests, snippetBlock, writeKind } from './kinds.js'
 export { compareOutput, outputLines, sameOutput, type OutputDifference } from './output.js'
 export { calledNames, importedModules, tokenize, type Token, type TokenType } from './python.js'
 export { checkOutcomes, DEFAULT_LIMITS, MAX_RUNS, RUN_STATUSES, RUNNER_REQUIREMENTS, runAll, type CodeRunner, type RunLimits, type RunOutcome, type RunRequest, type RunStatus } from './runner.js'

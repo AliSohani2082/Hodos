@@ -2,9 +2,11 @@
  * Exercise kinds and the lesson block of the code environment. Programs are
  * shown read-only (highlighted, with line numbers) by the sandboxed
  * `code-view` renderer; the learner answers in the workspace's own form.
- * Nothing here runs code: `code.predict` compares typed output with an
- * authored key, and `code.write` exists only when the host supplies an
- * isolated runner (see `runner.ts`).
+ * The server never runs code: `code.predict` compares typed output with an
+ * authored key, `code.write` exists only when the host supplies an isolated
+ * runner (see `runner.ts`), and `code.sandbox` runs the learner's program
+ * in their own browser, in the sandboxed `code-sandbox` renderer, which
+ * reports how many visible tests passed.
  * @module @hodos/code/kinds
  */
 import type { Diagnostic, ExerciseKindSpec, JsonObject, JsonSchema, JsonValue, LessonBlockSpec, LessonNode } from '@hodos/plugin-sdk'
@@ -13,13 +15,19 @@ import { calledNames, importedModules, tokenize } from './python.js'
 
 export const ENVIRONMENT = 'code.listing'
 export const RENDERER_ID = 'code-view'
+/** Environment of programs the learner writes and runs in the browser. */
+export const SANDBOX_ENVIRONMENT = 'code.sandbox'
+/** Renderer with an editor that runs Python (Pyodide) in a worker. */
+export const SANDBOX_RENDERER_ID = 'code-sandbox'
+/** Grader of `code.sandbox` (self-reported: the tests ran in the learner's browser). */
+export const SANDBOX_GRADER_ID = 'code.sandbox-grader'
 /** Grader of `code.predict` (deterministic). */
 export const GRADER_ID = 'code.grader'
 /** Grader of `code.write` (oracle; needs a runner). */
 export const RUNNER_GRADER_ID = 'code.runner-grader'
 
 /** Kind ids. */
-export const KIND = { predict: 'code.predict', write: 'code.write' } as const
+export const KIND = { predict: 'code.predict', write: 'code.write', sandbox: 'code.sandbox' } as const
 
 /** Longest program shown in an exercise or lesson, in lines. */
 export const MAX_LINES = 30
@@ -206,6 +214,92 @@ export const writeKind: ExerciseKindSpec = {
     const starter = str(p.starter)
     return [str(p.prompt), ...examples, ...(starter === '' ? [] : [`Starter code:\n${listing(starter)}`]), '(Write a Python 3 program. It reads standard input and prints its answer.)'].join('\n\n')
   },
+}
+
+/** Size limits of a sandbox exercise. */
+export const SANDBOX_LIMITS = { tests: 20, testChars: 2000, starterChars: 8000, solutionChars: 8000, codeChars: 20_000 } as const
+
+/** The tests of a sandbox payload. */
+export function sandboxTests(payload: JsonValue): Array<{ name: string; code: string }> {
+  const tests = obj(payload).tests
+  return (Array.isArray(tests) ? tests : []).map(obj).map(t => ({ name: str(t.name), code: str(t.code) }))
+}
+
+/** Write and run a program in the learner's browser against visible tests. */
+export const sandboxKind: ExerciseKindSpec = {
+  id: KIND.sandbox,
+  title: 'Code sandbox',
+  environment: SANDBOX_ENVIRONMENT,
+  responseKind: 'code',
+  interaction: 'single',
+  grader: SANDBOX_GRADER_ID,
+  format: { guessable: false },
+  payloadSchema: {
+    type: 'object', additionalProperties: false, required: ['language', 'prompt', 'tests'],
+    properties: {
+      language: PYTHON,
+      prompt: TEXT(2000),
+      starter: { type: 'string', maxLength: SANDBOX_LIMITS.starterChars },
+      stdin: { type: 'string', maxLength: 4000 },
+      tests: {
+        type: 'array', minItems: 1, maxItems: SANDBOX_LIMITS.tests,
+        items: { type: 'object', additionalProperties: false, required: ['name', 'code'], properties: { name: TEXT(120), code: TEXT(SANDBOX_LIMITS.testChars) } },
+      },
+    },
+  },
+  keySchema: { type: 'object', additionalProperties: false, required: ['solution'], properties: { solution: TEXT(SANDBOX_LIMITS.solutionChars) } },
+  responseSchema: {
+    type: 'object', additionalProperties: false, required: ['code'],
+    properties: {
+      code: { type: 'string', maxLength: SANDBOX_LIMITS.codeChars },
+      results: {
+        type: 'object', additionalProperties: false, required: ['passed', 'total'],
+        properties: { passed: { type: 'integer', minimum: 0, maximum: SANDBOX_LIMITS.tests }, total: { type: 'integer', minimum: 0, maximum: SANDBOX_LIMITS.tests } },
+      },
+    },
+  },
+  guidance: {
+    when: 'The learner writes a short Python 3 program or function in an editor and runs it, with visible tests, in their own browser (Pyodide). For practising writing code; the result is self-reported, so it gives feedback but never counts as mastery evidence.',
+    rules: [
+      '`tests` are shown to the learner and run after their code, in the same namespace: each is a few lines of Python that raise (usually with assert) when the code is wrong, e.g. "assert add(2, 3) == 5".',
+      'Give each test a short `name` that says what it checks.',
+      '`starter` is code the editor starts with (a function signature, for example); `stdin` is what input() reads.',
+      '`key.solution` is your reference solution, shown to the learner after they submit. Write it before asking and make sure it passes every test.',
+      'Only the standard library is available, with no network; keep programs small and quick (a run stops after a few seconds).',
+    ],
+    example: {
+      payload: {
+        language: 'python', prompt: 'Write `average(xs)`: the mean of a non-empty list of numbers.',
+        starter: 'def average(xs):\n    ...',
+        tests: [{ name: 'three numbers', code: 'assert average([1, 2, 3]) == 2' }, { name: 'one number', code: 'assert average([5]) == 5' }],
+      },
+      key: { solution: 'def average(xs):\n    return sum(xs) / len(xs)' },
+    },
+  },
+  validateItem: item => {
+    const payload = obj(item.payload)
+    const out: Diagnostic[] = []
+    const syntax = (source: string, where: string): void => {
+      const problem = tokenize(source).error
+      if (problem !== undefined) out.push(error('code/syntax', `${where}: line ${problem.line}: ${problem.message}`))
+    }
+    syntax(str(payload.starter), 'the starter code')
+    syntax(str(obj(item.key).solution), 'the solution')
+    const names = new Set<string>()
+    for (const t of sandboxTests(item.payload)) {
+      syntax(t.code, `test "${t.name}"`)
+      if (names.has(t.name)) out.push(error('code/test-name', `two tests are called "${t.name}"`))
+      names.add(t.name)
+    }
+    return out
+  },
+  fallbackText: payload => {
+    const p = obj(payload)
+    const starter = str(p.starter)
+    const tests = sandboxTests(payload).map(t => `- ${t.name}:\n${t.code}`).join('\n')
+    return [str(p.prompt), ...(starter === '' ? [] : [`Starter code:\n${listing(starter)}`]), `Tests:\n${tests}`, '(Write Python 3; your code is run in your browser.)'].join('\n\n')
+  },
+  reveal: item => str(obj(item.key).solution),
 }
 
 /** The `code-snippet` lesson block: a program and, optionally, what it prints. */

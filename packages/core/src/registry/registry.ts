@@ -353,7 +353,8 @@ export class PluginRegistry {
         const rel = relative(root, entry)
         if (rel.startsWith('..') || isAbsolute(rel) || !existsSync(entry)) err('registry/renderer-entry', `renderer ${r.id} entry must be a file inside its root`)
         const allowed = new Set(manifest.rendererPermissions ?? [])
-        const granted = r.capabilities.filter(cap => RENDERER_CAPABILITIES.includes(cap) && (cap === 'respond' || cap === 'resize' || allowed.has(cap)))
+        // Running code in the renderer (WebAssembly, workers) is granted to trusted plugins only.
+        const granted = r.capabilities.filter(cap => RENDERER_CAPABILITIES.includes(cap) && (cap === 'respond' || cap === 'resize' || (allowed.has(cap) && (cap !== 'run-code' || trusted))))
         renderers.push({ pluginId: manifest.id, spec: { ...r, root }, granted })
       }
     }

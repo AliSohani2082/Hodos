@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest'
 import {
+  answerFieldOf,
   brandId,
   findCycle,
   gradeChoice,
@@ -156,6 +157,16 @@ describe('choice questions', () => {
     expect(gradeChoice(multi, { selected: ['a', 'c'] })).toMatchObject({ outcome: 'incorrect', score: 0 })
     const single: ChoiceBody = { ...multi, correct: ['c'], multi: false }
     expect(gradeChoice(single, { selected: ['d'] })).toMatchObject({ outcome: 'incorrect', countsAsEvidence: true })
+  })
+})
+
+describe('interface answer fields', () => {
+  it('finds the single field of simple responses and nothing for richer ones', () => {
+    expect(answerFieldOf({ type: 'object', required: ['text'], properties: { text: { type: 'string' } } })).toEqual({ name: 'text', type: 'string' })
+    expect(answerFieldOf({ type: 'object', required: ['value'], properties: { value: { type: 'number' } } })).toEqual({ name: 'value', type: 'number' })
+    expect(answerFieldOf({ type: 'object', required: ['from', 'to'], properties: { from: { type: 'string' }, to: { type: 'string' } } })).toBeNull()
+    expect(answerFieldOf({ type: 'object', required: ['code'], properties: { code: { type: 'object' } } })).toBeNull()
+    expect(answerFieldOf({ type: 'string' })).toBeNull()
   })
 })
 

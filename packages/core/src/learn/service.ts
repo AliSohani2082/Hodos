@@ -14,7 +14,7 @@
  * question, and the committed answer is released only with the verdict.
  * @module @hodos/core/learn/service
  */
-import { stripServerFields, type GradeResult, type JsonValue } from '@hodos/plugin-sdk'
+import { stripServerFields, type ExerciseItem, type GradeResult, type JsonValue } from '@hodos/plugin-sdk'
 import { systemClock, type Clock } from '../clock.js'
 import { HodosError } from '../errors.js'
 import { randomIds, type IdGenerator, type LearnerId } from '../ids.js'
@@ -24,6 +24,7 @@ import type { PluginRegistry, RegistryLogger } from '../registry/registry.js'
 import { movesMastery, nodeMasteryView, observeNode, type NodeMasteryView } from './mastery.js'
 import { parsePlan, planStatuses, planToMermaid, type PlanEdge, type PlanNode, type PlanNodeStatus } from './plan.js'
 import {
+  answerFieldOf,
   answerReport,
   choiceAnswerText,
   diagnosticProblems,
@@ -154,6 +155,28 @@ export interface LearnServiceOptions {
   readonly scheduler?: FsrsScheduler
   /** Mastery threshold shown in views (default: the standard gate). */
   readonly theta?: number
+  /** Exercises of installed, approved courses the tutor may ask (verified question banks). */
+  readonly bank?: QuestionBank
+}
+
+/** One exercise of a question bank, as the tutor sees it: no key. */
+export interface BankEntry {
+  /** `courseId/itemId`, what the tutor passes to ask it. */
+  readonly ref: string
+  readonly course: string
+  readonly kind: string
+  readonly skill: string
+  readonly text: string
+  /** How the item was checked, e.g. `chess.js`, `stockfish`, `human`. */
+  readonly verifiedBy: readonly string[]
+}
+
+/** Exercises of installed courses, served to the tutor without keys. */
+export interface QuestionBank {
+  /** Entries matching words of a query (all when empty), at most `limit`. */
+  search(query: string, limit: number): BankEntry[]
+  /** The full item of a reference, for asking it; keys stay on the server. */
+  item(ref: string): { readonly item: ExerciseItem; readonly courseId: string } | undefined
 }
 
 function problemsError(what: string, problems: readonly string[]): HodosError {
@@ -174,6 +197,7 @@ export class LearnService {
   private readonly ids: IdGenerator
   private readonly scheduler: FsrsScheduler
   private readonly theta: number | undefined
+  private readonly bank: QuestionBank | undefined
 
   /** @param options - dependencies. */
   constructor(options: LearnServiceOptions) {
@@ -184,6 +208,7 @@ export class LearnService {
     this.ids = options.ids ?? randomIds
     this.scheduler = options.scheduler ?? new FsrsScheduler()
     this.theta = options.theta
+    this.bank = options.bank
   }
 
   private now(): string {
@@ -330,6 +355,7 @@ export class LearnService {
         title: kind.spec.title,
         responseKind: kind.spec.responseKind,
         interaction: kind.spec.interaction,
+        answerField: answerFieldOf(kind.spec.responseSchema),
         project: payload => stripServerFields(kind.spec.payloadSchema, payload) ?? null,
         text: payload => this.registry.fallbackText(id, payload),
       })
@@ -377,7 +403,7 @@ export class LearnService {
     switch (request.form) {
       case 'choice': body = readChoiceBody(request.input, problems); break
       case 'explain': body = readExplainBody(request.input, problems); break
-      case 'interface': body = readInterfaceBody(request.input, kinds, problems); break
+      case 'interface': body = typeof request.input.bank === 'string' ? this.bankBody(request.input.bank, problems) : readInterfaceBody(request.input, kinds, problems); break
       default: problems.push('form must be choice, explain or interface')
     }
     if (body?.type === 'interface' && problems.length === 0) problems.push(...await this.checkInterface(id, body, nodeId, [prompt, details ?? '']))
@@ -397,6 +423,31 @@ export class LearnService {
       this.repo.updateSession({ ...current, phase, updatedAt: at })
       return this.repo.question(id) ?? record
     })
+  }
+
+  /** The body of a bank exercise asked by reference. */
+  private bankBody(ref: string, problems: string[]): InterfaceBody | undefined {
+    const found = this.bank?.item(ref.trim())
+    if (found === undefined) {
+      problems.push(`no bank exercise is called "${ref}"; list them with the bank tool and copy a reference`)
+      return undefined
+    }
+    const { item } = found
+    return {
+      type: 'interface', kind: item.kind, payload: item.payload, key: item.key,
+      ...(item.explanation === undefined ? {} : { explanation: item.explanation }),
+      bankItem: { courseId: found.courseId, itemId: item.id },
+    }
+  }
+
+  /**
+   * Bank exercises for the tutor, without keys.
+   * @param query - words to match (empty for all).
+   * @param limit - most entries returned.
+   * @returns matching entries.
+   */
+  bankEntries(query: string, limit = 20): BankEntry[] {
+    return this.bank?.search(query, limit) ?? []
   }
 
   /** Validate an interface question with its plugin and check the tutor's text for the answer. */
@@ -492,7 +543,8 @@ export class LearnService {
           }
           verdict = graded.verdict
           progress = graded.progress
-          answerText = compactJson(response)
+          // Programs and longer answers reach the tutor in full (within the response size limit).
+          answerText = compactJson(response, 6000)
           break
         }
       }

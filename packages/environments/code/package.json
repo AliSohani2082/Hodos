@@ -1,7 +1,7 @@
 {
   "name": "@hodos/code",
   "version": "0.1.0",
-  "description": "Hodos code environment: predict-the-output exercises for Python, a read-only code view, and a runner contract for code-writing exercises that only a host with an isolated runner can offer",
+  "description": "Hodos code environment: predict-the-output exercises for Python, a code sandbox that runs Python in the learner's browser (Pyodide), a read-only code view, and a runner contract for code-writing exercises with hidden tests",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -15,7 +15,13 @@
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
-  "files": ["lib", "renderer/dist", "cordis.patch.yml", "LICENSE", "README.md"],
+  "files": [
+    "lib",
+    "renderer/dist",
+    "cordis.patch.yml",
+    "LICENSE",
+    "README.md"
+  ],
   "engines": {
     "node": ">=24.9.0",
     "dsh": ">=0.2.1-rc.3 <0.3.0"
@@ -27,5 +33,28 @@
   },
   "dependencies": {
     "@hodos/plugin-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "pyodide": "0.29.4"
+  },
+  "hodos": {
+    "renderer": {
+      "entries": {
+        "sandbox": "renderer/src/sandbox.ts"
+      },
+      "vendor": [
+        {
+          "package": "pyodide",
+          "to": "pyodide",
+          "files": [
+            "pyodide.js",
+            "pyodide.asm.js",
+            "pyodide.asm.wasm",
+            "python_stdlib.zip",
+            "pyodide-lock.json"
+          ]
+        }
+      ]
+    }
   }
 }

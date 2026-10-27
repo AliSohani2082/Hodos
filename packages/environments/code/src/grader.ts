@@ -3,12 +3,15 @@
  * line by line with the authored key, listed misreadings are named, and an
  * answer with the right values but wrong quotes or spacing gets partial
  * credit. `code.write` runs the learner's program in the host's isolated
- * runner and compares outputs here, outside the sandbox. Feedback never
- * states the key, a hidden test, or anything the program printed.
+ * runner and compares outputs here, outside the sandbox. `code.sandbox`
+ * takes the test results the learner's browser reported (self-reported, so
+ * never mastery evidence). Feedback never states the key, a hidden test, or
+ * anything the program printed.
  * @module @hodos/code/grader
  */
 import { uniformGrade, unreachable, type GradeInput, type GradeResult, type JsonObject, type JsonValue } from '@hodos/plugin-sdk'
 import { compareOutput, outputLines, sameIgnoringQuotes, sameIgnoringSpacing, sameOutput, type OutputDifference } from './output.js'
+import { sandboxTests } from './kinds.js'
 import { DEFAULT_LIMITS, runAll, type CodeRunner, type RunOutcome } from './runner.js'
 
 /** Credit for the right values with the wrong quotes or spacing. */
@@ -140,4 +143,24 @@ export function createWriteGrader(runner: CodeRunner, budgetMs: number): (input:
     lines.push(`Hidden tests: ${hiddenPassed} of ${hidden.length} passed${failures.length === 0 ? '' : ` (${failures.join(', ')})`}.`)
     return uniformGrade(input.skills, passed / runs.length, { correct: false, feedback: lines.join(' '), details })
   }
+}
+
+/**
+ * Grade a sandbox answer from the results the learner's browser reported.
+ * The server cannot check them, which is why the grader's method is
+ * `self-report`.
+ * @param input - payload (for the number of tests) and response.
+ * @returns the grade.
+ */
+export function gradeSandbox(input: GradeInput): GradeResult {
+  const response = obj(input.response)
+  const results = obj(response.results)
+  const total = sandboxTests(input.payload).length
+  const passed = results.passed
+  if (str(response.code).trim() === '') return uniformGrade(input.skills, 0, { feedback: 'Write some code first.' })
+  if (typeof passed !== 'number' || results.total !== total || passed < 0 || passed > total) {
+    return uniformGrade(input.skills, 0, { feedback: 'Not run: run the tests before you submit.' })
+  }
+  if (passed === total) return uniformGrade(input.skills, 1, { feedback: `All ${total} tests passed in your browser.` })
+  return uniformGrade(input.skills, passed / total, { correct: false, feedback: `${passed} of ${total} tests passed in your browser.` })
 }

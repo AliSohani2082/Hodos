@@ -13,9 +13,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
 import type { ModelPort, ModelRequest } from '@hodos/core'
+import { createCodePlugin } from '@hodos/code'
 import { createQuizPlugin, quizCourse } from '@hodos/testing'
 import * as plugin from '../src/index.js'
-import { GLOBAL_TOOL_NAMES, RENDERER_CSP } from '../src/index.js'
+import { GLOBAL_TOOL_NAMES, RENDERER_CSP, RUN_CODE_RENDERER_CSP } from '../src/index.js'
 import type { HodosService } from '../src/service.js'
 
 /** What a DSH tool guard sees of a call (the part these tests use). */
@@ -152,8 +153,8 @@ function followupTexts(agent: FakeAgent): string[] {
   return agent.followups.map(m => (m as { content: Array<{ text: string }> }).content[0]?.text ?? '')
 }
 
-const PROBE_TOOLS = ['hodos_probe', 'hodos_probe_done', 'hodos_probe_exercise', 'hodos_recall']
-const TEACH_TOOLS = ['hodos_exercise', 'hodos_explain', 'hodos_plan', 'hodos_quiz']
+const PROBE_TOOLS = ['hodos_bank', 'hodos_probe', 'hodos_probe_done', 'hodos_probe_exercise', 'hodos_recall']
+const TEACH_TOOLS = ['hodos_bank', 'hodos_exercise', 'hodos_explain', 'hodos_plan', 'hodos_quiz']
 
 /** A chat that has become a learning session in its teaching phase. */
 async function teaching(h: Harness, agent: FakeAgent): Promise<void> {
@@ -339,6 +340,27 @@ describe('Hodos DSH plugin', () => {
     expect(view.learn.plan.statuses).toEqual({ power: 'upcoming', chain: 'current' })
   })
 
+  it('asks verified exercises from the question banks without showing the tutor their keys', async () => {
+    const h = await harness()
+    const agent = fakeAgent('sess-1')
+    h.agents.push(agent)
+    await teaching(h, agent)
+    const listing = await call(h, 'hodos_bank', { query: 'steps' })
+    expect(listing.text).toContain('quiz-arithmetic/mixed-s1 (quiz.sequence; Quiz arithmetic: Order of operations)')
+    const keys = quizCourse().items.flatMap(i => JSON.stringify(i.key).match(/"[a-z]{4,}"/gu) ?? []).map(k => k.slice(1, -1)).filter(k => !['steps', 'answer', 'correct', 'accept', 'misconceptions'].includes(k))
+    for (const k of keys) expect(listing.text, k).not.toContain(k)
+    await expect(call(h, 'hodos_exercise', { role: 'check', nodeId: 'chain', question: 'Try this one.', bank: 'quiz-arithmetic/nope' })).rejects.toThrow(/no bank exercise is called "quiz-arithmetic\/nope"/)
+    const asked = await call(h, 'hodos_exercise', { role: 'check', nodeId: 'chain', question: 'Name the steps.', bank: 'quiz-arithmetic/mixed-s1' })
+    expect(asked.text).not.toMatch(/twelve|fourteen/)
+    const pending = await openQuestion(h, 'sess-1')
+    const state = dataOf(await api(h, 'GET', 'state', undefined, { session: 'sess-1' })) as { learn: { openQuestion: { origin: string } } }
+    expect(state.learn.openQuestion.origin).toBe('bank')
+    expect(JSON.stringify(state)).not.toMatch(/twelve|fourteen/)
+    for (const token of ['multiply', 'twelve']) await api(h, 'POST', 'learn/answer', { questionId: pending.id, response: { token } }, { session: 'sess-1' })
+    const done = await api(h, 'POST', 'learn/answer', { questionId: pending.id, response: { token: 'fourteen' } }, { session: 'sess-1' })
+    expect(dataOf(done)).toMatchObject({ status: 'answered', question: { origin: 'bank', answer: { verdict: { outcome: 'correct', countsAsEvidence: true } } } })
+  })
+
   it('takes the session from the calling chat, never from arguments', async () => {
     const h = await harness()
     h.agents.push(fakeAgent('sess-1'), fakeAgent('sess-2'))
@@ -471,6 +493,16 @@ describe('Hodos workspace API', () => {
       '/hodos/env/another-plugin/binary-bits/bits.js', // a renderer id under someone else's plugin id
     ]) expect((await rawRequest(h.url, path)).status, path).toBe(404)
     expect((await rawRequest(h.url, `${at}/bits.js`, 'POST')).status).toBe(404)
+  })
+
+  it('security: serves only the code sandbox renderer with the policy that lets it run Python', async () => {
+    const h = await harness({ trustedPlugins: ['hodos-quiz', 'hodos-code'] })
+    await h.hodos.registerEnvironment(createCodePlugin())
+    expect(await rawRequest(h.url, '/hodos/env/hodos-code/code-sandbox/sandbox.html')).toEqual({ status: 200, csp: RUN_CODE_RENDERER_CSP })
+    expect(await rawRequest(h.url, '/hodos/env/hodos-code/code-view/index.html')).toEqual({ status: 200, csp: RENDERER_CSP })
+    expect(RUN_CODE_RENDERER_CSP).toMatch(/^sandbox allow-scripts;/)
+    expect(RUN_CODE_RENDERER_CSP).not.toContain('allow-same-origin')
+    expect(RUN_CODE_RENDERER_CSP).not.toContain("'unsafe-eval'")
   })
 
   it('requires JSON bodies, bounds their size and validates fields', async () => {

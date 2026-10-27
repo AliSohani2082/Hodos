@@ -34,6 +34,15 @@ export const APP_CSP = "default-src 'self'; script-src 'self'; style-src 'self' 
 /** Content-Security-Policy of renderer files: always sandboxed, no network. */
 export const RENDERER_CSP = "sandbox allow-scripts; default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; connect-src 'none'; frame-ancestors 'self'; base-uri 'none'; form-action 'none'"
 
+/**
+ * Content-Security-Policy of a renderer granted `run-code` (trusted plugins
+ * only), served for its own path only. It may compile WebAssembly, start
+ * `blob:` workers and fetch files from the Hodos server (its runtime, such
+ * as Pyodide); it is still sandboxed in an opaque origin, so those requests
+ * carry no cookies and the authenticated Hodos and DSH APIs refuse them.
+ */
+export const RUN_CODE_RENDERER_CSP = "sandbox allow-scripts; default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'none'"
+
 const MIME: Readonly<Record<string, string>> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -46,6 +55,7 @@ const MIME: Readonly<Record<string, string>> = {
   '.webp': 'image/webp',
   '.woff2': 'font/woff2',
   '.wasm': 'application/wasm',
+  '.zip': 'application/zip',
   '.txt': 'text/plain; charset=utf-8',
 }
 
@@ -326,7 +336,7 @@ export function createHandler(deps: HttpDeps): (req: IncomingMessage, res: Serve
       const renderer = rendererId === undefined ? undefined : deps.hodos.registry.renderer(rendererId)
       if (renderer === undefined || renderer.pluginId !== pluginId || rest.length === 0) return notFound(res)
       const served = serveFile(res, renderer.spec.root, rest.join('/'), {
-        'content-security-policy': RENDERER_CSP,
+        'content-security-policy': renderer.granted.includes('run-code') ? RUN_CODE_RENDERER_CSP : RENDERER_CSP,
         'access-control-allow-origin': '*',
         'cross-origin-resource-policy': 'cross-origin',
         'cache-control': 'no-cache',

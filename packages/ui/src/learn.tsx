@@ -3,10 +3,10 @@
  * assessment, the live plan map, the open question and the answered ones.
  */
 import { useState } from 'react'
-import type { RendererRef, SessionView } from '@hodos/core'
+import type { SessionView } from '@hodos/core'
 import { api, errorText } from './api.js'
 import { PlanMap } from './plan-map.js'
-import { AnsweredQuestion, OpenQuestion } from './question.js'
+import { AnsweredQuestion, OpenQuestion, type InstalledRenderer } from './question.js'
 
 const PHASE: Readonly<Record<string, { label: string; help: string }>> = {
   probe: { label: 'Probe', help: 'Your tutor is finding where your understanding ends. "I don\'t know" is a fine answer.' },
@@ -17,7 +17,7 @@ const PHASE: Readonly<Record<string, { label: string; help: string }>> = {
 
 interface Props {
   readonly session: SessionView
-  readonly renderers: ReadonlyMap<string, RendererRef>
+  readonly renderers: ReadonlyMap<string, InstalledRenderer>
   readonly model: boolean
   readonly refresh: () => void
   readonly announce: (message: string) => void

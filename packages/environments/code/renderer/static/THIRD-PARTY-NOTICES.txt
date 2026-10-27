@@ -1,0 +1,11 @@
+The code sandbox renderer ships Pyodide 0.29.4 (pyodide/), unmodified files
+from the "pyodide" npm package: CPython compiled to WebAssembly and its
+standard library.
+
+Pyodide is distributed under the Mozilla Public License 2.0
+(https://mozilla.org/MPL/2.0/). Its source code is available at
+https://github.com/pyodide/pyodide (tag 0.29.4). CPython, included in
+Pyodide, is distributed under the Python Software Foundation License
+(https://docs.python.org/3/license.html).
+
+The rest of this renderer is part of @hodos/code and is MIT-licensed.

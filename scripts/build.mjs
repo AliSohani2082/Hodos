@@ -108,19 +108,30 @@ if (want('renderers') && existsSync(envRoot)) {
       const out = join(dir, 'renderer/dist')
       rmSync(out, { recursive: true, force: true })
       mkdirSync(out, { recursive: true })
-      await build({
-        entryPoints: [rendererEntry],
-        outfile: join(out, 'renderer.js'),
-        bundle: true,
-        format: 'iife',
-        platform: 'browser',
-        target: 'es2022',
-        minify: true,
-        conditions: ['hodos-source'],
-        legalComments: 'linked',
-        logLevel: 'warning',
-      })
+      // `renderer/src/main.ts` builds to renderer.js; `hodos.renderer.entries` in package.json adds more
+      // (name → source), and `hodos.renderer.vendor` copies runtime files of a dependency (e.g. Pyodide).
+      const extra = pkg.hodos?.renderer ?? {}
+      const entries = { renderer: rendererEntry, ...Object.fromEntries(Object.entries(extra.entries ?? {}).map(([n, src]) => [n, join(dir, src)])) }
+      for (const [entryName, entry] of Object.entries(entries)) {
+        await build({
+          entryPoints: [entry],
+          outfile: join(out, `${entryName}.js`),
+          bundle: true,
+          format: 'iife',
+          platform: 'browser',
+          target: 'es2022',
+          minify: true,
+          conditions: ['hodos-source'],
+          legalComments: 'linked',
+          logLevel: 'warning',
+        })
+      }
       for (const file of readdirSync(join(dir, 'renderer/static'))) copyFileSync(join(dir, 'renderer/static', file), join(out, file))
+      for (const vendor of extra.vendor ?? []) {
+        const from = dirname(createRequire(manifest).resolve(`${vendor.package}/package.json`))
+        mkdirSync(join(out, vendor.to), { recursive: true })
+        for (const file of vendor.files) copyFileSync(join(from, file), join(out, vendor.to, file))
+      }
     }
   }
 }

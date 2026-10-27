@@ -1193,7 +1193,7 @@ export class HodosEngine {
       ...(format.options === undefined ? {} : { options: format.options }),
       ...(item.expectedTimeSec === undefined ? {} : { expectedTimeSec: item.expectedTimeSec }),
       // Checkpoint correctness never rests on an AI judgment alone.
-      ...(this.registry.graderInfo(item.kind)?.method === 'ai-rubric' ? { advisory: true } : {}),
+      ...(['ai-rubric', 'self-report'].includes(this.registry.graderInfo(item.kind)?.method ?? '') ? { advisory: true } : {}),
     }
     const latency = request.latencyMs !== undefined && Number.isFinite(request.latencyMs) && request.latencyMs >= 0 ? Math.round(request.latencyMs) : null
 

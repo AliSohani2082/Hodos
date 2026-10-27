@@ -37,7 +37,7 @@ export { HodosService } from './service.js'
 export { GLOBAL_TOOL_NAMES } from './tools.js'
 export { learningTools, practiceTools } from './learn-tools.js'
 export { tutorPrompt } from './prompt.js'
-export { API_PREFIX, APP_PREFIX, ENV_PREFIX, APP_CSP, RENDERER_CSP } from './http.js'
+export { API_PREFIX, APP_PREFIX, ENV_PREFIX, APP_CSP, RENDERER_CSP, RUN_CODE_RENDERER_CSP } from './http.js'
 
 /** Cordis plugin name. */
 export const name = 'hodos'

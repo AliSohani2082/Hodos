@@ -52,8 +52,13 @@ export type StepResult =
   | { readonly status: 'continue'; readonly progress: JsonValue; readonly message?: string }
   | { readonly status: 'complete'; readonly progress: JsonValue; readonly grade: GradeResult }
 
-/** How a grader decides. AI-rubric results are advisory and cannot open a gate. */
-export type GradingMethod = 'deterministic' | 'oracle' | 'engine' | 'ai-rubric'
+/**
+ * How a grader decides. AI-rubric results are advisory and cannot open a
+ * gate. `self-report` grades what the learner's browser reported (for
+ * example tests run in the renderer); it gives feedback and is never
+ * evidence of mastery.
+ */
+export type GradingMethod = 'deterministic' | 'oracle' | 'engine' | 'ai-rubric' | 'self-report'
 
 /**
  * A grader contributed by a plugin. Trusted (built-in, allowlisted) plugins

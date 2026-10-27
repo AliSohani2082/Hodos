@@ -45,7 +45,31 @@ function sandboxedPlugin(source: string, spy?: () => void): HodosEnvironmentPlug
   }
 }
 
+/** A plugin with a renderer that asks for every capability. */
+function rendererPlugin(source: string): HodosEnvironmentPlugin {
+  const base = sandboxedPlugin(source)
+  const root = mkdtempSync(join(tmpdir(), 'hodos-renderer-'))
+  writeFileSync(join(root, 'index.html'), '<!doctype html>')
+  return {
+    manifest: { ...base.manifest, capabilities: { ...base.manifest.capabilities, renderers: ['tp-view'] }, rendererPermissions: ['run-code', 'speech-synthesis'] },
+    register(ctx) {
+      ctx.registerRenderer({ id: 'tp-view', environments: ['tp.env'], root, entry: 'index.html', capabilities: ['respond', 'resize', 'speech-synthesis', 'run-code'] })
+      return base.register(ctx)
+    },
+  }
+}
+
 describe('plugin registry', () => {
+  it('security: grants running code in a renderer to trusted plugins only', async () => {
+    const source = 'function grade(input) { return { score: 1, correct: true, skillEvidence: [], misconceptions: [] } }'
+    const untrusted = registry().registry
+    await untrusted.register(rendererPlugin(source), { trusted: false })
+    expect(untrusted.renderer('tp-view')?.granted).toEqual(['respond', 'resize', 'speech-synthesis'])
+    const trusted = registry().registry
+    await trusted.register(rendererPlugin(source), { trusted: true })
+    expect(trusted.renderer('tp-view')?.granted).toEqual(['respond', 'resize', 'speech-synthesis', 'run-code'])
+  })
+
   it('registers a trusted plugin with all contributions', async () => {
     const { registry: r } = registry()
     await r.register(createQuizPlugin(), { trusted: true })
