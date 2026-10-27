@@ -169,7 +169,7 @@ describe('knowledge extraction', () => {
     expect(() => knowledge.deleteProposition(env.other, 'n_1')).toThrow(HodosError)
   })
 
-  it('stops at the daily budget without marking the stretch covered', async () => {
+  it('security: stops at the daily budget without marking the stretch covered', async () => {
     const env = setup()
     session(env, 'lsn_1', 'Limits', ['Limits describe behaviour near a point, not at it.'])
     const model = fakeModel({ 'graph.extract': ['{}', '{}', '{}'] })
@@ -180,7 +180,7 @@ describe('knowledge extraction', () => {
     expect(knowledge.uncovered('lsn_1')).toBeGreaterThan(0)
   })
 
-  it('refuses sessions of other learners and runs one extraction per learner at a time', async () => {
+  it('security: refuses sessions of other learners and runs one extraction per learner at a time', async () => {
     const env = setup()
     session(env, 'lsn_1', 'Limits', ['Limits describe behaviour near a point.'])
     const opened: Array<() => void> = []
@@ -220,7 +220,7 @@ async function practiceEnv() {
 }
 
 describe('practice sessions', () => {
-  it('poses one problem at a time and releases the solution only when concluded', async () => {
+  it('security: poses one problem at a time and releases the solution only when concluded', async () => {
     const { env, practice } = await practiceEnv()
     expect(() => practice.start(env.learner, { targets: ['n_99'], hostSessionId: null })).toThrow(/not in your graph/)
     const s = practice.start(env.learner, { targets: ['n_1', 'n_2', 'n_3'], hostSessionId: 'chat-p' })

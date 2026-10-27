@@ -1,8 +1,8 @@
 # @hodos/plugin-sdk
 
-Contracts, schemas and helpers for Hodos environment plugins: the code that teaches one domain (chess, a language, algebra, code) inside Hodos. MIT-licensed, so plugins can use it without taking on the AGPL obligations of the Hodos core.
+Contracts, schemas and helpers for Hodos environment plugins: question interfaces for one domain (a chess board, a code sandbox, algebra) that a Hodos tutor can use between teaching steps. MIT-licensed, so plugins can use it without taking on the AGPL obligations of the Hodos core.
 
-A plugin contributes exercise kinds, graders, lesson blocks, presets, renderers and courses. It never touches learner state: graders return evidence, and Hodos decides mastery, checkpoints and what is released.
+A plugin contributes exercise kinds, graders, renderers and courses (whose exercises become question banks), and optionally lesson blocks and presets. It never touches learner state: graders return a score, and Hodos decides what it counts for and what is released.
 
 **Read the [plugin guide](../../docs/plugin-guide.md)** for the trust tiers, the renderer protocol, the grading rules and how to test a plugin.
 
@@ -60,11 +60,11 @@ export const inject = entry.inject
 export const apply = entry.apply
 ```
 
-Its in-process grader runs only if the host trusts the plugin (`trustedPlugins`). A plugin for hosts that do not trust it ships its grader as a sandboxed source, or comes as a declarative directory: see [`examples/binary-numbers`](../../examples/binary-numbers).
+With this plugin installed, the tutor can ask "What is the capital of …?" as a `capitals.name` exercise; the panel shows the plain-text view and takes the typed answer in its own field (the response has one required string property). Its in-process grader runs only if the host trusts the plugin (`trustedPlugins`). A plugin for hosts that do not trust it ships its grader as a sandboxed source, or comes as a declarative directory: see [`examples/binary-numbers`](../../examples/binary-numbers).
 
 ## Versions
 
-SDK 0.1.0, plugin API 0.1.0. The manifest, exercise, grading, lesson-block, preset, renderer and content contracts and the renderer protocol (version 1) are stable within plugin API 0.1. Content generators and the speech contracts are experimental.
+SDK 0.1.0, plugin API 0.1.0. The manifest, exercise, grading, lesson-block, preset, renderer and content contracts and the renderer protocol (version 1) are stable within plugin API 0.1. Content generators and the speech contracts are experimental. This release added, without changing the API version, the `self-report` grading method and the `run-code` renderer capability (trusted plugins only).
 
 ## License
 

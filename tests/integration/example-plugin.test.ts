@@ -66,7 +66,7 @@ describe('example plugin: binary numbers (untrusted, declarative)', () => {
     expect((await r.grade(input(item('read-2'), 'twelve'))).feedback).toBe('Type a whole number, like 12.')
   })
 
-  it('is a question bank: misconceptions explained, feedback that gives the key away withheld', async () => {
+  it('security: is a question bank: misconceptions explained, feedback that gives the key away withheld', async () => {
     const s = await bankSession(await registry())
     expect(s.entries('decimal').map(e => e.ref)).toContain('binary-numbers/read-2')
     const q = await s.ask('binary-numbers/read-2')

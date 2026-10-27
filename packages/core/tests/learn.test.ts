@@ -227,7 +227,7 @@ async function rejection(promise: Promise<unknown> | (() => unknown)): Promise<H
 }
 
 describe('learning sessions', () => {
-  it('runs probe → plan → teach, keeping keys out of the learner view until answered', async () => {
+  it('security: runs probe → plan → teach, keeping keys out of the learner view until answered', async () => {
     const env = await setup()
     const session = env.learn.start(env.learner, '  Understand the chain rule ', 'chat-1')
     expect(session).toMatchObject({ phase: 'probe', goal: 'Understand the chain rule', hostSessionId: 'chat-1' })
@@ -288,7 +288,7 @@ describe('learning sessions', () => {
     expect(env.learn.view(env.learner, sessionId).mastery).toEqual([])
   })
 
-  it('updates mastery and schedules review from graded checks only', async () => {
+  it('security: updates mastery and schedules review from graded checks only', async () => {
     const env = await setup()
     const sessionId = await toTeaching(env)
     const ask = (role: 'predict' | 'check') => env.learn.ask(sessionId, { form: 'choice', role, nodeId: 'limits', prompt: `${role}: limit of 1/x at infinity?`, input: { options: ['0', '1', 'infinity'], correct: '0' } })
@@ -316,7 +316,7 @@ describe('learning sessions', () => {
     expect(after?.pMastered).toBeLessThan(mastery[0]?.pMastered ?? 0)
   })
 
-  it('validates interface questions with their plugin and grades them with its grader', async () => {
+  it('security: validates interface questions with their plugin and grades them with its grader', async () => {
     const env = await setup()
     const sessionId = await toTeaching(env)
     const payload = { prompt: 'Which is the chain rule?', options: [{ id: 'a', text: "f'(g(x)) g'(x)" }, { id: 'b', text: "f'(x) g'(x)" }], authorNote: 'b is the product mistake' }
@@ -353,7 +353,7 @@ describe('learning sessions', () => {
     expect(done).toMatchObject({ status: 'answered', question: { status: 'answered', answer: { verdict: { outcome: 'correct' } } } })
   })
 
-  it('does not count advisory graders as evidence', async () => {
+  it('security: does not count advisory graders as evidence', async () => {
     const env = await setup({ method: 'ai-rubric' })
     const sessionId = await toTeaching(env)
     const q = await env.learn.ask(sessionId, { form: 'interface', role: 'check', nodeId: 'limits', prompt: 'Name it', input: { kind: 'quiz.text', payload: { prompt: 'What is lim 1/x?' }, key: { answer: 'zero', accept: ['0'] } } })
@@ -363,7 +363,7 @@ describe('learning sessions', () => {
     expect(env.learn.view(env.learner, sessionId).mastery).toEqual([])
   })
 
-  it('supersedes an open question, guards ownership and refuses closed sessions', async () => {
+  it('security: supersedes an open question, guards ownership and refuses closed sessions', async () => {
     const env = await setup()
     const sessionId = await toTeaching(env)
     const first = await env.learn.ask(sessionId, { form: 'explain', role: 'predict', nodeId: 'limits', prompt: 'First?', input: { answer: 'one' } })

@@ -57,6 +57,26 @@ const SCRIPT = learningScript({
   conclusion: { outcome: 'solved', verdict: 'You found the fork square.', rung: 'none', missClass: 'none', retest: false },
 })
 
+/** Python that tries the Hodos API from inside the sandbox, with credentials, and prints each status. */
+function apiProbe(origin: string, chat: string, learnId: string): string {
+  return [
+    'import js',
+    'def attempt(method, url, body=None):',
+    '    try:',
+    '        x = js.XMLHttpRequest.new()',
+    '        x.open(method, url, False)',
+    '        x.withCredentials = True',
+    '        if body is not None:',
+    '            x.setRequestHeader("content-type", "application/json")',
+    '        x.send(body)',
+    '        return str(x.status)',
+    '    except Exception as e:',
+    '        return type(e).__name__',
+    `print("state:", attempt("GET", "${origin}/hodos/api/v1/state?session=${chat}"))`,
+    `print("close:", attempt("POST", "${origin}/hodos/api/v1/learn/close", '{"sessionId": "${learnId}"}'))`,
+  ].join('\n')
+}
+
 const KNIGHT_SOLUTION = 'def knight_moves(file, rank):\n    steps = [(1, 2), (2, 1), (-1, 2), (-2, 1), (1, -2), (2, -1), (-1, -2), (-2, -1)]\n    return sum(1 <= file + a <= 8 and 1 <= rank + b <= 8 for a, b in steps)'
 
 let dsh: DshProcess | undefined
@@ -201,6 +221,16 @@ describe.skipIf(!DSH_AVAILABLE)('a learning session in DeepSeek Harness', () => 
     const q = await nextQuestion()
     const box = app().locator('iframe.renderer-frame').contentFrame()
     const editor = box.locator('textarea.editor')
+    // Code in the sandbox (the learner's, or test code the tutor wrote) may load Pyodide from the
+    // Hodos server, but it cannot use the Hodos API with the learner's sign-in.
+    const learnId = (await state()).learn?.id ?? ''
+    await editor.fill(apiProbe(the(dsh, 'dsh').origin, session, learnId))
+    await box.getByRole('button', { name: 'Run tests' }).click()
+    await expect.poll(() => box.locator('.output').textContent(), { timeout: 120_000 }).toContain('close:')
+    const probed = await box.locator('.output').textContent() ?? ''
+    expect(probed).toMatch(/state: \S+/)
+    expect(probed).not.toMatch(/: 200\b/)
+    expect((await state()).learn?.phase).toBe('teach')
     await editor.fill('def knight_moves(file, rank):\n    return 8')
     await box.getByRole('button', { name: 'Run tests' }).click()
     await expect.poll(() => box.locator('.status').textContent(), { timeout: 120_000 }).toBe('1 of 2 tests passed.')

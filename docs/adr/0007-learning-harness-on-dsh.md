@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Accepted |
-| **Date** | 2026-10-28 |
+| **Status** | Accepted; the question round trip, the tool set, practice and the fate of the journey engine are settled by [ADR-0008](0008-learning-session-mechanics.md) |
+| **Date** | 2026-10-27 |
 | **Amends** | [ADR-0006](0006-hodos-as-dsh-plugin-ecosystem.md) consequences on course delivery; the course-journey flow of the MVP ([report](../reports/2026-10-27-mvp-report.md)) |
 
 ## Question
@@ -12,7 +12,7 @@ The MVP teaches only from prepared courses: a learner picks a goal, Hodos finds 
 
 ## Context
 
-The owner's request (2026-10-28): the functionality and process of LearnHarness, built on DeepSeek Harness (DSH) and its plugin system, with a knowledge-graph view in the sidebar. The chess, code and math plugins should complement the core. Each adds interfaces for quizzes between teaching steps, such as a chess position to solve or a small code sandbox, and none of them is needed to learn anything else.
+The owner's request (2026-10-27): the functionality and process of LearnHarness, built on DeepSeek Harness (DSH) and its plugin system, with a knowledge-graph view in the sidebar. The chess, code and math plugins should complement the core. Each adds interfaces for quizzes between teaching steps, such as a chess position to solve or a small code sandbox, and none of them is needed to learn anything else.
 
 LearnHarness 0.3.8 (AGPL-3.0, read at commit `3dc8847`) works as follows. Its design notes are [`docs/teaching-methodology.md`](https://github.com/amosblomqvist/learnharness/blob/main/docs/teaching-methodology.md), [`docs/probe-teach-split.md`](https://github.com/amosblomqvist/learnharness/blob/main/docs/probe-teach-split.md) and [`docs/architecture.md`](https://github.com/amosblomqvist/learnharness/blob/main/docs/architecture.md).
 
@@ -45,7 +45,7 @@ What DSH offers for this ([compatibility report](../dsh-integration/compatibilit
 - **The knowledge graph and practice** follow LearnHarness's model: propositions and chains, an extractor, an auditor and a deterministic merger, practice sets with named levels and one graded attempt. Background model calls go through `ctx.llm` with no tools, under per-learner budgets.
 - **Plugins are interfaces.** An environment plugin contributes exercise kinds that the teacher may use as quiz interfaces (chess position, Python sandbox, math expression), plus renderers for lessons. None is required. Their prepared courses stay installed as **question banks** the teacher can draw verified items from.
 - **Code runs in the browser.** The code plugin's sandbox runs Python with Pyodide inside the sandboxed renderer iframe. The result is self-reported, so it gives feedback but never counts as unassisted evidence.
-- **Mastery and review are an extra layer** (owner's choice, 2026-10-28). Deterministically graded answers about a plan node update a per-node estimate (BKT-lite) and schedule its review (FSRS). The tutor offers due reviews. Nothing in the LearnHarness process depends on this layer.
+- **Mastery and review are an extra layer** (owner's choice, 2026-10-27). Deterministically graded answers about a plan node update a per-node estimate (BKT-lite) and schedule its review (FSRS). The tutor offers due reviews. Nothing in the LearnHarness process depends on this layer.
 
 ## Evidence
 

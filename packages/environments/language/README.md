@@ -1,10 +1,10 @@
 # @hodos/language
 
-The language environment for Hodos, with a first course for English speakers starting Spanish. Exercises are text: the learner answers in the workspace's own accessible form.
+Typed-answer language exercises for Hodos, with a first question bank for English speakers starting Spanish. Exercises are text: the learner answers in the workspace's own accessible form.
 
 ## Course: Spanish basics
 
-Skills, in order: greetings and courtesy; articles and gender; the verb *ser*; the verb *estar*; *ser* or *estar*; simple sentences. 61 exercises.
+A question bank. Skills: greetings and courtesy; articles and gender; the verb *ser*; the verb *estar*; *ser* or *estar*; simple sentences. 61 exercises.
 
 | Exercise kind | The learner |
 |---|---|
@@ -21,7 +21,7 @@ There are no listening or speaking exercises: Hodos does not judge pronunciation
 
 ## Content and how it was checked
 
-The lessons and exercises were written for Hodos with an AI coding assistant. The course validator and unit tests check their structure and the grader's behaviour. No native speaker or Spanish teacher has reviewed them.
+The exercises were written for Hodos with an AI coding assistant. The course validator and unit tests check their structure and the grader's behaviour. No native speaker or Spanish teacher has reviewed them.
 
 ## Install in DeepSeek Harness
 

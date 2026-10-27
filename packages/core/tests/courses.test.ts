@@ -62,7 +62,7 @@ describe('course library', () => {
     env.store.close()
   })
 
-  it('keeps proposed courses as drafts, with their own provenance, until the learner approves them', async () => {
+  it('security: keeps proposed courses as drafts, with their own provenance, until the learner approves them', async () => {
     const env = await setup()
     const malformed = await env.courses.proposeCourse(env.agent, { id: 'x', items: 'none' })
     expect(malformed.stored).toBe(false)
@@ -95,7 +95,7 @@ describe('course library', () => {
     env.store.close()
   })
 
-  it('bounds model-written proposals and delegations per learner', async () => {
+  it('security: bounds model-written proposals and delegations per learner', async () => {
     const env = await setup()
     env.courses.chargeDelegation(env.ui.learnerId)
     env.courses.chargeDelegation(env.ui.learnerId)

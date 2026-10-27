@@ -1,12 +1,14 @@
 # Course authoring
 
-Hodos teaches from courses: a skill graph, one lesson per skill and exercise items with server-side answer keys. A course reaches learners in one of three ways, and every way ends the same: Hodos validates it against the installed environments, and a course that did not ship with a reviewed plugin stays a **draft** until the learner approves it in the Hodos workspace.
+A Hodos learning session can teach any topic without a course: the tutor writes its own questions. Courses add **question banks**: exercises whose checks ran when the course was validated (a chess position checked by chess.js and an engine, a program's output checked with CPython), which the tutor can list with `hodos_bank` and ask by reference instead of writing a question itself. The tutor never sees a bank exercise's key.
+
+A course is a skill graph, one lesson per skill and exercise items with server-side answer keys. Learning sessions use only the items; the lessons are validated but not shown. A course reaches the banks in one of three ways, and every way ends the same: Hodos validates it against the installed plugins, and a course that did not ship with a reviewed plugin stays a **draft** until the learner approves it in the Hodos workspace.
 
 | Way in | Who writes it | How it reaches Hodos |
 |---|---|---|
 | Shipped content pack | Plugin authors (for example the chess tactics course) | Registered with its environment plugin |
 | Course inbox | You, or Claude Code with the `hodos-course` skill | `hodos course submit` places a file in `<dataDir>/inbox`; the running service imports it as a draft |
-| Drafting in DeepSeek Harness | The tutor agent (`hodos_propose_course`), or a subagent (`hodos_draft_course`) from a chat that is not running a learning journey | Proposed through the Hodos tools; stored as a draft |
+| Drafting in DeepSeek Harness | The agent (`hodos_propose_course`), or a subagent (`hodos_draft_course`) from a chat that is not a Hodos session | Proposed through the Hodos tools; stored as a draft |
 
 Hodos sets the provenance of every proposed item itself (`generated` or `imported`); a "verified" claim inside a proposal is dropped. The workspace says that proposed content is not independently verified.
 
@@ -20,7 +22,7 @@ The repository includes a Claude Code skill, [`.claude/skills/hodos-course`](../
 4. submit it: `pnpm exec hodos course submit courses/<id>.json`;
 5. confirm the import: `pnpm exec hodos course status`.
 
-You then review the course under **Proposed courses** in the Hodos workspace and approve or reject it.
+You then review the course under **Question banks to review** in the Hodos workspace (the Hodos learning tab of a chat that is not a session) and approve or reject it.
 
 Claude Code does the writing under its own sign-in, as in any other Claude Code session. Hodos makes no model calls on this path and never handles Claude credentials: it only reads the JSON file you submitted.
 
@@ -42,9 +44,9 @@ DeepSeek Harness ships an optional bundle, **Claude Code subagent** (`@deepseek-
    A DeepSeek Harness patch replaces the whole `config` of the row; it does not merge into it. So restate `dataDir` and any other Hodos settings you changed. Check the result with `dsh --profile web --patch <file> --dump-config`.
 
    With an empty `delegateProvider`, Hodos uses the first provider DeepSeek Harness lists.
-4. In a chat that is not running a learning journey, ask for a course on a topic that no installed course covers. The agent calls `hodos_draft_course`. The subagent receives the authoring guide and answers with a course. Hodos validates it and keeps it as a draft for you to approve.
+4. In a chat that is not a Hodos session, ask for a course on a topic that no installed course covers. The agent calls `hodos_draft_course`. The subagent receives the authoring guide and answers with a course. Hodos validates it and keeps it as a draft for you to approve.
 
-   A chat that is running a journey cannot draft: under the default `tutorTools: restricted`, a tutoring session keeps only Hodos's own tools and may not start subagents, since a subagent can have shell, file and network tools. The tutor can still write a course itself with `hodos_propose_course`.
+   A chat that is a Hodos session cannot draft: under the default `tutorTools: restricted`, a session keeps only Hodos's own tools and may not start subagents, since a subagent can have shell, file and network tools. The tutor can still write a course itself with `hodos_propose_course`.
 
 Each delegation spends one unit of a small per-learner budget: three per day by default. Keep the provider's default `permissionMode` (`dontAsk`). The drafting task needs no tools, so do not use `bypassPermissions` for it.
 
@@ -73,7 +75,7 @@ What is tested:
 
 - **Unit test** (`packages/dsh-adapter/tests/adapter.test.ts`): a fake provider named `claude-code`. It checks that the configured provider is used, that the prompt carries the authoring guide, and that the result is stored as a draft with `generated` provenance.
 - **End-to-end test** (`tests/e2e/dsh-claude-drafting.e2e.test.ts`, opt-in with `HODOS_E2E_CLAUDE_CODE=1`): a real DeepSeek Harness 0.2.1-rc.3 with the real `@deepseek-ai/dsh-subagent-claude-code` bundle installed from npm.
-  1. The agent of a chat with no learning journey calls `hodos_draft_course`.
+  1. The agent of an ordinary chat calls `hodos_draft_course`.
   2. DSH runs the bundled Claude Code binary.
   3. Claude Code calls a local stand-in for Anthropic's API, configured through the provider's `env` with a dummy key.
   4. The answer becomes a draft in the workspace.
@@ -108,6 +110,6 @@ Neither test exercises a real Claude sign-in or Anthropic's servers. That last s
 - **Structure**: every field of the course format, skill ids, a prerequisite graph without cycles, and that the goal is reachable.
 - **Lessons**: each lesson parses as Markdoc with only core tags and installed blocks. Block attributes are checked against their schemas, and there is no HTML and no scripts.
 - **Items**: payloads, keys and hints are checked against the kind's schemas, plus the environment's own checks. For chess, chess.js checks that the position is legal, the solution line is legal, and the key move does what the goal or theme says (mate, check, a free capture, two pieces attacked, a pin or skewer line).
-- **Coverage**: at least 3 practice items and enough checkpoint items for every skill.
+- **Coverage** (`hodos course validate` and shipped content only): at least 3 practice items and enough checkpoint items for every skill. Learning sessions do not use the modes; the rule keeps a course usable as a broad bank.
 
 Validation cannot check that a fact, a translation or a "best move" is right beyond those checks. For chess, `pnpm verify:puzzles` runs Stockfish over the shipped puzzle set; proposed courses get no engine check. Review a draft before you approve it.

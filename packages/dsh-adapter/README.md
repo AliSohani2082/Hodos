@@ -1,16 +1,18 @@
 # @hodos/dsh
 
-Hodos for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): a DSH plugin bundle that turns a chat session into a tutored learning journey. The DSH agent becomes the tutor; Hodos keeps the learning state, chooses exercises, grades through environment plugins and decides mastery.
+Hodos for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): a DSH plugin bundle that turns a chat into a learning session in the style of [LearnHarness](https://github.com/amosblomqvist/learnharness). The chat's agent becomes the tutor: it probes what the learner understands, writes a plan map, and teaches one step at a time with questions that Hodos shows and grades. Hodos keeps the session, builds a knowledge graph from what was taught, runs practice sessions, and keeps a mastery estimate per plan node.
 
 What it adds to a DSH profile:
 
-- **Tutor tools** (`hodos_start_learning`, `hodos_next_exercise`, `hodos_submit_answer`, `hodos_hint`, `hodos_progress`, …). A tool acts for the learner bound to the calling session; no tool takes a learner id from the model.
-- **A system-prompt section** with the tutoring rules, and per-session learner context.
-- **The "Hodos learning" sidebar tab**: the workspace (lesson, exercise, path, progress) at `/hodos/app/`, behind DSH's own sign-in.
+- **Global tools**: `hodos_start_learning`, `hodos_start_practice`, `hodos_list_courses`, `hodos_propose_course`, and `hodos_draft_course` when DSH's subagents are available (never inside a Hodos session).
+- **Session tools by phase**, given to the chat's agent only while its chat is in that phase: probe (`hodos_probe`, `hodos_recall`, `hodos_probe_exercise`, `hodos_bank`, `hodos_probe_done`), teach (`hodos_plan`, `hodos_quiz`, `hodos_explain`, `hodos_exercise`, `hodos_bank`) and practice (`hodos_problem`, `hodos_conclude`). A question tool ends the tutor's turn; the graded answer arrives as its next message. No tool takes a session or learner id from the model.
+- **The prompt**: a short section on when to start a session, and per-session context with the phase's instructions and the session's state.
+- **Two sidebar tabs**: "Hodos learning" (the session: plan map, questions, practice) and "Knowledge graph", both served at `/hodos/app/` behind DSH's own sign-in.
+- **Knowledge-graph extraction** through DSH's `llm` service on the user's default model, with no tools, under a daily budget.
 - **Storage**: a SQLite database under `$DSH_HOME/hodos`.
 - **The `hodos` command** for course authoring outside DSH (see [course authoring](../../docs/course-authoring.md)).
 
-It teaches nothing by itself: install at least one environment ([`@hodos/chess`](../environments/chess/README.md), [`@hodos/language`](../environments/language/README.md), [`@hodos/code`](../environments/code/README.md), [`@hodos/math`](../environments/math/README.md)).
+It teaches any topic by itself, with multiple-choice and own-words questions. Interface plugins add more ways of asking: [`@hodos/chess`](../environments/chess/README.md), [`@hodos/code`](../environments/code/README.md), [`@hodos/math`](../environments/math/README.md), [`@hodos/language`](../environments/language/README.md).
 
 ## Install
 
@@ -33,7 +35,7 @@ dsh plugin --profile web add /absolute/path/to/hodos-dsh-0.1.0.tgz
 dsh plugin --profile web add /absolute/path/to/hodos-chess-0.1.0.tgz
 ```
 
-Then ask the agent, for example: "Teach me chess tactics. I know the basic rules but struggle with knight forks." The [install guide](../../docs/install.md) has the details, including removal.
+Then tell the agent what you want to learn, for example: "I want to learn how knight forks win material", and open the "Hodos learning" tab. The [install guide](../../docs/install.md) has the details, including removal.
 
 ## Configuration
 
@@ -43,23 +45,23 @@ Defaults come from this bundle's `cordis.patch.yml`. Override them in the profil
 - id: hodos
   config:
     dataDir: !!js dshHomePath('hodos')
-    notices: proactive
+    backgroundCallsPerDay: 20
 ```
 
 | Key | Default | Meaning |
 |---|---|---|
 | `dataDir` | `dshHomePath('hodos')` | Directory of the Hodos database (learning records) and the course inbox |
-| `trustedPlugins` | the four built-in environments | Environment plugins whose graders and validators run in-process. Any other plugin must ship sandboxed graders |
-| `pluginDirs` | `[]` | Directories of declarative environment plugins (`hodos-plugin.json`), loaded as data |
-| `tutorTools` | `restricted` | `restricted` hides the session's other tools (shell, files, network) once it is bound to a learning journey; `unrestricted` keeps them |
-| `notices` | `quiet` | How the tutor hears about workspace activity: `quiet` adds context to its next turn (no extra model calls), `proactive` also wakes it for checkpoint results and stuck learners (rate-limited), `off` |
+| `trustedPlugins` | the four built-in plugins | Plugins whose graders and validators run in-process, and which may be granted the `run-code` renderer capability. Any other plugin must ship sandboxed graders |
+| `pluginDirs` | `[]` | Directories of declarative plugins (`hodos-plugin.json`), loaded as data |
+| `tutorTools` | `restricted` | `restricted`: a chat that is a Hodos session keeps only Hodos's tools and DSH's `ask_user_question` (no shell, files or network); `unrestricted` keeps the chat's other tools |
+| `backgroundCallsPerDay` | `60` | Model calls for knowledge-graph extraction per learner per 24 hours; `0` turns extraction off |
 | `delegateProvider` | `''` | DSH subagent provider for drafting courses, for example `claude-code`; empty picks the first provider with structured output |
 | `courseInbox` | `true` | Import course files from `<dataDir>/inbox` (written by `hodos course submit`) as drafts awaiting the learner's approval |
-| `strictness` | `standard` | Mastery gate: `lenient`, `standard` or `strict` |
+| `strictness` | `standard` | Threshold at which a plan node counts as mastered: `lenient` (0.90), `standard` (0.95) or `strict` (0.98) |
 
 ## Security
 
-The tutor's authority comes from DSH's session identity, not from tool arguments. Answer keys never reach the model or the browser before they are released. Untrusted plugins run only as sandboxed graders and sandboxed renderers. Read the [security notes](../../docs/security.md) for the boundaries and what they do not cover.
+The tutor's authority comes from DSH's session identity, not from tool arguments. Answer keys never reach the browser before the answer, and the keys of question-bank exercises never reach the model. Untrusted plugins run only as sandboxed graders and sandboxed renderers. Read the [security notes](../../docs/security.md) for the boundaries and what they do not cover.
 
 ## License
 

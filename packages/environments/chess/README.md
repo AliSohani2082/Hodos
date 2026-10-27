@@ -1,17 +1,17 @@
 # @hodos/chess
 
-The chess environment for Hodos: tactics on an interactive board, graded by the rules of chess rather than by a language model.
+Chess as a question interface for Hodos: the tutor can ask a position to solve on an interactive board, like a puzzle on chess.com, graded by the rules of chess rather than by a language model. Positions the tutor writes are checked by chess.js before the learner sees them; verified positions come from the course below.
 
 ## Course: Chess tactics
 
-For players who know how the pieces move. Skills, in order: moves, captures and check; knight forks; double attacks; pins; skewers; mate in one; spot the tactic. 53 exercises, with lessons that show positions on the board.
+A question bank for players who know how the pieces move. Skills: moves, captures and check; knight forks; double attacks; pins; skewers; mate in one; spot the tactic. 53 exercises, which the tutor lists with `hodos_bank` and asks by reference.
 
 | Exercise kind | The learner | Graded by |
 |---|---|---|
-| `chess.puzzle` | plays the solution on the board (or types it in SAN or UCI); multi-move lines get the opponent's reply | chess.js: legality, the line, the goal (check, mate, a free capture) or the theme (a fork attacks two pieces) |
+| `chess.puzzle` | plays the solution on the board; multi-move lines get the opponent's reply from the server after each move | chess.js: legality, the line, the goal (check, mate, a free capture) or the theme (a fork attacks two pieces) |
 | `chess.identify` | names the tactic in a position | the answer key |
 
-Wrong moves get feedback that names the mistake (a single threat instead of a fork, a missed check, a hanging piece) without revealing the solution.
+Wrong moves get feedback that names the mistake (a single threat instead of a fork, a missed check, a hanging piece) without revealing the solution. After the answer, the board replays the solution line.
 
 ## Renderer
 
@@ -23,7 +23,7 @@ The puzzles, lessons and hints were written for Hodos with an AI coding assistan
 
 - **Every position and line** is checked by chess.js on each test run: the position is legal, every move of the line is legal, and the key move does what the puzzle claims.
 - **27 of the 53 items** were also checked with Stockfish 17.1 at depth 18 (`pnpm verify:puzzles`). Each solution move is the engine's best move or close to it, equally good alternatives are listed, and the scripted replies are the best defence. The record names the exact puzzle set it checked; changing any puzzle voids it.
-- The lesson texts and hints have not been reviewed by a chess coach.
+- The explanations and hints have not been reviewed by a chess coach. The course's lessons are validated but not shown in learning sessions.
 
 ## Install in DeepSeek Harness
 

@@ -1,6 +1,6 @@
 # Writing a Hodos environment plugin
 
-An environment plugin teaches in one domain: chess, a language, algebra, code. It brings the exercise formats, the graders that check answers, the lesson blocks and the screens that draw positions, formulas or programs, and usually a course. Hodos brings everything that decides what a learner knows: the learner model, mastery gates, checkpoints, spaced review, the tutor's tools, and what may be shown when.
+An environment plugin adds a way of asking questions in one domain: a chess position to solve on a board, a program to write and run, an expression to compute. Hodos's tutor can teach any topic without plugins, with multiple-choice and own-words questions; a plugin lets it ask, between teaching steps, in a form that fits the domain. A plugin brings the exercise formats, the graders that check answers, the screens that draw them, and usually a course whose exercises become a question bank. Hodos brings the learning session, the tutor's tools, the grading round trip, the mastery layer, and what may be shown when.
 
 The contracts live in [`@hodos/plugin-sdk`](../packages/plugin-sdk) (MIT). The four built-in environments are complete examples written against them: [`@hodos/chess`](../packages/environments/chess), [`@hodos/language`](../packages/environments/language), [`@hodos/math`](../packages/environments/math) and [`@hodos/code`](../packages/environments/code). [`examples/binary-numbers`](../examples/binary-numbers) is a third-party plugin in the declarative format, with no host code at all.
 
@@ -16,13 +16,13 @@ Everything a plugin registers must be declared in its manifest's `capabilities`;
 | Lesson blocks | `LessonBlockSpec` | `chess-position`, `code-snippet` |
 | Pedagogy presets | `PedagogyPreset` | `strategy@1`, `math-practice@1` |
 | Renderers | `RendererSpec` | `chess-board`, `code-view` |
-| Content packs | `ContentPack` (courses) | `chess-tactics`, `python-basics` |
+| Content packs | `ContentPack` (courses, used as question banks) | `chess-tactics`, `python-tracing` |
 | Content generators (experimental) | `ContentGeneratorSpec` | none ship |
 
 What a plugin can never do, in any tier:
 
 - read or write learner state, or learn who the learner is;
-- set a mastery estimate, open a mastery gate, mark a skill mastered or skip a checkpoint: a grader returns evidence, and the platform's estimators, gates and checkpoint policy decide;
+- set a mastery estimate or mark anything mastered: a grader returns a score, and Hodos decides whether it counts;
 - release an answer key, hint or explanation: the platform decides what is released and when;
 - call a model or start a tutor turn.
 
@@ -30,7 +30,7 @@ What a plugin can never do, in any tier:
 
 | Tier | What it is | What Hodos runs |
 |---|---|---|
-| **Built-in** | A package whose manifest id is in the host's `trustedPlugins` setting. The default list is the four reviewed built-ins: `hodos-chess`, `hodos-language`, `hodos-code`, `hodos-math`. | Its in-process hooks: `grade` and `step`, `validateItem`, `fallbackText`, `reveal`, block `validate`. Each call has a deadline (5 s by default) and its output is validated. |
+| **Built-in** | A package whose manifest id is in the host's `trustedPlugins` setting. The default list is the four reviewed built-ins: `hodos-chess`, `hodos-language`, `hodos-code`, `hodos-math`. | Its in-process hooks: `grade` and `step`, `validateItem`, `fallbackText`, `reveal`, block `validate`. Each call has a deadline (5 s by default) and its output is validated. Only this tier can be granted the `run-code` renderer capability. |
 | **Declarative** | A directory with a `hodos-plugin.json`, listed in the host's `pluginDirs`. | Nothing in-process. The description is read as data; graders and item checks run in the QuickJS sandbox; renderers run in sandboxed iframes; plain-text views come from templates. |
 | **Other code** | Any other package that registers through `createCordisEntry` or the host API. | None of its hooks. Its graders must ship sandboxed sources; its plain-text views are generic; it gets no `reveal`. |
 
@@ -50,6 +50,13 @@ A hook that throws, runs out of time or returns something malformed fails closed
 
 ## Exercise kinds
 
+An exercise kind is a question interface. The tutor uses it in two ways:
+
+- **It writes an item** with `hodos_exercise` (or `hodos_probe_exercise` while probing): `kind`, `payload` and `key`. Hodos validates them against the kind's schemas, runs the plugin's `validateItem`, and refuses the question if its text gives away the key. Only then does the learner see it.
+- **It asks a bank item** by reference: an exercise of an approved course, validated when the course was. The tutor sees what the learner would see, never the key.
+
+The kind's `guidance` (when to use it, the rules, one valid example) goes into the tutor's tool description, so write it for a model that has never seen your plugin.
+
 An exercise item has an envelope the platform owns (id, skills and weights, difficulty, modes, hints, explanation, misconception feedback, provenance) and a body the plugin owns:
 
 - `payload`: what the learner sees, validated against `payloadSchema`;
@@ -64,29 +71,29 @@ Other fields of `ExerciseKindSpec`:
 |---|---|
 | `environment` | The environment (renderer family) that presents it. |
 | `responseKind` | `choice`, `text` (one line), `lines` (several lines, e.g. a program's output), `moves`, `code`, `number`, `expression` or `structured`. The workspace's own answer form uses it when the renderer does not collect the answer. |
+| `responseSchema` | When it has exactly one required string or number property (`{ "text": … }`), the workspace's own form puts the typed answer there, so a kind works without an answering renderer. |
 | `interaction` | `single` (one answer) or `stepwise` (the server holds progress, e.g. a chess line with replies). |
-| `format.guessable` | Multiple-choice and similar formats are guessable: a skill then needs three unassisted checkpoint successes instead of one. |
-| `guidance` | `when` to use the kind, `rules` beyond the schemas, and one valid `example`. It goes into the authoring guide that course authors (people, Claude Code, a subagent) read. |
+| `format.guessable` | Multiple-choice and similar formats are guessable. Course validation uses it; learning sessions do not. |
+| `guidance` | `when` to use the kind, `rules` beyond the schemas, and one valid `example`. It goes into the tutor's exercise tool and into the authoring guide that course authors (people, Claude Code, a subagent) read. |
 | `validateItem` | Semantic checks beyond the schemas: a legal chess position, a key consistent with the prompt. Built-ins only; others put `validateItem` in the sandboxed source. |
 | `fallbackText` | The prompt as plain text: used by the tutor and when no renderer is available. It must not reveal the key. Declarative plugins use `fallbackTemplate` with `{{field}}` placeholders. |
-| `reveal` | What a renderer may show once the platform releases the answer (a solution line, a program's output). Built-ins only. |
+| `reveal` | What the learner sees with the verdict (a solution line, a reference program). Built-ins only; without it, only the item's explanation is shown. |
 
 ## Graders
 
-A grader returns a `GradeResult`: `score` in [0, 1], `correct`, per-skill `skillEvidence` (only skills the item is tagged with; the host fills missing ones with the score), the `misconceptions` it detected, optional `feedback`, and `details` that are stored but never shown raw.
+A grader returns a `GradeResult`: `score` in [0, 1], `correct`, per-skill `skillEvidence` (only skills the item is tagged with; the host fills missing ones with the score), the `misconceptions` it detected, optional `feedback`, and `details` that are stored but never shown raw. Hodos turns it into a verdict (correct, partly right, incorrect) and reports it to the tutor.
 
 Rules the host enforces:
 
-- **Feedback must not reveal the key.** Feedback is ignored in checkpoint and diagnostic modes, and in practice it is scanned for answer-key fragments (and for hints, explanations and misconception texts that are not released yet) before it is released. Write feedback that says *where* an answer goes wrong, not what the answer is.
-- **Misconception feedback comes from the item**, keyed by the ids the grader reports, so course authors control the wording.
-- **`method`** says how the grader decides: `deterministic`, `oracle` (compares with a reference, e.g. by running code in an isolated runner), `engine` (a chess engine) or `ai-rubric`. AI-rubric results are advisory: they inform estimates but never count as a checkpoint success.
-- **Only first attempts are evidence of mastery**; retries, hints and tutor help count as assisted.
+- **Feedback must not reveal the key.** Feedback that reveals more of the key than the verdict does (the item's explanation, or the kind's `reveal`) is withheld, and so is the message of a stepwise step that is still in progress. A bank item can be asked again later. Write feedback that says *where* an answer goes wrong, not what the answer is.
+- **Misconception feedback comes from the item**, keyed by the ids the grader reports, so course authors control the wording. It is released for bank items with the verdict.
+- **`method`** says how the grader decides: `deterministic`, `oracle` (compares with a reference, e.g. by running code in an isolated runner), `engine` (a chess engine), `ai-rubric`, or `self-report` (the browser reports the result and the server cannot check it, as with the Python sandbox). Only `deterministic`, `oracle` and `engine` grades of `check` and `review` questions move the mastery estimate of a plan node.
 
-For code-writing exercises, Hodos never runs learner code in the host process. `@hodos/code` defines a `CodeRunner` contract (ADR-0004, tier 1: the runner receives the source and the inputs only; outputs are compared in Hodos) and offers `code.write` only when a host supplies such a runner. No runner ships.
+For code-writing exercises, Hodos never runs learner code in the host process. `@hodos/code` has two ways: the Python sandbox (`code.sandbox`), which runs the learner's code with Pyodide in the browser and is self-reported, and a `CodeRunner` contract (ADR-0004, tier 1: the runner receives the source and the inputs only; outputs are compared in Hodos) for `code.write`, offered only when a host supplies such a runner. No runner ships.
 
 ## Lesson blocks
 
-Lessons are [Markdoc](https://markdoc.dev) text. Core blocks are `step`, `callout`, `worked-example` and `check`; a plugin adds tags with an attribute schema, guidance (`when`, one `syntax` example, `rules`), an optional `validate` (built-ins only), a required `fallbackText` (declarative: `fallbackTemplate`), and optionally the `renderer` that draws it. Lessons are data: Markdoc variables and functions are rejected, raw HTML stays inert text, images are not allowed (use a block), and only http(s), mailto and in-page links survive. Attributes marked `x-visibility: server` (a check's answer) are removed before a lesson reaches the browser.
+Learning sessions do not show course lessons yet ([ADR-0008](adr/0008-learning-session-mechanics.md)); blocks are still validated in courses. Lessons are [Markdoc](https://markdoc.dev) text. Core blocks are `step`, `callout`, `worked-example` and `check`; a plugin adds tags with an attribute schema, guidance (`when`, one `syntax` example, `rules`), an optional `validate` (built-ins only), a required `fallbackText` (declarative: `fallbackTemplate`), and optionally the `renderer` that draws it. Lessons are data: Markdoc variables and functions are rejected, raw HTML stays inert text, images are not allowed (use a block), and only http(s), mailto and in-page links survive. Attributes marked `x-visibility: server` (a check's answer) are removed before a lesson reaches the browser.
 
 ## Renderers
 
@@ -100,6 +107,8 @@ frame-ancestors 'self'; base-uri 'none'; form-action 'none'
 
 and loads it in an `<iframe sandbox="allow-scripts">`: an opaque origin with no access to the workspace, its cookies or its API, and no network. Bundle everything into the directory; nothing outside `root` is served.
 
+A renderer granted `run-code` (a trusted plugin that lists it in `rendererPermissions`) is served with `script-src 'self' 'wasm-unsafe-eval'`, `worker-src blob:` and `connect-src 'self'` instead, so it can run WebAssembly in a worker started from a `blob:` URL and fetch its own files from the server. It is still sandboxed in an opaque origin; the Hodos API refuses its requests. `@hodos/code`'s sandbox is the example: its build vendors Pyodide into the renderer directory (`hodos.renderer.vendor` in its `package.json`).
+
 ### Protocol (version 1)
 
 1. The host posts `{ type: 'hodos:connect', protocol: 1 }` to the iframe's window with one `MessagePort`. Accept it only from `window.parent`, once. Every later message travels on that port.
@@ -108,7 +117,7 @@ and loads it in an `<iframe sandbox="allow-scripts">`: an opaque origin with no 
 
 | Host → renderer | Meaning |
 |---|---|
-| `hodos:present` `{ exercise }` | Show a new exercise (the student view: no key). It is answerable until the host sends `hodos:lock` with `locked: true`. |
+| `hodos:present` `{ exercise }` | Show a new exercise (the student view: no key). It is answerable until the host sends `hodos:lock` with `locked: true`. For a question, the exercise id is the question id. |
 | `hodos:progress` `{ exerciseId, progress, message? }` | The server accepted one step of a stepwise exercise. |
 | `hodos:result` `{ exerciseId, correct, score, reveal? }` | The attempt was graded; `reveal` only when the platform released it. |
 | `hodos:block` `{ block }` | Show a lesson block (read-only). |
@@ -120,13 +129,15 @@ and loads it in an `<iframe sandbox="allow-scripts">`: an opaque origin with no 
 | `hodos:response` `{ exerciseId, response }` | The learner's answer (or one step). | `respond` |
 | `hodos:resize` `{ height }` | Ask for a new iframe height. | `resize` |
 
-Both sides validate every message and drop anything malformed; a message from a renderer is limited to 64 KiB. `respond` and `resize` are granted on request; `speech-synthesis` only when the manifest lists it in `rendererPermissions`.
+Both sides validate every message and drop anything malformed; a message from a renderer is limited to 64 KiB. `respond` and `resize` are granted on request; `speech-synthesis` only when the manifest lists it in `rendererPermissions`; `run-code` only when it is listed there and the plugin is trusted.
+
+A renderer with `respond` collects the answer itself. A renderer without it only draws (the example plugin's place-value boxes): the workspace shows it and takes the answer in its own form, using the kind's `responseSchema`.
 
 `connectRenderer(window, handlers)` from `@hodos/plugin-sdk/renderer` does the handshake and the validation for you; `examples/binary-numbers/renderer/bits.js` shows the same protocol by hand. Build the page with DOM APIs and `textContent`, never from HTML strings, so payload text can never become markup.
 
 ## Content packs and courses
 
-A course (`CourseSpec`) has a goal skill, a prerequisite graph of skills (each with a `kind`: fact, concept, procedure, pattern, performance or judgment, which selects the learning loop), one lesson per skill, and items. Shipped courses are validated with full coverage:
+A course's exercises are a question bank for the tutor ([course authoring](course-authoring.md)). A course (`CourseSpec`) has a goal skill, a prerequisite graph of skills (each with a `kind`: fact, concept, procedure, pattern, performance or judgment), one lesson per skill, and items. Shipped courses are validated with full coverage:
 
 - every skill needs at least 3 `practice` items and at least 1 `checkpoint` item; give it at least as many checkpoint items as a checkpoint draws (3 by default), kept separate from the practice items;
 - give every skill a `diagnostic` item, so placement can skip what the learner knows;
@@ -163,8 +174,8 @@ The SDK is at 0.1.0 and speaks plugin API 0.1.0 (`SDK_VERSION`, `CORE_PLUGIN_API
 
 - **Unit-test the grader** with `GradeInput` objects built from your items: the right answer, each misconception, malformed input, and that feedback never contains the key. See `packages/environments/*/tests`.
 - **Validate the content** with `PluginRegistry` and `validateCourse(course, registry, { requireCoverage: true })` from `@hodos/core`, registering the plugin with the trust it will have in production (`{ trusted: false, declarative: true }` for a declarative plugin), so sandboxed checks run as they will for users. See `tests/integration/*-course.test.ts` and `tests/integration/example-plugin.test.ts`.
-- **Run a journey** through `HodosEngine` with an in-memory store: start, lesson, practice, a misconception, and the feedback that is released.
+- **Ask from the bank** through a learning session with an in-memory store: `tests/support/bank-session.ts` turns a registry's content packs into a bank and asks items by reference, as the tutor does; check the verdict, the misconception feedback that is released, and that the open question's view has no key.
 - **Test the renderer in a browser** under the renderer CSP in a sandboxed iframe: `tests/e2e/support/renderer-host.ts` serves a renderer directory the way the workspace does and records its messages.
-- **Run it in DeepSeek Harness** without a model account: `@hodos/testing` has `startMockLlm` and `tutorScript`, a deterministic stand-in for the model API, and `tests/e2e/support/dsh.ts` installs bundles into a throwaway Harness home.
+- **Run it in DeepSeek Harness** without a model account: `@hodos/testing` has `startMockLlm` and `learningScript`, a deterministic stand-in for the model API (it also passes through "Call the tool `<name>` with `<JSON>`" so a test can have the tutor ask your exercise), and `tests/e2e/support/dsh.ts` installs bundles into a throwaway Harness home.
 
 `@hodos/testing` (MIT) also ships `createQuizPlugin`, a small fixture environment used by the platform's own tests.
