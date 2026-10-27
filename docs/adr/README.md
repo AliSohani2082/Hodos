@@ -21,3 +21,4 @@ ADRs are not edited after they are accepted, except to fix typos or to set the s
 | [0004](0004-runner-sandbox-and-grader-isolation.md) | Runner sandbox and isolated hidden-test grader | Accepted | M0 (d), [ALI-40](https://linear.app/ali-inc/issue/ALI-40) |
 | [0005](0005-bkt-lite-and-fsrs-defaults.md) | BKT-lite mastery gate and FSRS defaults | Accepted | M0 (e), [ALI-41](https://linear.app/ali-inc/issue/ALI-41) |
 | [0006](0006-hodos-as-dsh-plugin-ecosystem.md) | Hodos as a DeepSeek Harness plugin ecosystem | Accepted | Host-integration spike (DSH 0.2.1-rc.3) |
+| [0007](0007-learning-harness-on-dsh.md) | Hodos as a learning harness for any topic, on DeepSeek Harness | Accepted | — |
