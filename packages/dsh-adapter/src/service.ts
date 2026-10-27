@@ -1,21 +1,29 @@
 /**
  * The `hodos` Cordis service: owns the Hodos database, the plugin registry,
- * the sandbox worker and the engine for one DSH process. Environment bundles
- * inject it and call {@link HodosService.registerEnvironment}.
+ * the sandbox worker, the learning, knowledge-graph and practice services,
+ * and the course store used for question banks, for one DSH process.
+ * Environment bundles inject it and call {@link HodosService.registerEnvironment}.
  * @module @hodos/dsh/service
  */
 import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import {
+  GraphRepository,
   HodosEngine,
   HodosStore,
+  KnowledgeService,
+  LearnRepository,
+  LearnService,
   loadDeclarativePlugin,
   PluginRegistry,
+  PracticeService,
   SandboxRunner,
   THETA_BY_STRICTNESS,
   DEFAULT_MASTERY_CONFIG,
   type Actor,
   type LearnerId,
+  type LearnPhase,
+  type ModelPort,
 } from '@hodos/core'
 import type { HodosEnvironmentHost, HodosEnvironmentPlugin } from '@hodos/plugin-sdk'
 import { OWNER_PRINCIPAL, type HodosConfig } from './config.js'
@@ -37,14 +45,27 @@ export interface HodosLogger {
   error(message: string): void
 }
 
+/** What a DSH chat is to Hodos. */
+export type ChatBinding =
+  | { readonly kind: 'learn'; readonly sessionId: string; readonly phase: LearnPhase }
+  | { readonly kind: 'practice'; readonly sessionId: string; readonly closed: boolean }
+
 /** The Hodos service. */
 export class HodosService extends Service implements HodosEnvironmentHost {
   readonly store: HodosStore
   readonly registry: PluginRegistry
+  /** Course storage, validation and the inbox: installed courses serve as question banks. */
   readonly engine: HodosEngine
+  readonly learnRepo: LearnRepository
+  readonly graph: GraphRepository
+  readonly learn: LearnService
+  readonly knowledge: KnowledgeService
+  readonly practice: PracticeService
   readonly logger: HodosLogger
   private readonly sandbox: SandboxRunner
-  private readonly boundListeners = new Set<(sessionId: string) => void>()
+  private model: ModelPort | null = null
+  private delivery: ((chatId: string, text: string, summary: string) => boolean) | null = null
+  private readonly changeListeners = new Set<(sessionId: string) => void>()
   private readonly globalToolNames = new Set<string>()
 
   /**
@@ -64,6 +85,11 @@ export class HodosService extends Service implements HodosEnvironmentHost {
       logger: this.logger,
       config: { mastery: { ...DEFAULT_MASTERY_CONFIG, theta: THETA_BY_STRICTNESS[config.strictness] } },
     })
+    this.learnRepo = new LearnRepository(this.store)
+    this.graph = new GraphRepository(this.store)
+    this.learn = new LearnService({ repository: this.learnRepo, registry: this.registry, logger: this.logger, theta: THETA_BY_STRICTNESS[config.strictness] })
+    this.knowledge = new KnowledgeService({ graph: this.graph, learn: this.learnRepo, model: () => this.model, logger: this.logger, budget: { callsPerDay: config.backgroundCallsPerDay } })
+    this.practice = new PracticeService({ store: this.store, graph: this.graph })
     ctx.effect(() => () => {
       this.sandbox.dispose()
       this.store.close()
@@ -152,26 +178,69 @@ export class HodosService extends Service implements HodosEnvironmentHost {
   }
 
   /**
-   * Announce that a session was bound to a journey (by a tool or the workspace).
+   * Offer a model for background work (graph extraction). The host's
+   * model plugin calls this; without it, extraction reports that no model
+   * is available.
+   * @param port - the model port.
+   * @returns a disposer that withdraws it.
+   */
+  setModel(port: ModelPort): () => void {
+    this.model = port
+    return () => { if (this.model === port) this.model = null }
+  }
+
+  /**
+   * Set how messages from the Hodos panel reach a chat's agent (the tools plugin does).
+   * @param deliver - starts a turn in the chat, or holds the message until its agent runs.
+   * @returns a disposer.
+   */
+  setDelivery(deliver: (chatId: string, text: string, summary: string) => boolean): () => void {
+    this.delivery = deliver
+    return () => { if (this.delivery === deliver) this.delivery = null }
+  }
+
+  /**
+   * Start a turn in a chat with a message from the Hodos panel.
+   * @param chatId - DSH session id.
+   * @param text - the message for the tutor.
+   * @param summary - a one-line account.
+   * @returns whether it was delivered or queued.
+   */
+  deliver(chatId: string, text: string, summary: string): boolean {
+    if (this.delivery === null) {
+      this.logger.warn(`no agent runtime to deliver a Hodos message to ${chatId}`)
+      return false
+    }
+    return this.delivery(chatId, text, summary)
+  }
+
+  /** Whether a model is available for background work. */
+  hasModel(): boolean {
+    return this.model !== null
+  }
+
+  /**
+   * Announce that a chat became a Hodos session or its phase changed, so its
+   * tools and prompt follow.
    * @param sessionId - DSH session id.
    */
-  notifyBound(sessionId: string): void {
-    for (const listener of this.boundListeners) {
+  notifyChanged(sessionId: string): void {
+    for (const listener of this.changeListeners) {
       try {
         listener(sessionId)
       } catch (error) {
-        this.logger.warn(`session-bound listener failed: ${error instanceof Error ? error.message : String(error)}`)
+        this.logger.warn(`session listener failed: ${error instanceof Error ? error.message : String(error)}`)
       }
     }
   }
 
   /**
-   * @param listener - called when a session is bound to a journey.
+   * @param listener - called when a chat is bound or its phase changes.
    * @returns the unsubscriber.
    */
-  onBound(listener: (sessionId: string) => void): () => void {
-    this.boundListeners.add(listener)
-    return () => { this.boundListeners.delete(listener) }
+  onChanged(listener: (sessionId: string) => void): () => void {
+    this.changeListeners.add(listener)
+    return () => { this.changeListeners.delete(listener) }
   }
 
   /**
@@ -190,12 +259,25 @@ export class HodosService extends Service implements HodosEnvironmentHost {
   }
 
   /**
-   * Whether a session is bound to a learning journey.
+   * What a DSH chat is to Hodos.
+   * @param sessionId - DSH session id (trusted, from the host runtime).
+   * @returns the binding, or null for an ordinary chat.
+   */
+  binding(sessionId: string): ChatBinding | null {
+    const learn = this.learn.sessionForHost(sessionId)
+    if (learn !== undefined) return { kind: 'learn', sessionId: learn.id, phase: learn.phase }
+    const practice = this.practice.sessionForHost(sessionId)
+    if (practice !== undefined) return { kind: 'practice', sessionId: practice.id, closed: practice.status === 'closed' }
+    return null
+  }
+
+  /**
+   * Whether a chat is an open Hodos session (its tools are restricted and its prompt is the tutor's).
    * @param sessionId - DSH session id.
-   * @returns true when a journey is bound.
+   * @returns true for an open learning or practice session.
    */
   isTutorSession(sessionId: string): boolean {
-    const binding = this.store.sessionBinding(sessionId)
-    return binding !== undefined && binding.journeyId !== null
+    const b = this.binding(sessionId)
+    return b !== null && (b.kind === 'learn' ? b.phase !== 'closed' : !b.closed)
   }
 }

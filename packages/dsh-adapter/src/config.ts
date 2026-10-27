@@ -12,9 +12,6 @@ export const OWNER_PRINCIPAL = 'dsh:owner'
 /** How Hodos changes the tools of a session once it becomes a tutoring session. */
 export type TutorToolPolicy = 'restricted' | 'unrestricted'
 
-/** How Hodos tells the tutor agent about learner activity in the workspace. */
-export type NoticePolicy = 'off' | 'quiet' | 'proactive'
-
 /** Plugin configuration. */
 export interface HodosConfig {
   /** Directory for the Hodos database. */
@@ -24,17 +21,13 @@ export interface HodosConfig {
   /** Directories holding declarative (untrusted, sandboxed) environment plugins. */
   pluginDirs: string[]
   /**
-   * `restricted`: a session bound to a learning journey sees only Hodos tools
-   * (no shell, filesystem, network or credential tools). `unrestricted` keeps
-   * the session's other tools.
+   * `restricted`: a chat that is a Hodos learning or practice session sees
+   * only Hodos tools and DSH's own question tool (no shell, filesystem,
+   * network or credential tools). `unrestricted` keeps the session's other tools.
    */
   tutorTools: TutorToolPolicy
-  /**
-   * `quiet`: workspace activity is queued as context for the tutor's next step
-   * (no extra model calls). `proactive`: checkpoint results and stuck learners
-   * also wake the tutor (rate-limited). `off`: no notices.
-   */
-  notices: NoticePolicy
+  /** Background model calls (knowledge-graph extraction) per learner per 24 hours. */
+  backgroundCallsPerDay: number
   /** Subagent provider for course drafting; empty picks the first provider with structured output. */
   delegateProvider: string
   /**
@@ -42,7 +35,7 @@ export interface HodosConfig {
    * submit`) as drafts that wait for the learner's approval.
    */
   courseInbox: boolean
-  /** Mastery gate strictness (θ = 0.90 / 0.95 / 0.98). */
+  /** Threshold at which a plan node counts as mastered (θ = 0.90 / 0.95 / 0.98). */
   strictness: 'lenient' | 'standard' | 'strict'
 }
 
@@ -57,10 +50,10 @@ export const Config = Schema.object({
   pluginDirs: Schema.array(Schema.string()).default([])
     .description('Directories of declarative environment plugins (hodos-plugin.json), loaded as data.'),
   tutorTools: Schema.union(['restricted', 'unrestricted'] as const).default('restricted')
-    .description('Hide non-Hodos tools in sessions bound to a learning journey.'),
-  notices: Schema.union(['off', 'quiet', 'proactive'] as const).default('quiet')
-    .description('How the tutor hears about workspace activity.'),
+    .description('Hide non-Hodos tools in chats that are Hodos learning or practice sessions.'),
+  backgroundCallsPerDay: Schema.natural().default(60)
+    .description('Background model calls (knowledge-graph extraction) per learner per 24 hours; 0 turns extraction off.'),
   delegateProvider: Schema.string().default('').description('Subagent provider used to draft courses.'),
   courseInbox: Schema.boolean().default(true).description('Import course files from <dataDir>/inbox as drafts awaiting approval.'),
-  strictness: Schema.union(['lenient', 'standard', 'strict'] as const).default('standard').description('Mastery gate strictness.'),
+  strictness: Schema.union(['lenient', 'standard', 'strict'] as const).default('standard').description('Mastery threshold for plan nodes.'),
 })

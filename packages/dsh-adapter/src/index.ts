@@ -1,9 +1,11 @@
 /**
  * Hodos for DeepSeek Harness. Mounts, as Cordis sub-plugins:
  *
- * - the `hodos` service (database, registry, sandbox, engine);
- * - the tutor tools and tutor-session handling (needs `tools`, `agents`);
- * - the prompt section and learner context (needs `systemPrompt`);
+ * - the `hodos` service (database, registry, sandbox, learning, knowledge
+ *   graph, practice, course store);
+ * - the global tools and tutor-session handling (needs `tools`, `agents`);
+ * - the model for background graph extraction (needs `llm`, `agentDefaultModel`);
+ * - the prompt section and tutor context (needs `systemPrompt`);
  * - the workspace routes (needs `webServer`, `connection`);
  * - optional course drafting through subagents (needs `subagents`).
  *
@@ -23,16 +25,18 @@ import type { Context } from '@deepseek-ai/cordis'
 import { Config, type HodosConfig } from './config.js'
 import { draftCourseTool } from './delegate.js'
 import { createHandler } from './http.js'
+import { dshModelPort, type DefaultModelSource } from './model-port.js'
 import { registerPrompt } from './prompt.js'
 import { HodosService } from './service.js'
-import { globalTools, sessionTools } from './tools.js'
+import { globalTools } from './tools.js'
 import { TutorSessions } from './tutor-sessions.js'
 
 export { Config }
 export type { HodosConfig }
 export { HodosService } from './service.js'
-export { GLOBAL_TOOL_NAMES, SESSION_TOOL_NAMES } from './tools.js'
-export { noticeFor } from './tutor-sessions.js'
+export { GLOBAL_TOOL_NAMES } from './tools.js'
+export { learningTools, practiceTools } from './learn-tools.js'
+export { tutorPrompt } from './prompt.js'
 export { API_PREFIX, APP_PREFIX, ENV_PREFIX, APP_CSP, RENDERER_CSP } from './http.js'
 
 /** Cordis plugin name. */
@@ -56,20 +60,32 @@ export function findAppDir(): string | null {
 
 function toolsPlugin(ctx: Context): void {
   const hodos = ctx.hodos
-  const sessions = new TutorSessions(ctx, hodos, () => sessionTools(hodos))
+  const sessions = new TutorSessions(ctx, hodos)
   sessions.listen()
-  ctx.effect(() => hodos.onBound(sessionId => sessions.activate(sessionId)), 'hodos tutor sessions')
-  for (const tool of globalTools(hodos, { onBound: sessionId => hodos.notifyBound(sessionId) })) {
+  ctx.effect(() => hodos.setDelivery((chatId, text, summary) => sessions.deliver(chatId, text, summary)), 'hodos message delivery')
+  for (const tool of globalTools(hodos)) {
     ctx.effect(() => {
       const unregister = ctx.tools.register(tool)
       const untrack = hodos.trackGlobalTool(tool.name)
       return () => { untrack(); unregister() }
     }, `hodos tool ${tool.name}`)
   }
-  // Sessions already bound before this plugin (re)loaded become tutor sessions again.
-  for (const agent of ctx.agents.list()) if (hodos.isTutorSession(String(agent.id))) sessions.activate(String(agent.id))
+  // Chats bound before this plugin (re)loaded become tutor sessions again.
+  for (const agent of ctx.agents.list()) if (hodos.isTutorSession(String(agent.id))) sessions.sync(String(agent.id))
 }
 toolsPlugin.inject = ['hodos', 'tools', 'agents']
+
+/** The DSH default-model service, read structurally (Hodos needs one method of it). */
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    agentDefaultModel: DefaultModelSource
+  }
+}
+
+function modelPlugin(ctx: Context): void {
+  ctx.effect(() => ctx.hodos.setModel(dshModelPort(ctx, ctx.agentDefaultModel)), 'hodos background model')
+}
+modelPlugin.inject = ['hodos', 'llm', 'agentDefaultModel']
 
 function promptPlugin(ctx: Context): void {
   registerPrompt(ctx, ctx.hodos)
@@ -80,7 +96,7 @@ function webPlugin(ctx: Context): void {
   const handler = createHandler({
     hodos: ctx.hodos,
     rejection: req => ctx.connection.requestRejection({ headers: req.headers }),
-    onBound: sessionId => ctx.hodos.notifyBound(sessionId),
+    deliver: (chatId, text, summary) => ctx.hodos.deliver(chatId, text, summary),
     appDir: findAppDir(),
   })
   ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/hodos', handler }), 'hodos routes')
@@ -106,6 +122,7 @@ delegatePlugin.inject = ['hodos', 'tools', 'subagents']
 export function apply(ctx: Context, config: HodosConfig): void {
   ctx.plugin(HodosService, config)
   ctx.plugin(toolsPlugin)
+  ctx.plugin(modelPlugin)
   ctx.plugin(promptPlugin)
   ctx.plugin(webPlugin)
   ctx.plugin(delegatePlugin)

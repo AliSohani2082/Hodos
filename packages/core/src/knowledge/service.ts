@@ -114,8 +114,8 @@ function words(text: string): Set<string> {
 export interface KnowledgeServiceOptions {
   readonly graph: GraphRepository
   readonly learn: LearnRepository
-  /** Null when the host offers no model: extraction then reports `unavailable`. */
-  readonly model: ModelPort | null
+  /** The host's model, read at each run; null when none is available (extraction then reports `unavailable`). */
+  readonly model: () => ModelPort | null
   readonly logger: RegistryLogger
   readonly clock?: Clock
   readonly ids?: IdGenerator
@@ -126,7 +126,7 @@ export interface KnowledgeServiceOptions {
 export class KnowledgeService {
   private readonly repo: GraphRepository
   private readonly learn: LearnRepository
-  private readonly model: ModelPort | null
+  private readonly model: () => ModelPort | null
   private readonly logger: RegistryLogger
   private readonly clock: Clock
   private readonly ids: IdGenerator
@@ -182,7 +182,7 @@ export class KnowledgeService {
 
   /** One model call with one retry on an invalid reply. Throws on budget or model failure. */
   private async call<T>(learnerId: string, purpose: string, system: string, prompt: string, read: (raw: Record<string, unknown>) => { value: T } | { problems: string[] }, signal?: AbortSignal): Promise<T> {
-    const model = this.model
+    const model = this.model()
     if (model === null) throw new HodosError('UNAVAILABLE', 'no model is available for background work')
     let request = prompt
     for (let attempt = 1; attempt <= 2; attempt += 1) {
@@ -258,7 +258,7 @@ export class KnowledgeService {
   }
 
   private async exclusive(learnerId: string, run: () => Promise<ExtractionResult>): Promise<ExtractionResult> {
-    if (this.model === null) return { status: 'unavailable', batches: 0, stats: ZERO, message: 'no model is available for background work' }
+    if (this.model() === null) return { status: 'unavailable', batches: 0, stats: ZERO, message: 'no model is available for background work' }
     if (this.running.has(learnerId)) return { status: 'busy', batches: 0, stats: ZERO }
     this.running.add(learnerId)
     try {

@@ -1,312 +1,113 @@
 /**
- * The tutor agent's Hodos tools. Identity always comes from the calling
- * agent's session (`exec.agent.id`), never from arguments; answers relayed
- * through these tools count as assisted; checkpoint and diagnostic answers
- * are refused here and must come from the learner in the workspace.
+ * The global Hodos tools, offered in every chat: start a learning or
+ * practice session in this chat, and list or propose courses (installed
+ * courses serve as question banks). The tools of a session itself are in
+ * `learn-tools.ts`.
  *
- * Four tools are global (start, resume, list and propose courses). The rest
- * exist only in sessions bound to a learning journey (see `tutor-sessions.ts`).
+ * Identity comes from the calling chat (`exec.agent`), never from arguments.
  * @module @hodos/dsh/tools
  */
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
-import { HodosError, type Actor } from '@hodos/core'
-import { describeAttempt, describeCheckpoint, describeExercise, describeHint, describeJourney, describeLesson, describeNext, describeProgress } from './describe.js'
+import { HodosError, resolveProposition, type LearnerId } from '@hodos/core'
+import { safeError } from './learn-tools.js'
 import type { HodosService } from './service.js'
 
-/** Tools every session sees. */
-export const GLOBAL_TOOL_NAMES = ['hodos_start_learning', 'hodos_resume_learning', 'hodos_list_courses', 'hodos_propose_course'] as const
+/** Tools every chat sees. */
+export const GLOBAL_TOOL_NAMES = ['hodos_start_learning', 'hodos_start_practice', 'hodos_list_courses', 'hodos_propose_course'] as const
 
 const OUTPUT = {
   type: 'object',
   properties: {
     text: { type: 'string', required: true, description: 'What the tutor needs to know.' },
-    ref: { type: 'string', description: 'Id of the journey, exercise or course the result is about.' },
+    ref: { type: 'string', description: 'Id of the session or course the result is about.' },
   },
   additionalProperties: false,
 } as const
-
-/** Callbacks the tools need from the plugin. */
-export interface ToolHooks {
-  /** A session became bound to a journey: give it the session tools. */
-  onBound(sessionId: string): void
-}
-
-function safeError(hodos: HodosService, error: unknown): Error {
-  if (error instanceof HodosError) {
-    const retry = error.details?.retryAfterSec
-    return new Error(`${error.code}: ${error.message}${typeof retry === 'number' ? ` (try again in ${retry}s)` : ''}`)
-  }
-  // Unexpected failures are logged for the operator; the model gets no internals.
-  hodos.logger.error(`tool failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}`)
-  return new Error('INTERNAL: Hodos could not complete this request; details are in the DSH log.')
-}
-
-async function asLearner<T>(hodos: HodosService, exec: ToolRunContext, work: (actor: Actor) => T | Promise<T>): Promise<T> {
-  const agent = exec.agent
-  if (agent === undefined) throw new Error('FORBIDDEN: Hodos tools can only be used from an agent session.')
-  try {
-    return await work(hodos.agentActor(String(agent.id)))
-  } catch (error) {
-    throw safeError(hodos, error)
-  }
-}
 
 function render(_args: unknown, value: { text: string }): Array<{ type: 'text'; text: string }> {
   return [{ type: 'text', text: value.text }]
 }
 
-const COURSE_FORMAT = `A Hodos course as JSON: { id, version (semver), title, description, keywords[], goal (skill id), environments[] (installed environment ids), skills[] { id, title, kind: fact|concept|procedure|pattern|performance|judgment, requires?[], description?, objectives?[] }, lessons[] { id, skillId, title, source (Markdoc; core blocks: step, callout, worked-example, check) }, items[] { id, kind (installed exercise kind), skills[] { skillId, weight }, difficulty (-4..4), modes[] (practice|checkpoint|review|diagnostic), payload, key, hints?[] { level 1-5, text }, explanation? } }. Skill and item ids are lowercase, e.g. "spanish.greetings". The course is validated (graph, lessons, every item against its exercise kind) and stored as a draft the learner must approve.`
+async function inChat<T>(hodos: HodosService, exec: ToolRunContext, work: (chatId: string, learnerId: LearnerId) => T | Promise<T>): Promise<T> {
+  const agent = exec.agent
+  if (agent === undefined) throw new Error('FORBIDDEN: Hodos tools can only be used from an agent session.')
+  try {
+    return await work(String(agent.id), hodos.ownerLearner())
+  } catch (error) {
+    throw safeError(hodos, error)
+  }
+}
+
+const COURSE_FORMAT = `A Hodos course as JSON: { id, version (semver), title, description, keywords[], goal (skill id), environments[] (installed environment ids), skills[] { id, title, kind: fact|concept|procedure|pattern|performance|judgment, requires?[], description?, objectives?[] }, lessons[] { id, skillId, title, source (Markdoc; core blocks: step, callout, worked-example, check) }, items[] { id, kind (installed exercise kind), skills[] { skillId, weight }, difficulty (-4..4), modes[] (practice|checkpoint|review|diagnostic), payload, key, hints?[] { level 1-5, text }, explanation? } }. Skill and item ids are lowercase, e.g. "spanish.greetings". The course is validated (graph, lessons, every item against its exercise kind) and stored as a draft the learner must approve; approved courses serve as question banks.`
 
 /**
  * The global tools.
  * @param hodos - the Hodos service.
- * @param hooks - plugin callbacks.
  * @returns tool definitions.
  */
-export function globalTools(hodos: HodosService, hooks: ToolHooks): ToolDefinition[] {
+export function globalTools(hodos: HodosService): ToolDefinition[] {
   return [
     defineTool({
       name: 'hodos_start_learning',
-      description: 'Start an adaptive learning journey in Hodos when the user wants to learn or practise a subject (e.g. chess tactics, Spanish). Hodos picks an installed course, may run a short diagnostic, and proposes a path of skills. Pass what the learner says they know as self_report (a weak prior; never treated as mastery).',
-      parameters: {
-        goal: { type: 'string', required: true, description: 'The learning goal in the learner\'s words.' },
-        environment: { type: 'string', description: 'Subject or environment hint, e.g. "chess" or "spanish".' },
-        course_id: { type: 'string', description: 'Exact course id from hodos_list_courses, when known.' },
-        self_report: {
-          type: 'array',
-          description: 'What the learner says about their prior knowledge.',
-          items: {
-            type: 'object',
-            properties: {
-              skill: { type: 'string', required: true, description: 'Skill named in the learner\'s words, e.g. "knight forks".' },
-              level: { type: 'string', enum: ['never', 'heard-of', 'used-it'], required: true },
-            },
-            additionalProperties: false,
-          },
-        },
-        skip_diagnostic: { type: 'boolean', description: 'Skip the placement diagnostic (start from scratch).' },
-      },
+      description: 'Turn this chat into a Hodos learning session when the user wants to learn or understand something (any topic). You then probe what they already understand with graded questions, write a plan map from there to their goal, and teach it step by step with questions shown in the Hodos panel. Call it once, with the goal in the learner\'s words.',
+      parameters: { goal: { type: 'string', required: true, description: 'What the learner wants to learn, in their words.' } },
       output: { schema: OUTPUT, render },
-      execute: (args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.startJourney(actor, {
-          goal: args.goal,
-          ...(args.environment === undefined ? {} : { environment: args.environment }),
-          ...(args.course_id === undefined ? {} : { courseId: args.course_id }),
-          ...(args.self_report === undefined ? {} : { selfReport: args.self_report.map(r => ({ skill: r.skill, level: r.level })) }),
-          ...(args.skip_diagnostic === undefined ? {} : { skipDiagnostic: args.skip_diagnostic }),
-        })
-        if (actor.sessionId !== undefined) hooks.onBound(actor.sessionId)
-        return { text: `Started.\n${describeJourney(view)}`, ref: view.id }
+      execute: (args, exec) => inChat(hodos, exec, (chatId, learnerId) => {
+        const binding = hodos.binding(chatId)
+        if (binding !== null) throw new HodosError('CONFLICT', binding.kind === 'learn' ? 'this chat is already a learning session' : 'this chat is a practice session; start learning in a new chat')
+        const session = hodos.learn.start(learnerId, args.goal, chatId)
+        hodos.notifyChanged(chatId)
+        return { text: `Learning session started for "${session.goal}". You are now the prober: find where the learner's understanding ends on each strand the goal depends on, with hodos_probe / hodos_recall questions, then conclude with hodos_probe_done. Tell the learner their questions appear in the Hodos panel (right sidebar).`, ref: session.id }
       }),
     }),
     defineTool({
-      name: 'hodos_resume_learning',
-      description: 'Resume the learner\'s most recent Hodos learning journey in this session (after a restart or in a new session).',
-      parameters: {},
+      name: 'hodos_start_practice',
+      description: 'Turn this chat into a Hodos practice session: you pose one problem at a time and the learner works it in the Hodos panel. Optionally name propositions from the learner\'s knowledge graph (by name) to practise; otherwise give a topic.',
+      parameters: {
+        topic: { type: 'string', required: true, description: 'What to practise, in the learner\'s words.' },
+        propositions: { type: 'array', items: { type: 'string' }, description: 'Names of propositions from the knowledge graph to practise.' },
+      },
       output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.resume(actor)
-        if (view === null) return { text: 'No learning journey yet. Use hodos_start_learning with the learner\'s goal.' }
-        if (actor.sessionId !== undefined) hooks.onBound(actor.sessionId)
-        return { text: `Resumed.\n${describeJourney(view)}`, ref: view.id }
+      execute: (args, exec) => inChat(hodos, exec, (chatId, learnerId) => {
+        if (hodos.binding(chatId) !== null) throw new HodosError('CONFLICT', 'this chat is already a Hodos session; practise in a new chat')
+        const graph = hodos.graph.propositions(learnerId)
+        const targets: string[] = []
+        const unknown: string[] = []
+        for (const name of args.propositions ?? []) {
+          const id = resolveProposition(name, graph)
+          if (id === null) unknown.push(name)
+          else targets.push(id)
+        }
+        const session = hodos.practice.start(learnerId, { targets, title: args.topic, hostSessionId: chatId })
+        hodos.notifyChanged(chatId)
+        return { text: `Practice session "${session.title}" started with ${targets.length} picked proposition(s).${unknown.length > 0 ? ` Not in the graph: ${unknown.join(', ')}.` : ''} Pose the first problem with hodos_problem.`, ref: session.id }
       }),
     }),
     defineTool({
       name: 'hodos_list_courses',
-      description: 'List the Hodos courses installed and approved on this machine, with whether their environment is available.',
+      description: 'List the Hodos courses installed and approved on this machine. Their exercises serve as verified question banks.',
       parameters: {},
       output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, () => {
+      execute: (_args, exec) => inChat(hodos, exec, () => {
         const catalog = hodos.engine.catalog()
-        if (catalog.length === 0) return { text: 'No courses are installed. Install a Hodos environment (for example @hodos/chess) or propose a course with hodos_propose_course.' }
-        return {
-          text: catalog.map(c => `- ${c.title} [${c.id}@${c.version}]${c.available ? '' : ' (environment not installed)'}: ${c.description} Skills: ${c.skills.map(s => s.title).join(', ')}.`).join('\n'),
-        }
+        if (catalog.length === 0) return { text: 'No courses are installed.' }
+        return { text: catalog.map(c => `- ${c.title} [${c.id}@${c.version}]${c.available ? '' : ' (environment not installed)'}: ${c.description}`).join('\n') }
       }),
     }),
     defineTool({
       name: 'hodos_propose_course',
-      description: `Propose a new course when no installed course fits the learner's goal. ${COURSE_FORMAT}`,
-      parameters: {
-        course: { type: 'json', required: true, description: 'The course JSON.' },
-      },
+      description: `Propose a course (a verified question bank) for the learner to approve. ${COURSE_FORMAT}`,
+      parameters: { course: { type: 'json', required: true, description: 'The course JSON.' } },
       output: { schema: OUTPUT, render },
-      execute: (args, exec) => asLearner(hodos, exec, async actor => {
-        const result = await hodos.engine.proposeCourse(actor, args.course)
+      execute: (args, exec) => inChat(hodos, exec, async chatId => {
+        const result = await hodos.engine.proposeCourse(hodos.agentActor(chatId), args.course)
         if (!result.stored) return { text: `The course was not stored. Fix these problems and propose it again:\n${result.errors.map(e => `- ${e}`).join('\n')}`, ref: result.courseId }
         return {
-          text: [
-            `Stored as a draft: ${result.courseId}@${result.version}. The learner reviews and approves it in the Hodos workspace before it can be used; it is not independently verified.`,
-            ...result.warnings.map(w => `Warning: ${w}`),
-          ].join('\n'),
+          text: [`Stored as a draft: ${result.courseId}@${result.version}. The learner reviews and approves it in the Hodos panel; it is not independently verified.`, ...result.warnings.map(w => `Warning: ${w}`)].join('\n'),
           ref: result.courseId,
         }
       }),
     }),
   ]
 }
-
-/**
- * The tools of a session bound to a journey.
- * @param hodos - the Hodos service.
- * @returns tool definitions.
- */
-export function sessionTools(hodos: HodosService): ToolDefinition[] {
-  const presentation = { type: 'string', required: true, description: 'The exercise id shown by hodos_next_exercise.' } as const
-  return [
-    defineTool({
-      name: 'hodos_status',
-      description: 'Show the learning journey: phase, path, progress, the open exercise and what to do next.',
-      parameters: {},
-      output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.journey(actor)
-        return { text: `${describeJourney(view)}\n\n${hodos.engine.tutorContext(actor).text}`, ref: view.id }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_lesson',
-      description: 'Read the lesson for the active skill (or another skill of the journey) as text, with its formative check questions.',
-      parameters: { skill_id: { type: 'string', description: 'Skill id; defaults to the active skill.' } },
-      output: { schema: OUTPUT, render },
-      execute: (args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.lesson(actor, args.skill_id === undefined ? {} : { skillId: args.skill_id })
-        return { text: describeLesson(view), ref: view.skillId }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_answer_check',
-      description: 'Record the learner\'s answer to a formative lesson check (by option id) and get the explanation.',
-      parameters: {
-        lesson_id: { type: 'string', required: true },
-        check_id: { type: 'string', required: true },
-        option_id: { type: 'string', required: true },
-      },
-      output: { schema: OUTPUT, render },
-      execute: (args, exec) => asLearner(hodos, exec, actor => {
-        const result = hodos.engine.answerCheck(actor, { lessonId: args.lesson_id, checkId: args.check_id, optionId: args.option_id })
-        return { text: `${result.correct ? 'Correct' : 'Not correct'}.${result.explanation === undefined ? '' : ` ${result.explanation}`}`, ref: result.checkId }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_complete_lesson',
-      description: 'Mark the current lesson (or remedial step) complete and move on to practice.',
-      parameters: {},
-      output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.completeLesson(actor)
-        return { text: describeJourney(view), ref: view.id }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_next_exercise',
-      description: 'Show the learner\'s current exercise (presenting the next one if none is open). The learner answers on the board or form in the workspace.',
-      parameters: {},
-      output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.nextExercise(actor)
-        if (view === null) return { text: describeNext(hodos.engine.journey(actor).nextAction) }
-        return { text: describeExercise(view), ref: view.id }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_submit_answer',
-      description: 'Submit an answer the learner gave in chat for a practice or review exercise. Relayed answers count as assisted. Checkpoint and diagnostic answers cannot be relayed.',
-      parameters: {
-        presentation_id: presentation,
-        response: { type: 'json', required: true, description: 'The response in the exercise kind\'s format, e.g. {"move":"Nf7+"} or {"text":"hola"}.' },
-      },
-      output: { schema: OUTPUT, render },
-      execute: (args, exec) => asLearner(hodos, exec, async actor => {
-        const view = await hodos.engine.submitAttempt(actor, { presentationId: args.presentation_id, response: args.response })
-        return { text: describeAttempt(view), ref: view.presentationId }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_hint',
-      description: 'Reveal the next hint level for a practice exercise (graded: orient → point → example → partial → answer). Paced: stronger hints need an attempt or a short wait.',
-      parameters: { presentation_id: presentation },
-      output: { schema: OUTPUT, render },
-      execute: (args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.requestHint(actor, args.presentation_id)
-        return { text: describeHint(view), ref: view.presentationId }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_start_checkpoint',
-      description: 'Start the unassisted checkpoint for the active skill: fresh items, one attempt each, no hints. The learner answers in the workspace.',
-      parameters: {},
-      output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.startCheckpoint(actor)
-        return { text: `${describeCheckpoint(view)}\nThe learner now answers ${view.total} item(s) alone in the workspace. Do not help with them.`, ref: view.id }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_start_review',
-      description: 'Start a spaced-repetition review of skills that are due.',
-      parameters: {},
-      output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.startReview(actor)
-        return { text: describeJourney(view), ref: view.id }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_progress',
-      description: 'Show mastery evidence per skill, reviews due and recent results.',
-      parameters: {},
-      output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.progress(actor)
-        return { text: describeProgress(view), ...(view.journeyId === null ? {} : { ref: view.journeyId }) }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_approve_path',
-      description: 'Approve the proposed learning path after discussing it with the learner (shipped courses only; agent-proposed courses need the learner\'s approval in the workspace).',
-      parameters: {},
-      output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.approvePath(actor)
-        return { text: describeJourney(view), ref: view.id }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_skip_diagnostic',
-      description: 'Skip the placement diagnostic when the learner prefers to start from the beginning.',
-      parameters: {},
-      output: { schema: OUTPUT, render },
-      execute: (_args, exec) => asLearner(hodos, exec, actor => {
-        const view = hodos.engine.skipDiagnostic(actor)
-        return { text: describeJourney(view), ref: view.id }
-      }),
-    }),
-    defineTool({
-      name: 'hodos_write_lesson',
-      description: 'Write an extra lesson or remedial explanation for this learner (Markdoc text; blocks: step, callout, worked-example, check, plus installed environment blocks). It is validated and shown in the workspace; it is not independently verified.',
-      parameters: {
-        title: { type: 'string', required: true },
-        source: { type: 'string', required: true, description: 'Markdoc source. No HTML, images or variables.' },
-        skill_id: { type: 'string', description: 'Skill id; defaults to the active skill.' },
-        kind: { type: 'string', enum: ['lesson', 'remedial'] },
-      },
-      output: { schema: OUTPUT, render },
-      execute: (args, exec) => asLearner(hodos, exec, actor => {
-        const result = hodos.engine.addLessonOverlay(actor, {
-          title: args.title, source: args.source,
-          ...(args.skill_id === undefined ? {} : { skillId: args.skill_id }),
-          ...(args.kind === undefined ? {} : { kind: args.kind }),
-        })
-        return { text: `Lesson ${result.id} saved.${result.diagnostics.length > 0 ? ` Notes: ${result.diagnostics.join('; ')}` : ''}`, ref: result.id }
-      }),
-    }),
-  ]
-}
-
-/** Names of the session tools, for documentation and tests. */
-export const SESSION_TOOL_NAMES = [
-  'hodos_status', 'hodos_lesson', 'hodos_answer_check', 'hodos_complete_lesson', 'hodos_next_exercise', 'hodos_submit_answer',
-  'hodos_hint', 'hodos_start_checkpoint', 'hodos_start_review', 'hodos_progress', 'hodos_approve_path', 'hodos_skip_diagnostic', 'hodos_write_lesson',
-] as const

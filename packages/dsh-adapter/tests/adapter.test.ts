@@ -12,12 +12,11 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
-import type { LearnerId } from '@hodos/core'
-import { correctResponse, createQuizPlugin, quizCourse, wrongResponse } from '@hodos/testing'
+import type { ModelPort, ModelRequest } from '@hodos/core'
+import { createQuizPlugin, quizCourse } from '@hodos/testing'
 import * as plugin from '../src/index.js'
-import { GLOBAL_TOOL_NAMES, RENDERER_CSP, SESSION_TOOL_NAMES } from '../src/index.js'
+import { GLOBAL_TOOL_NAMES, RENDERER_CSP } from '../src/index.js'
 import type { HodosService } from '../src/service.js'
-import { noticeFor } from '../src/tutor-sessions.js'
 
 /** What a DSH tool guard sees of a call (the part these tests use). */
 type FakeGuard = (execution: { readonly name: string }) => string | undefined
@@ -121,9 +120,16 @@ async function harness(config: Record<string, unknown> = {}, services: Record<st
   return h
 }
 
+/** Calls whose turn a tool ended (concludeTurn), by session. */
+const concluded: string[] = []
+
 /** Tests drive tool bodies directly; only the fields Hodos reads are populated. */
 function exec(sessionId: string | undefined): ToolRunContext {
-  const fake = { callId: 'call-1', name: 'test', arguments: {}, signal: new AbortController().signal, ...(sessionId === undefined ? {} : { agent: { id: sessionId } }) }
+  const fake = {
+    callId: 'call-1', name: 'test', arguments: {}, signal: new AbortController().signal,
+    concludeTurn: () => { concluded.push(sessionId ?? '') },
+    ...(sessionId === undefined ? {} : { agent: { id: sessionId } }),
+  }
   return fake as unknown as ToolRunContext
 }
 
@@ -133,6 +139,53 @@ async function call(h: Harness, name: string, args: Record<string, unknown>, ses
   if (tool === undefined) throw new Error(`tool ${name} is not visible in ${sessionId ?? 'a session-less call'}`)
   const value = await tool.execute(args, exec(sessionId))
   return value as { text: string; ref?: string }
+}
+
+/** The text of the tutor context for a session. */
+function contextText(h: Harness, sessionId: string): string {
+  const context = h.contexts[0]
+  return typeof context?.text === 'function' ? context.text({ agent: { id: sessionId } }) : ''
+}
+
+/** Text of the follow-up messages an agent received. */
+function followupTexts(agent: FakeAgent): string[] {
+  return agent.followups.map(m => (m as { content: Array<{ text: string }> }).content[0]?.text ?? '')
+}
+
+const PROBE_TOOLS = ['hodos_probe', 'hodos_probe_done', 'hodos_probe_exercise', 'hodos_recall']
+const TEACH_TOOLS = ['hodos_exercise', 'hodos_explain', 'hodos_plan', 'hodos_quiz']
+
+/** A chat that has become a learning session in its teaching phase. */
+async function teaching(h: Harness, agent: FakeAgent): Promise<void> {
+  await call(h, 'hodos_start_learning', { goal: 'Understand the chain rule' }, agent.id)
+  await call(h, 'hodos_probe_done', { assessment: { strands: [{ strand: 'derivatives', assessment: 'knows the power rule' }] } }, agent.id)
+  await call(h, 'hodos_plan', { mermaid: 'graph TD\n  power[Power rule] --> chain[Chain rule]' }, agent.id)
+}
+
+/** The open question of a chat's learning session, as the workspace sees it. */
+async function openQuestion(h: Harness, sessionId: string): Promise<{ id: string; form: { type: string; options?: Array<{ value: string; label: string }> } }> {
+  const state = dataOf(await api(h, 'GET', 'state', undefined, { session: sessionId })) as { learn: { openQuestion: { id: string; form: { type: string; options?: Array<{ value: string; label: string }> } } | null } | null }
+  const q = state.learn?.openQuestion
+  if (q === null || q === undefined) throw new Error('no open question')
+  return q
+}
+
+/** A session event carrying an assistant message with reasoning and text. */
+function assistant(text: string): unknown {
+  return { type: 'assistant/message', data: { turn: 1, step: 1, stream: [], message: { id: 'm', role: 'assistant', source: { kind: 'model' }, content: [{ type: 'reasoning', text: 'secret reasoning' }, { type: 'text', text }] } } }
+}
+
+/** A model that answers background calls from a queue. */
+function fakeModel(replies: string[]): ModelPort & { readonly requests: ModelRequest[] } {
+  const requests: ModelRequest[] = []
+  return {
+    requests,
+    complete: req => {
+      requests.push(req)
+      const next = replies.shift()
+      return next === undefined ? Promise.reject(new Error('no scripted reply')) : Promise.resolve({ text: next })
+    },
+  }
 }
 
 /** The sample declarative plugin, which has a renderer. */
@@ -183,7 +236,7 @@ interface FakeActivationSpec {
 }
 
 describe('Hodos DSH plugin', () => {
-  it('drafts a course through the configured subagent provider, as a draft with generated provenance', async () => {
+  it('drafts a course through the configured subagent provider, and never offers drafting in a Hodos session', async () => {
     const requests: FakeActivationSpec[] = []
     const drafted = { ...quizCourse(), id: 'quiz-drafted', version: '0.1.0', items: quizCourse().items.map(i => ({ ...i, provenance: { source: 'authored', verifiedBy: ['human'] } })) }
     const subagents = {
@@ -202,46 +255,163 @@ describe('Hodos DSH plugin', () => {
     const result = await call(h, 'hodos_draft_course', { topic: 'arithmetic for beginners' })
     expect(result.text).toContain('Draft quiz-drafted@0.1.0 is ready for the learner to review')
     expect(requests.map(r => r.provider)).toEqual(['claude-code'])
-    expect(requests[0]?.request.prompt[0]?.text).toContain('# Hodos course authoring guide')
     expect(h.hodos.engine.drafts()).toEqual([expect.objectContaining({ id: 'quiz-drafted', origin: 'agent' })])
-    for (const item of h.hodos.store.course('quiz-drafted', '0.1.0')?.spec.items ?? []) expect(item.provenance).toEqual({ source: 'generated' })
 
-    // Once the session becomes a restricted tutoring session, drafting (a subagent) is neither offered nor run.
     const tutor = fakeAgent('sess-2')
     h.agents.push(tutor)
-    await call(h, 'hodos_start_learning', { goal: 'arithmetic', skip_diagnostic: true }, 'sess-2')
+    await call(h, 'hodos_start_learning', { goal: 'arithmetic' }, 'sess-2')
     expect(tutor.restrictions[0]?.allow).not.toContain('hodos_draft_course')
-    expect(tutor.guards.map(guard => guard({ name: 'hodos_draft_course' })).find(reason => reason !== undefined)).toContain('not available in a learning session')
+    expect(tutor.guards.map(guard => guard({ name: 'hodos_draft_course' })).find(reason => reason !== undefined)).toContain('not available in a Hodos session')
   })
 
-  it('registers the global tools, the prompt section and the learner context', async () => {
+  it('registers the global tools, the prompt section and the tutor context', async () => {
     const h = await harness()
     expect([...h.globals.keys()].toSorted()).toEqual([...GLOBAL_TOOL_NAMES].toSorted())
     expect(h.sections.map(s => s.name)).toEqual(['hodos'])
-    expect(h.sections[0]?.text).toContain('never state the answer')
+    expect(h.sections[0]?.text).toContain('hodos_start_learning')
     expect(h.contexts.map(c => c.name)).toEqual(['hodos-learner'])
+    expect(contextText(h, 'sess-unbound')).toBe('')
   })
 
-  it('starts a journey from the agent, binds the session and turns it into a restricted tutor session', async () => {
+  it('turns a chat into a restricted learning session and swaps tools by phase', async () => {
     const h = await harness()
     const agent = fakeAgent('sess-1')
     h.agents.push(agent)
-    const started = await call(h, 'hodos_start_learning', { goal: 'Teach me arithmetic, I struggle with multiplication', self_report: [{ skill: 'addition', level: 'used-it' }] })
-    expect(started.text).toContain('Quiz arithmetic')
-    expect(started.text).toContain('Hodos learning')
-    expect([...agent.scoped.keys()].toSorted()).toEqual([...SESSION_TOOL_NAMES].toSorted())
-    expect(agent.restrictions).toEqual([{ allow: expect.arrayContaining([...GLOBAL_TOOL_NAMES]) as unknown as string[] }])
-    // Tools that other plugins put in the agent's own scope (DSH's `subagent`) cannot be hidden: the guard refuses them.
+    const started = await call(h, 'hodos_start_learning', { goal: 'Understand the chain rule' })
+    expect(started.text).toContain('You are now the prober')
+    expect([...agent.scoped.keys()].toSorted()).toEqual(PROBE_TOOLS)
+    expect(agent.restrictions).toEqual([{ allow: expect.arrayContaining([...GLOBAL_TOOL_NAMES, 'ask_user_question']) as unknown as string[] }])
     const refused = (name: string): string | undefined => agent.guards.map(guard => guard({ name })).find(reason => reason !== undefined)
+    for (const name of [...PROBE_TOOLS, ...GLOBAL_TOOL_NAMES, 'ask_user_question']) expect(refused(name), name).toBeUndefined()
+    for (const name of ['subagent', 'bash', 'web_fetch', 'read_file']) expect(refused(name), name).toContain('not available in a Hodos session')
+    expect(contextText(h, 'sess-1')).toContain('## You are probing')
+    expect((await call(h, 'hodos_start_learning', { goal: 'again' }).catch((e: unknown) => e)) as Error).toHaveProperty('message', 'CONFLICT: this chat is already a learning session')
+
+    await call(h, 'hodos_probe_done', { assessment: '{"strands": [{"strand": "derivatives", "assessment": "knows the power rule"}]}' })
+    expect([...agent.scoped.keys()].toSorted()).toEqual(TEACH_TOOLS)
     expect(agent.guards).toHaveLength(1)
-    for (const name of [...SESSION_TOOL_NAMES, ...GLOBAL_TOOL_NAMES]) expect(refused(name), name).toBeUndefined()
-    for (const name of ['subagent', 'subagent_fork', 'bash', 'web_fetch']) expect(refused(name), name).toContain('not available in a learning session')
-    expect(h.hodos.isTutorSession('sess-1')).toBe(true)
-    // The learner context now appears in the prompt of this session only.
-    const context = h.contexts[0]
-    const text = (s: string): string => (typeof context?.text === 'function' ? context.text({ agent: { id: s } }) : '')
-    expect(text('sess-1')).toContain('Hodos learning context')
-    expect(text('sess-other')).toBe('')
+    expect(contextText(h, 'sess-1')).toContain('## You are the teacher')
+    expect(contextText(h, 'sess-1')).toContain('- derivatives: knows the power rule')
+    const planned = await call(h, 'hodos_plan', { mermaid: 'graph TD\n  power[Power rule] --> chain[Chain rule]' })
+    expect(planned.text).toContain('Plan version 1 saved')
+    await expect(call(h, 'hodos_plan', { mermaid: 'a --> b\nb --> a' })).rejects.toThrow(/INVALID_INPUT: the plan was not saved: the plan has a cycle/)
+  })
+
+  it('asks questions that end the turn, grades the answer on the server and sends it back as the next turn', async () => {
+    const h = await harness()
+    const agent = fakeAgent('sess-1')
+    h.agents.push(agent)
+    await teaching(h, agent)
+    concluded.length = 0
+    const asked = await call(h, 'hodos_quiz', { role: 'check', nodeId: 'chain', question: 'd/dx sin(3x)?', options: ['3cos(3x)', 'cos(3x)', '3sin(3x)'], correct: '3cos(3x)', explanation: 'Outer derivative times inner derivative.' })
+    expect(asked.text).toContain('End your turn now')
+    expect(concluded).toEqual(['sess-1'])
+    expect(contextText(h, 'sess-1')).toContain('Waiting for the learner\'s answer to: check on chain')
+
+    const pending = await openQuestion(h, 'sess-1')
+    const state = await api(h, 'GET', 'state', undefined, { session: 'sess-1' })
+    expect(JSON.stringify(state.json)).not.toMatch(/Outer derivative|"correct"/)
+    const wrong = pending.form.options?.find(o => o.label === 'cos(3x)')?.value
+    const answered = await api(h, 'POST', 'learn/answer', { questionId: pending.id, response: { selected: [wrong] }, thinking: 'chain rule means differentiate the outside' }, { session: 'sess-1' })
+    expect(dataOf(answered)).toMatchObject({ status: 'answered', question: { answer: { verdict: { outcome: 'incorrect' }, reveal: { correct: ['3cos-3x'], explanation: 'Outer derivative times inner derivative.' } } } })
+    const [report] = followupTexts(agent)
+    expect(report).toContain(`[Hodos] Answer to question ${pending.id} (check on chain)`)
+    expect(report).toContain('The learner answered "cos(3x)". Incorrect.')
+    expect(report).toContain('Their thinking out loud: «chain rule means differentiate the outside»')
+    expect((await api(h, 'POST', 'learn/answer', { questionId: pending.id, response: { selected: [wrong] } }, { session: 'sess-1' })).json?.error?.code).toBe('INVALID_STATE')
+  })
+
+  it('validates exercise questions with their plugin before the learner sees them', async () => {
+    const h = await harness()
+    const agent = fakeAgent('sess-1')
+    h.agents.push(agent)
+    await teaching(h, agent)
+    const payload = { prompt: 'Pick the chain rule', options: [{ id: 'a', text: "f'(g(x))g'(x)" }, { id: 'b', text: "f'(x)g'(x)" }], authorNote: 'b is the product mistake' }
+    await expect(call(h, 'hodos_exercise', { role: 'check', nodeId: 'chain', question: 'Which?', kind: 'quiz.choice', payload, key: { correct: 'z' } })).rejects.toThrow(/quiz\/key: the correct option is not one of the options/)
+    await call(h, 'hodos_exercise', { role: 'check', nodeId: 'chain', question: 'Which?', kind: 'quiz.choice', payload, key: { correct: 'a' } })
+    const pending = await openQuestion(h, 'sess-1')
+    expect(pending.form).toMatchObject({ type: 'interface', kind: 'quiz.choice', environment: 'quiz.card' })
+    expect(JSON.stringify(await api(h, 'GET', 'state', undefined, { session: 'sess-1' }))).not.toContain('product mistake')
+    const answered = await api(h, 'POST', 'learn/answer', { questionId: pending.id, response: { choice: 'a' } }, { session: 'sess-1' })
+    expect(dataOf(answered)).toMatchObject({ question: { answer: { verdict: { outcome: 'correct', countsAsEvidence: true }, reveal: { solution: { correct: 'a' } } } } })
+    const view = dataOf(await api(h, 'GET', 'state', undefined, { session: 'sess-1' })) as { learn: { mastery: Array<{ nodeId: string }>; plan: { statuses: Record<string, string> } } }
+    expect(view.learn.mastery.map(m => m.nodeId)).toEqual(['chain'])
+    expect(view.learn.plan.statuses).toEqual({ power: 'upcoming', chain: 'current' })
+  })
+
+  it('takes the session from the calling chat, never from arguments', async () => {
+    const h = await harness()
+    h.agents.push(fakeAgent('sess-1'), fakeAgent('sess-2'))
+    await call(h, 'hodos_start_learning', { goal: 'chess tactics' }, 'sess-1')
+    await expect(h.globals.get('hodos_start_learning')?.execute({ goal: 'x' }, exec(undefined))).rejects.toThrow(/FORBIDDEN/)
+    // A probe tool registered for sess-1, called from a chat that is not a learning session, has nothing to act on.
+    const probe = h.agents[0]?.scoped.get('hodos_probe')
+    await expect(probe?.execute({ question: 'q', options: ['a', 'b'], correct: 'a', sessionId: 'sess-1' }, exec('sess-2'))).rejects.toThrow(/INVALID_STATE: this chat is not a Hodos learning session/)
+  })
+
+  it("holds a graded answer until the chat's agent runs again, and restores the session tools", async () => {
+    const h = await harness()
+    const agent = fakeAgent('sess-1')
+    h.agents.push(agent)
+    await teaching(h, agent)
+    await call(h, 'hodos_explain', { role: 'check', nodeId: 'chain', question: 'Why multiply?', answer: 'Rates of change compose multiplicatively.' })
+    const pending = await openQuestion(h, 'sess-1')
+    h.agents.splice(0, 1)
+    h.root.events.emit('agent/disposed', { agent: { id: 'sess-1' } })
+    await api(h, 'POST', 'learn/answer', { questionId: pending.id, response: { text: 'because the slopes stack' } }, { session: 'sess-1' })
+    expect(agent.followups).toEqual([])
+    const again = fakeAgent('sess-1')
+    h.agents.push(again)
+    h.root.events.emit('agent/created', { agent: again, source: 'resume' })
+    expect([...again.scoped.keys()].toSorted()).toEqual(TEACH_TOOLS)
+    expect(followupTexts(again)[0]).toContain('Your committed answer: «Rates of change compose multiplicatively.»')
+  })
+
+  it("records the tutor's prose and extracts the knowledge graph after a turn, within budget", async () => {
+    const h = await harness()
+    const agent = fakeAgent('sess-1')
+    h.agents.push(agent)
+    await teaching(h, agent)
+    const model = fakeModel([JSON.stringify({
+      propositions: [
+        { id: 'p1', name: 'Chain rule', statement: 'The derivative of f(g(x)) is f\'(g(x))·g\'(x).', passage: 'T1' },
+        { id: 'p2', name: 'Rates compose', statement: 'Rates of change of composed functions multiply.', passage: 'T1' },
+      ],
+      chains: [{ premises: ['p2'], conclusion: 'p1' }],
+    })])
+    const unset = h.hodos.setModel(model)
+    h.root.events.emit('session/event', { id: 'sess-1' }, assistant(`When functions are composed, their rates of change multiply. ${'That is the chain rule. '.repeat(80)}`))
+    h.root.events.emit('session/event', { id: 'sess-other' }, assistant('Unrelated chat text.'))
+    h.root.events.emit('session/event', { id: 'sess-1' }, { type: 'turn/end', data: { turn: 1, reason: 'completed' } })
+    await waitFor(() => h.hodos.knowledge.snapshot(h.hodos.ownerLearner()).propositions.length === 2, 'the extraction')
+    expect(model.requests[0]?.prompt).toContain('[T1]\nWhen functions are composed')
+    expect(model.requests[0]?.prompt).not.toContain('secret reasoning')
+    const graph = dataOf(await api(h, 'GET', 'graph')) as { propositions: Array<{ name: string }>; edges: unknown[]; clusters: unknown[] }
+    expect(graph.propositions.map(p => p.name)).toEqual(['Chain rule', 'Rates compose'])
+    expect(graph.edges).toHaveLength(1)
+    unset()
+    expect((await api(h, 'POST', 'graph/import', { title: 'notes', text: 'x' })).json?.error?.code).toBe('UNAVAILABLE')
+  })
+
+  it('runs a practice session: hidden solution, thinking sent to the tutor, reveal on conclusion', async () => {
+    const h = await harness()
+    const agent = fakeAgent('sess-p')
+    h.agents.push(agent)
+    const started = await api(h, 'POST', 'practice/start', { targets: [], title: 'Derivatives' }, { session: 'sess-p' })
+    expect(dataOf(started)).toMatchObject({ title: 'Derivatives', status: 'active' })
+    expect([...agent.scoped.keys()].toSorted()).toEqual(['hodos_conclude', 'hodos_problem'])
+    expect(followupTexts(agent)[0]).toContain('started a practice session')
+    expect(contextText(h, 'sess-p')).toContain('## You are running a practice session')
+    await call(h, 'hodos_problem', { statement: 'Differentiate sin(x^2).', mode: 'recall', modelSolution: 'Outer cos(x^2), inner 2x: 2x cos(x^2).' }, 'sess-p')
+    const view = dataOf(await api(h, 'GET', 'state', undefined, { session: 'sess-p' })) as { practice: { problems: Array<{ id: string }> } }
+    expect(JSON.stringify(view)).not.toContain('Outer cos')
+    const problemId = view.practice.problems[0]?.id ?? ''
+    await api(h, 'POST', 'practice/thinking', { problemId, text: 'cos(x^2)?' }, { session: 'sess-p' })
+    expect(followupTexts(agent).at(-1)).toBe(`Your thinking (problem ${problemId}):\ncos(x^2)?`)
+    await call(h, 'hodos_conclude', { outcome: 'solvedWithHints', verdict: 'Missed the inner factor at first.', rung: 'R1', missClass: 'execution', retest: true }, 'sess-p')
+    const after = dataOf(await api(h, 'GET', 'state', undefined, { session: 'sess-p' })) as { practice: { problems: Array<{ modelSolution?: string }> } }
+    expect(after.practice.problems[0]?.modelSolution).toBe('Outer cos(x^2), inner 2x: 2x cos(x^2).')
+    expect((await api(h, 'POST', 'learn/start', { goal: 'x' }, { session: 'sess-p' })).json?.error?.code).toBe('CONFLICT')
   })
 
   it('trusts environment code only through the host allowlist', async () => {
@@ -253,137 +423,23 @@ describe('Hodos DSH plugin', () => {
     const h = await harness({ tutorTools: 'unrestricted' })
     const agent = fakeAgent('sess-1')
     h.agents.push(agent)
-    await call(h, 'hodos_start_learning', { goal: 'arithmetic', skip_diagnostic: true })
-    expect(agent.scoped.size).toBe(SESSION_TOOL_NAMES.length)
+    await call(h, 'hodos_start_learning', { goal: 'arithmetic' })
+    expect([...agent.scoped.keys()].toSorted()).toEqual(PROBE_TOOLS)
     expect(agent.restrictions).toEqual([])
     expect(agent.guards).toEqual([])
   })
 
-  it('takes identity from the calling session, never from arguments', async () => {
+  it('closes a session from the workspace and gives the chat its tools back', async () => {
     const h = await harness()
-    const start = h.globals.get('hodos_start_learning')
-    await expect(start?.execute({ goal: 'arithmetic' }, exec(undefined))).rejects.toThrow(/FORBIDDEN/)
-    // A model-supplied learner id is just an ignored argument: the session decides.
-    const result = await start?.execute({ goal: 'arithmetic', learner_id: 'lrn_someone_else' }, exec('sess-1')) as { ref: string }
-    expect(h.hodos.store.journey(result.ref)?.learnerId).toBe(h.hodos.ownerLearner())
-  })
-
-  it('keeps the journey readable while its environment is missing', async () => {
-    const h = await harness()
-    h.agents.push(fakeAgent('sess-1'))
-    await call(h, 'hodos_start_learning', { goal: 'arithmetic multiplication', skip_diagnostic: true })
-    await call(h, 'hodos_approve_path', {})
-    const ui = h.hodos.uiActor('sess-1')
-    for (const l of h.hodos.engine.lesson(ui).lessons) for (const c of l.checks) h.hodos.engine.answerCheck(ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
-    await call(h, 'hodos_complete_lesson', {})
-    await h.hodos.registry.unregister('hodos-quiz')
-    const missing = await api(h, 'GET', 'state')
-    expect(missing.status).toBe(200)
-    const data = dataOf(missing) as { journey: { environments: unknown[] } | null; exercise: unknown }
-    expect(data.journey?.environments).toEqual([{ id: 'quiz.card', available: false }])
-    expect(data.exercise).toBeNull()
-    const next = await api(h, 'POST', 'exercise/next', {})
-    expect(next.json?.error?.code).toBe('UNAVAILABLE')
-    expect(next.json?.error?.message).toContain('your progress is saved')
-  })
-
-  it('relays practice answers as assisted and refuses relayed checkpoint answers', async () => {
-    const h = await harness()
-    h.agents.push(fakeAgent('sess-1'))
-    await call(h, 'hodos_start_learning', { goal: 'arithmetic multiplication', skip_diagnostic: true })
-    await call(h, 'hodos_approve_path', {})
-    const lesson = await call(h, 'hodos_lesson', {})
-    expect(lesson.text).toContain('Formative checks')
-    const ui = h.hodos.uiActor('sess-1')
-    const view = h.hodos.engine.lesson(ui)
-    for (const l of view.lessons) for (const c of l.checks) h.hodos.engine.answerCheck(ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
-    await call(h, 'hodos_complete_lesson', {})
-    const exercise = await call(h, 'hodos_next_exercise', {})
-    const presentationId = exercise.ref ?? ''
-    expect(exercise.text).toContain('What is')
-    const item = quizCourse().items.find(i => exercise.text.includes((i.payload as { prompt?: string }).prompt ?? '\u0000'))
-    if (item === undefined) throw new Error('item not found')
-    const relayed = await call(h, 'hodos_submit_answer', { presentation_id: presentationId, response: correctResponse(item) })
-    expect(relayed.text).toMatch(/Result: correct/)
-    expect(h.hodos.store.evidenceFor(presentationId)[0]).toMatchObject({ assisted: true, channel: 'agent' })
-    const hint = call(h, 'hodos_hint', { presentation_id: presentationId })
-    await expect(hint).rejects.toThrow(/INVALID_STATE/)
-    // A relayed checkpoint answer is refused.
-    h.hodos.engine.startCheckpoint(ui)
-    const cp = await call(h, 'hodos_next_exercise', {})
-    expect(cp.text).toContain('Assessment item')
-    await expect(call(h, 'hodos_submit_answer', { presentation_id: cp.ref ?? '', response: wrongResponse(item) })).rejects.toThrow(/POLICY_DENIED/)
-  })
-
-  it('resumes tutor sessions when a bound session\'s agent is created again', async () => {
-    const h = await harness()
-    h.agents.push(fakeAgent('sess-1'))
-    await call(h, 'hodos_start_learning', { goal: 'arithmetic', skip_diagnostic: true })
-    h.agents.splice(0)
-    h.root.events.emit('agent/disposed', { agent: { id: 'sess-1' } })
-    const again = fakeAgent('sess-1')
-    h.agents.push(again)
-    h.root.events.emit('agent/created', { agent: again, source: 'resume' })
-    expect(again.scoped.size).toBe(SESSION_TOOL_NAMES.length)
-    expect(again.restrictions).toHaveLength(1)
-  })
-
-  it('records tutor contact for learner messages in bound sessions only', async () => {
-    const h = await harness()
-    h.agents.push(fakeAgent('sess-1'))
-    await call(h, 'hodos_start_learning', { goal: 'arithmetic', skip_diagnostic: true })
-    const ui = h.hodos.uiActor('sess-1')
-    h.hodos.engine.approvePath(ui)
-    for (const l of h.hodos.engine.lesson(ui).lessons) for (const c of l.checks) h.hodos.engine.answerCheck(ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
-    h.hodos.engine.completeLesson(ui)
-    const ex = h.hodos.engine.nextExercise(ui)
-    const userMessage = { type: 'user/message', seq: 1, time: 0, data: { id: 'm1', role: 'user', content: [{ type: 'text', text: 'help?' }], source: { kind: 'user' } } }
-    h.root.events.emit('session/event', { id: 'sess-other' }, userMessage)
-    expect(h.hodos.store.presentation(ex?.id ?? '')?.tutorContact).toBe(false)
-    h.root.events.emit('session/event', { id: 'sess-1' }, { ...userMessage, data: { ...userMessage.data, source: { kind: 'hodos' } } })
-    expect(h.hodos.store.presentation(ex?.id ?? '')?.tutorContact).toBe(false)
-    h.root.events.emit('session/event', { id: 'sess-1' }, userMessage)
-    expect(h.hodos.store.presentation(ex?.id ?? '')?.tutorContact).toBe(true)
-  })
-
-  it('reports workspace answers to the tutor without revealing assessment results', () => {
-    const answered = { type: 'attempt', learnerId: 'learner:local' as LearnerId, journeyId: 'j1', skillId: 'quiz.add', hintLevel: 0, channel: 'ui' } as const
-    const practice = noticeFor({ ...answered, mode: 'practice', status: 'incorrect' })
-    expect(practice?.text).toContain('answered a practice exercise: incorrect')
-    expect(practice?.wake).toBe(false)
-    for (const mode of ['checkpoint', 'diagnostic']) {
-      for (const status of ['correct', 'incorrect', 'recorded'] as const) {
-        const notice = noticeFor({ ...answered, mode, status })
-        expect(notice?.text, mode).toContain('result withheld until the end')
-        expect(`${notice?.text ?? ''} ${notice?.summary ?? ''}`, `${mode} ${status}`).not.toMatch(/correct|recorded/)
-      }
-    }
-    // The tutor already knows what it relayed itself.
-    expect(noticeFor({ ...answered, channel: 'agent', mode: 'practice', status: 'correct' })).toBeNull()
-  })
-
-  it('tells the tutor about workspace activity with bounded notices', async () => {
-    const h = await harness({ notices: 'proactive' })
     const agent = fakeAgent('sess-1')
     h.agents.push(agent)
-    await call(h, 'hodos_start_learning', { goal: 'arithmetic', skip_diagnostic: true })
-    const ui = h.hodos.uiActor('sess-1')
-    h.hodos.engine.approvePath(ui)
-    for (const l of h.hodos.engine.lesson(ui).lessons) for (const c of l.checks) h.hodos.engine.answerCheck(ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
-    h.hodos.engine.completeLesson(ui)
-    for (let i = 0; i < 10; i++) {
-      const ex = h.hodos.engine.nextExercise(ui)
-      if (ex === null) break
-      const item = quizCourse().items.find(entry => entry.id === ex.itemId)
-      if (item === undefined) break
-      await h.hodos.engine.submitAttempt(ui, { presentationId: ex.id, response: correctResponse(item) })
-    }
-    // A token bucket (6 per learner, slow refill) caps notices, so a busy learner cannot drive unbounded model calls.
-    expect(agent.injected.length).toBe(6)
-    const first = agent.injected[0] as { source: { kind: string; form: string; summary: string }; content: Array<{ text: string }> }
-    expect(first.source).toMatchObject({ kind: 'hodos', form: 'notice' })
-    expect(first.source.summary.length).toBeLessThanOrEqual(120)
-    expect(first.content[0]?.text).toContain('[Hodos] The learner answered a practice exercise')
+    await call(h, 'hodos_start_learning', { goal: 'arithmetic' })
+    const state = dataOf(await api(h, 'GET', 'state', undefined, { session: 'sess-1' })) as { learn: { id: string } }
+    await api(h, 'POST', 'learn/close', { sessionId: state.learn.id }, { session: 'sess-1' })
+    expect(agent.scoped.size).toBe(0)
+    expect(agent.restrictions).toEqual([])
+    expect(h.hodos.isTutorSession('sess-1')).toBe(false)
+    expect(contextText(h, 'sess-1')).toBe('')
   })
 })
 
@@ -419,40 +475,13 @@ describe('Hodos workspace API', () => {
 
   it('requires JSON bodies, bounds their size and validates fields', async () => {
     const h = await harness()
-    expect((await api(h, 'POST', 'journeys', 'goal=x', { type: 'application/x-www-form-urlencoded' })).status).toBe(400)
-    expect((await api(h, 'POST', 'journeys', { goal: 'x'.repeat(70 * 1024) })).json?.error?.message).toContain('too large')
-    expect((await api(h, 'POST', 'journeys', { goal: 42 })).json?.error?.code).toBe('INVALID_INPUT')
-    expect((await api(h, 'POST', 'journeys', '{not json')).status).toBe(400)
+    expect((await api(h, 'POST', 'learn/start', 'goal=x', { type: 'application/x-www-form-urlencoded' })).status).toBe(400)
+    expect((await api(h, 'POST', 'learn/start', { goal: 'x'.repeat(70 * 1024) })).json?.error?.message).toContain('too large')
+    expect((await api(h, 'POST', 'learn/start', { goal: 42 })).json?.error?.code).toBe('INVALID_INPUT')
+    expect((await api(h, 'POST', 'learn/start', '{not json')).status).toBe(400)
+    expect((await api(h, 'POST', 'learn/start', { goal: 'x' }, { session: '' })).json?.error?.message).toContain('open the Hodos panel from a chat')
     expect((await api(h, 'GET', 'state', undefined, { session: 'bad id!' })).status).toBe(400)
     expect((await api(h, 'GET', 'nope')).status).toBe(404)
-  })
-
-  it('runs a learner journey from the workspace and binds the session', async () => {
-    const h = await harness()
-    const agent = fakeAgent('sess-9')
-    h.agents.push(agent)
-    const start = await api(h, 'POST', 'journeys', { goal: 'quiz arithmetic', skipDiagnostic: true }, { session: 'sess-9' })
-    expect(start.status).toBe(200)
-    expect(agent.scoped.size).toBe(SESSION_TOOL_NAMES.length)
-    expect((await api(h, 'POST', 'journey/approve', {}, { session: 'sess-9' })).status).toBe(200)
-    const lesson = await api(h, 'GET', 'lesson', undefined, { session: 'sess-9' })
-    const lessons = (dataOf(lesson) as { lessons: Array<{ id: string; checks: Array<{ id: string }> }> }).lessons
-    expect(JSON.stringify(lesson.json)).not.toContain('because that is the rule')
-    for (const l of lessons) for (const c of l.checks) await api(h, 'POST', 'lesson/check', { lessonId: l.id, checkId: c.id, optionId: 'a' }, { session: 'sess-9' })
-    expect((await api(h, 'POST', 'lesson/complete', {}, { session: 'sess-9' })).status).toBe(200)
-    const next = await api(h, 'POST', 'exercise/next', {}, { session: 'sess-9' })
-    const exercise = dataOf(next) as { id: string; itemId: string; payload: unknown }
-    expect(JSON.stringify(exercise)).not.toContain('"key"')
-    expect(JSON.stringify(exercise)).not.toContain('internal-note')
-    const item = quizCourse().items.find(i => i.id === exercise.itemId)
-    if (item === undefined) throw new Error('item')
-    const hint = await api(h, 'POST', 'exercise/hint', { presentationId: exercise.id }, { session: 'sess-9' })
-    expect((dataOf(hint) as { level: number }).level).toBe(1)
-    const wrong = await api(h, 'POST', 'exercise/submit', { presentationId: exercise.id, response: wrongResponse(item), latencyMs: 3000 }, { session: 'sess-9' })
-    expect((dataOf(wrong) as { status: string }).status).toBe('incorrect')
-    const state = await api(h, 'GET', 'state', undefined, { session: 'sess-9' })
-    expect((dataOf(state) as { exercise: { id: string } }).exercise.id).toBe(exercise.id)
-    expect(state.headers.get('cache-control')).toBe('no-store')
   })
 
   it('only lets the learner approve agent-proposed courses', async () => {
@@ -470,8 +499,8 @@ describe('Hodos workspace API', () => {
 
   it('reports errors with stable codes and no internals', async () => {
     const h = await harness()
-    const missing = await api(h, 'POST', 'journey/approve', {})
+    const missing = await api(h, 'POST', 'learn/answer', { questionId: 'q_nope', response: { selected: ['a'] } })
     expect(missing.status).toBe(404)
-    expect(missing.json?.error).toEqual({ code: 'NOT_FOUND', message: 'no learning journey yet; start one with a goal' })
+    expect(missing.json?.error).toEqual({ code: 'NOT_FOUND', message: 'no such question' })
   })
 })

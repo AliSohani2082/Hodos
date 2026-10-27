@@ -1,10 +1,13 @@
 /**
  * Prompt integration: a short static section describing Hodos to every
- * agent, and a per-session learner context for sessions bound to a journey.
- * Both opt out of `{{variable}}` interpolation: learner goals are user text.
+ * agent, and for chats that are Hodos sessions, the tutor's method for the
+ * session's kind and phase plus the session's state (goal, assessment, plan,
+ * open question, recent answers, due reviews). Both opt out of
+ * `{{variable}}` interpolation: goals and answers are user text.
  * @module @hodos/dsh/prompt
  */
 import type { Context } from '@deepseek-ai/cordis'
+import { PRACTICE, PROBE, SHARED, TEACH } from './doctrine.js'
 import type { HodosService } from './service.js'
 
 /** Section order: after the goal tool section (2400), before workflow tools (2600). */
@@ -14,16 +17,31 @@ export const CONTEXT_ORDER = 300
 
 /** The static Hodos section. */
 export const HODOS_SECTION = `# Hodos learning
-Hodos is the adaptive learning system installed in this harness. When the user wants to learn or practise a subject, call hodos_start_learning with their goal (or hodos_resume_learning to continue). The learner then works in the Hodos workspace (right sidebar → "Hodos learning"); you act as their tutor.
-
-Tutoring rules while a journey is active:
-- Teach through questions and explanations; never state the answer to an open exercise. Use hodos_hint for graded help.
-- Diagnostic and checkpoint items are answered by the learner alone in the workspace. Do not hint, solve or judge candidate answers while one is open; offer encouragement only.
-- Mastery comes only from Hodos evidence (practice, checkpoints, reviews). Never tell the learner they have mastered a skill unless Hodos reports it.
-- Material you write (hodos_write_lesson, hodos_propose_course) is validated for structure but not independently verified; say so when it matters.`
+Hodos is the learning system installed in this harness. When the user wants to learn or understand something, call hodos_start_learning with their goal: this chat becomes a learning session where you probe what they know, plan, and teach with questions shown in the Hodos panel (right sidebar). To practise what they have learned, call hodos_start_practice. Their knowledge graph, built from what was taught, is in the "Knowledge graph" sidebar tab.`
 
 /**
- * Register the section and the learner context.
+ * The tutor's context for a chat, or an empty string for ordinary chats.
+ * @param hodos - the Hodos service.
+ * @param chatId - DSH session id.
+ * @returns prompt text.
+ */
+export function tutorPrompt(hodos: HodosService, chatId: string): string {
+  const binding = hodos.binding(chatId)
+  if (binding === null) return ''
+  if (binding.kind === 'practice') {
+    if (binding.closed) return ''
+    return [SHARED, PRACTICE, '## This practice session', hodos.practice.tutorContext(binding.sessionId)].join('\n\n')
+  }
+  if (binding.phase === 'closed') return ''
+  const parts = [SHARED, binding.phase === 'probe' ? PROBE : TEACH, '## This learning session', hodos.learn.tutorContext(binding.sessionId)]
+  const session = hodos.learnRepo.session(binding.sessionId)
+  const due = session === undefined ? [] : hodos.learn.dueReviews(session.learnerId).filter(d => d.sessionId === session.id)
+  if (due.length > 0) parts.push(`Due for review (ask a review question on these when it fits): ${due.map(d => `${d.nodeId} (${d.title})`).join(', ')}`)
+  return parts.join('\n\n')
+}
+
+/**
+ * Register the section and the session context.
  * @param ctx - plugin context with `systemPrompt`.
  * @param hodos - the Hodos service.
  */
@@ -33,18 +51,17 @@ export function registerPrompt(ctx: Context, hodos: HodosService): void {
     name: 'hodos-learner',
     order: CONTEXT_ORDER,
     interpolate: false,
-    // Checkpoint policy must survive "minimal runtime context" settings.
+    // The tutor's rules must survive "minimal runtime context" settings.
     required: true,
     text: assembly => {
-      const sessionId = assembly.agent === undefined ? undefined : String(assembly.agent.id)
-      if (sessionId === undefined || !hodos.isTutorSession(sessionId)) return ''
+      if (assembly.agent === undefined) return ''
       try {
-        return hodos.engine.tutorContext(hodos.agentActor(sessionId)).text
+        return tutorPrompt(hodos, String(assembly.agent.id))
       } catch (error) {
         // Prompt assembly must never fail because of Hodos.
-        hodos.logger.warn(`learner context unavailable: ${error instanceof Error ? error.message : String(error)}`)
+        hodos.logger.warn(`tutor context unavailable: ${error instanceof Error ? error.message : String(error)}`)
         return ''
       }
     },
-  }), 'hodos learner context')
+  }), 'hodos tutor context')
 }

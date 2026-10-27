@@ -4,6 +4,8 @@
  * - `/hodos/api/v1/*`: the workspace's JSON API. Every request passes DSH's
  *   own Host/Origin checks and browser authentication; the authenticated
  *   owner maps to the local learner. State-changing requests must be JSON.
+ *   Answers are graded here, on the server, and reach the tutor as a
+ *   follow-up turn in the chat the session runs in.
  * - `/hodos/app/*`: the workspace single-page app (first-party, same origin).
  * - `/hodos/env/<plugin>/<renderer>/*`: environment renderer files. They are
  *   served with `Content-Security-Policy: sandbox allow-scripts`, so a renderer
@@ -14,8 +16,8 @@
 import { createReadStream, existsSync, realpathSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { extname, isAbsolute, relative, resolve } from 'node:path'
-import { HodosError, httpStatusOf, type Actor, type SelfReport } from '@hodos/core'
-import type { JsonObject, JsonValue } from '@hodos/plugin-sdk'
+import { HodosError, httpStatusOf, type Actor, type LearnerId } from '@hodos/core'
+import type { JsonObject } from '@hodos/plugin-sdk'
 import { isJsonValue } from '@hodos/plugin-sdk'
 import type { HodosService } from './service.js'
 
@@ -54,8 +56,8 @@ export interface HttpDeps {
   readonly hodos: HodosService
   /** DSH's request check: 401/403 to reject, undefined to accept. */
   readonly rejection: (req: IncomingMessage) => number | undefined
-  /** A session became bound to a journey from the workspace. */
-  readonly onBound: (sessionId: string) => void
+  /** Start a turn in a chat with a message from the Hodos panel (held until its agent runs). */
+  readonly deliver: (chatId: string, text: string, summary: string) => void
   /** Directory of the built workspace app (index.html, assets). */
   readonly appDir: string | null
 }
@@ -128,111 +130,143 @@ function bool(body: JsonObject, key: string): boolean | undefined {
   return value
 }
 
-function selfReports(value: JsonValue | undefined): SelfReport[] | undefined {
-  if (value === undefined || value === null) return undefined
-  if (!Array.isArray(value) || value.length > 20) throw new BadRequest('selfReport must be a list')
-  return value.map(entry => {
-    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) throw new BadRequest('selfReport entries must be objects')
-    const level = entry.level
-    if (level !== 'never' && level !== 'heard-of' && level !== 'used-it') throw new BadRequest('selfReport level must be never, heard-of or used-it')
-    const skill = str(entry, 'skill')
-    const skillId = str(entry, 'skillId')
-    return { level, ...(skill === undefined ? {} : { skill }), ...(skillId === undefined ? {} : { skillId }) }
-  })
+function strings(body: JsonObject, key: string, max: number): string[] {
+  const value = body[key]
+  if (value === undefined || value === null) return []
+  if (!Array.isArray(value) || value.length > max || value.some(v => typeof v !== 'string' || v.length > 200)) throw new BadRequest(`${key} must be a list of at most ${max} strings`)
+  return value.filter((v): v is string => typeof v === 'string')
 }
 
-function orNull<T>(read: () => T): T | null {
-  try {
-    return read()
-  } catch (error) {
-    if (error instanceof HodosError && error.code === 'NOT_FOUND') return null
-    throw error
-  }
+/** The DSH chat a request is about; required for routes that bind or message a chat. */
+function chatOf(actor: Actor): string {
+  if (actor.sessionId === undefined) throw new BadRequest('open the Hodos panel from a chat to do this')
+  return actor.sessionId
 }
 
-/** Like {@link orNull}, for reads that fail while an environment plugin is missing. */
-function unlessUnavailable<T>(read: () => T): T | null {
-  try {
-    return read()
-  } catch (error) {
-    if (error instanceof HodosError && error.code === 'UNAVAILABLE') return null
-    throw error
-  }
+function runInBackground(hodos: HodosService, what: string, work: Promise<unknown>): void {
+  work.catch((error: unknown) => hodos.logger.warn(`${what} failed: ${error instanceof Error ? error.message : String(error)}`))
 }
 
 type Route = (actor: Actor, body: JsonObject, query: URLSearchParams) => unknown
 
+function learner(actor: Actor): LearnerId {
+  return actor.learnerId
+}
+
 function routes(deps: HttpDeps): Record<string, Route> {
   const { hodos } = deps
-  const engine = hodos.engine
-  const bound = (actor: Actor): void => { if (actor.sessionId !== undefined) deps.onBound(actor.sessionId) }
   return {
     'GET state': actor => {
-      const journey = orNull(() => engine.journey(actor))
+      const chat = actor.sessionId
+      const binding = chat === undefined ? null : hodos.binding(chat)
       return {
-        journey,
-        // A missing environment leaves the journey readable; the exercise waits until it is back.
-        exercise: journey === null ? null : unlessUnavailable(() => engine.currentExercise(actor)),
-        checkpoint: journey === null ? null : engine.checkpointStatus(actor),
-        catalog: engine.catalog(),
-        drafts: engine.drafts(),
+        binding,
+        learn: binding?.kind === 'learn' ? hodos.learn.view(learner(actor), binding.sessionId) : null,
+        practice: binding?.kind === 'practice' ? hodos.practice.view(learner(actor), binding.sessionId) : null,
+        sessions: hodos.learn.sessions(learner(actor)),
+        practiceSessions: hodos.practice.sessions(learner(actor)).map(s => ({ id: s.id, title: s.title, status: s.status, hostSessionId: s.hostSessionId, updatedAt: s.updatedAt })),
+        reviews: hodos.learn.dueReviews(learner(actor)),
+        model: hodos.hasModel(),
+        drafts: hodos.engine.drafts(),
       }
     },
-    'POST journeys': (actor, body) => {
-      const selfReport = selfReports(body.selfReport)
-      const courseId = str(body, 'courseId')
-      const environment = str(body, 'environment')
-      const skipDiagnostic = bool(body, 'skipDiagnostic')
-      const view = engine.startJourney(actor, {
-        goal: str(body, 'goal', true),
-        ...(courseId === undefined ? {} : { courseId }),
-        ...(environment === undefined ? {} : { environment }),
-        ...(selfReport === undefined ? {} : { selfReport }),
-        ...(skipDiagnostic === undefined ? {} : { skipDiagnostic }),
-      })
-      bound(actor)
-      return view
+    'POST learn/start': (actor, body) => {
+      const chat = chatOf(actor)
+      if (hodos.binding(chat) !== null) throw new HodosError('CONFLICT', 'this chat is already a Hodos session; start in a new chat')
+      const session = hodos.learn.start(learner(actor), str(body, 'goal', true), chat)
+      hodos.notifyChanged(chat)
+      deps.deliver(chat, `[Hodos] The learner started a learning session from the Hodos panel. Their goal: «${session.goal}». You are the prober: make the goal concrete if needed, then probe what they already understand.`, 'Learning session started')
+      return hodos.learn.view(learner(actor), session.id)
     },
-    'POST journey/resume': actor => {
-      const view = engine.resume(actor)
-      if (view !== null) bound(actor)
-      return view
-    },
-    'POST journey/approve': actor => engine.approvePath(actor),
-    'POST journey/skip-diagnostic': actor => engine.skipDiagnostic(actor),
-    'GET lesson': (actor, _body, query) => {
-      const skillId = query.get('skill')
-      return engine.lesson(actor, skillId === null ? {} : { skillId })
-    },
-    'POST lesson/check': (actor, body) => engine.answerCheck(actor, { lessonId: str(body, 'lessonId', true), checkId: str(body, 'checkId', true), optionId: str(body, 'optionId', true) }),
-    'POST lesson/complete': actor => engine.completeLesson(actor),
-    'POST exercise/next': actor => engine.nextExercise(actor),
-    'POST exercise/hint': (actor, body) => engine.requestHint(actor, str(body, 'presentationId', true)),
-    'POST exercise/submit': (actor, body) => {
+    'POST learn/answer': async (actor, body) => {
+      const thinking = str(body, 'thinking')
+      const dontKnow = bool(body, 'dontKnow')
       const response = body.response
-      if (response === undefined) throw new BadRequest('response is required')
-      const latency = body.latencyMs
-      const confidence = body.confidence
-      return engine.submitAttempt(actor, {
-        presentationId: str(body, 'presentationId', true),
-        response,
-        ...(typeof latency === 'number' ? { latencyMs: latency } : {}),
-        ...(confidence === 'sure' || confidence === 'unsure' ? { confidence } : {}),
+      const outcome = await hodos.learn.answer(learner(actor), str(body, 'questionId', true), {
+        ...(response === undefined ? {} : { response }),
+        ...(dontKnow === undefined ? {} : { dontKnow }),
+        ...(thinking === undefined ? {} : { thinking }),
       })
+      if (outcome.status === 'answered') {
+        const stored = hodos.learnRepo.question(outcome.question.id)
+        const host = stored === undefined ? undefined : hodos.learnRepo.session(stored.sessionId)?.hostSessionId
+        if (host !== undefined && host !== null) deps.deliver(host, `[Hodos] Answer to question ${outcome.question.id} (${outcome.question.role}${outcome.question.nodeId === undefined ? '' : ` on ${outcome.question.nodeId}`}):\n${outcome.report}`, `Learner answered: ${outcome.question.answer?.verdict.outcome ?? 'answered'}`)
+      }
+      return outcome.status === 'answered' ? { status: outcome.status, question: outcome.question } : outcome
     },
-    'POST checkpoint/start': actor => engine.startCheckpoint(actor),
-    'GET checkpoint': actor => engine.checkpointStatus(actor),
-    'POST review/start': actor => engine.startReview(actor),
-    'GET progress': actor => engine.progress(actor),
-    'GET catalog': () => engine.catalog(),
-    'GET drafts': () => engine.drafts(),
+    'POST learn/close': (actor, body) => {
+      const sessionId = str(body, 'sessionId', true)
+      const host = hodos.learn.ownedSession(learner(actor), sessionId).hostSessionId
+      hodos.learn.close(learner(actor), sessionId)
+      if (host !== null) hodos.notifyChanged(host)
+      return { ok: true }
+    },
+    'POST learn/extract': (actor, body) => {
+      const sessionId = str(body, 'sessionId', true)
+      hodos.learn.ownedSession(learner(actor), sessionId)
+      if (!hodos.hasModel()) throw new HodosError('UNAVAILABLE', 'no model is available for background work')
+      runInBackground(hodos, 'knowledge graph extraction', hodos.knowledge.extractSession(learner(actor), sessionId, { force: true }))
+      return { started: true }
+    },
+    'GET graph': actor => hodos.knowledge.snapshot(learner(actor)),
+    'POST graph/import': (actor, body) => {
+      if (!hodos.hasModel()) throw new HodosError('UNAVAILABLE', 'no model is available for background work')
+      const title = str(body, 'title', true)
+      const text = body.text
+      if (typeof text !== 'string') throw new BadRequest('text is required')
+      runInBackground(hodos, 'notes import', hodos.knowledge.importNotes(learner(actor), title, text))
+      return { started: true }
+    },
+    'POST graph/delete': (actor, body) => hodos.knowledge.deleteProposition(learner(actor), str(body, 'propositionId', true)),
+    'POST graph/remove-source': (actor, body) => {
+      const mode = str(body, 'mode', true)
+      if (mode !== 'preserve-graph' && mode !== 'delete-nodes') throw new BadRequest('mode must be preserve-graph or delete-nodes')
+      return hodos.knowledge.removeSource(learner(actor), str(body, 'sourceId', true), mode)
+    },
+    'POST practice/start': (actor, body) => {
+      const chat = chatOf(actor)
+      if (hodos.binding(chat) !== null) throw new HodosError('CONFLICT', 'this chat is already a Hodos session; practise in a new chat')
+      const title = str(body, 'title')
+      const session = hodos.practice.start(learner(actor), { targets: strings(body, 'targets', 30), hostSessionId: chat, ...(title === undefined ? {} : { title }) })
+      hodos.notifyChanged(chat)
+      deps.deliver(chat, `[Hodos] The learner started a practice session from the Hodos panel: «${session.title}». Pose the first problem.`, 'Practice session started')
+      return hodos.practice.view(learner(actor), session.id)
+    },
+    'POST practice/thinking': (actor, body) => {
+      const result = hodos.practice.submitThinking(learner(actor), str(body, 'problemId', true), str(body, 'text', true))
+      if (result.session.hostSessionId !== null) deps.deliver(result.session.hostSessionId, result.message, 'Learner submitted thinking')
+      return hodos.practice.view(learner(actor), result.session.id)
+    },
+    'POST practice/dismiss': (actor, body) => {
+      const result = hodos.practice.dismiss(learner(actor), str(body, 'problemId', true))
+      if (result.session.hostSessionId !== null) deps.deliver(result.session.hostSessionId, result.message, 'Learner dismissed the problem')
+      return hodos.practice.view(learner(actor), result.session.id)
+    },
+    'POST practice/next': (actor, body) => {
+      const session = hodos.practice.ownedSession(learner(actor), str(body, 'sessionId', true))
+      if (session.hostSessionId !== null) deps.deliver(session.hostSessionId, '[Hodos] Next problem, please.', 'Learner asked for the next problem')
+      return { ok: true }
+    },
+    'POST practice/close': (actor, body) => {
+      const sessionId = str(body, 'sessionId', true)
+      const host = hodos.practice.ownedSession(learner(actor), sessionId).hostSessionId
+      hodos.practice.close(learner(actor), sessionId)
+      if (host !== null) hodos.notifyChanged(host)
+      return { ok: true }
+    },
+    'GET catalog': () => hodos.engine.catalog(),
+    'GET drafts': () => hodos.engine.drafts(),
     'POST drafts/decide': async (actor, body) => {
       const approve = bool(body, 'approve')
       if (approve === undefined) throw new BadRequest('approve is required')
-      await engine.decideCourse(actor, { courseId: str(body, 'courseId', true), version: str(body, 'version', true), approve })
+      await hodos.engine.decideCourse(actor, { courseId: str(body, 'courseId', true), version: str(body, 'version', true), approve })
       return { ok: true }
     },
-    'GET export': actor => engine.exportData(actor),
+    'GET export': actor => ({
+      sessions: hodos.learn.sessions(learner(actor)).map(s => hodos.learn.view(learner(actor), s.id)),
+      practice: hodos.practice.sessions(learner(actor)).map(s => hodos.practice.view(learner(actor), s.id)),
+      graph: hodos.knowledge.snapshot(learner(actor)),
+    }),
     'GET renderers': () => hodos.registry.environments().map(environment => {
       const r = hodos.registry.rendererFor(environment)
       return { environment, renderer: r === undefined ? null : { pluginId: r.pluginId, rendererId: r.spec.id, entry: r.spec.entry, capabilities: [...r.granted] } }

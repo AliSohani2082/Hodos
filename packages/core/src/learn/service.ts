@@ -152,6 +152,8 @@ export interface LearnServiceOptions {
   readonly clock?: Clock
   readonly ids?: IdGenerator
   readonly scheduler?: FsrsScheduler
+  /** Mastery threshold shown in views (default: the standard gate). */
+  readonly theta?: number
 }
 
 function problemsError(what: string, problems: readonly string[]): HodosError {
@@ -171,6 +173,7 @@ export class LearnService {
   private readonly clock: Clock
   private readonly ids: IdGenerator
   private readonly scheduler: FsrsScheduler
+  private readonly theta: number | undefined
 
   /** @param options - dependencies. */
   constructor(options: LearnServiceOptions) {
@@ -180,6 +183,7 @@ export class LearnService {
     this.clock = options.clock ?? systemClock
     this.ids = options.ids ?? randomIds
     this.scheduler = options.scheduler ?? new FsrsScheduler()
+    this.theta = options.theta
   }
 
   private now(): string {
@@ -638,7 +642,7 @@ export class LearnService {
       plan: this.planView(session),
       openQuestion: this.openQuestion(session.id),
       answered: questions.filter(q => q.status === 'answered').slice(-VIEW_HISTORY).map(q => this.questionView(q)),
-      mastery: this.repo.nodeStates(session.id).map(s => nodeMasteryView(s)),
+      mastery: this.repo.nodeStates(session.id).map(s => nodeMasteryView(s, this.theta)),
       createdAt: session.createdAt,
       updatedAt: session.updatedAt,
     }

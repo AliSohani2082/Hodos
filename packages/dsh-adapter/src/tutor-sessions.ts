@@ -1,15 +1,19 @@
 /**
- * Tutor sessions: DSH sessions bound to a Hodos learning journey.
+ * Tutor sessions: DSH chats that are Hodos learning or practice sessions.
  *
- * - The session gets the Hodos session tools (registered in the agent's own
- *   scope) and, under the `restricted` policy, loses every other tool: a
- *   learner-facing tutor has no shell, filesystem, network or credential tools,
- *   and cannot start subagents (which may have them). Global tools are hidden
- *   with a restriction; tools other plugins register in the agent's own scope
- *   (DSH's `subagent`) cannot be hidden, so a guard refuses to run them.
- * - Every message the learner types in a bound session marks open exercises
- *   and an active checkpoint as assisted (tutor contact).
- * - Workspace activity reaches the tutor as rate-limited notices.
+ * - The chat gets the tools of its kind and phase (registered in the
+ *   agent's own scope, swapped when the phase changes) and, under the
+ *   `restricted` policy, loses every other tool except DSH's own
+ *   `ask_user_question`: a learner-facing tutor has no shell, filesystem,
+ *   network or credential tools, and cannot start subagents. Global tools are
+ *   hidden with a restriction; tools other plugins register in the agent's
+ *   own scope cannot be hidden, so a guard refuses to run them.
+ * - What the tutor writes in a learning session is recorded as teacher
+ *   prose for the knowledge graph; after a turn, extraction runs in the
+ *   background once enough new prose has accumulated (budgeted per learner).
+ * - Graded answers and practice submissions from the Hodos panel reach the
+ *   tutor as follow-up turns; when the chat's agent is not running they wait
+ *   until it is.
  * @module @hodos/dsh/tutor-sessions
  */
 import type { Context } from '@deepseek-ai/cordis'
@@ -17,155 +21,161 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import { createUserMessage, type ContextFormed } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
-import type { EngineEvent, LearnerId } from '@hodos/core'
-import { unreachable } from '@hodos/plugin-sdk'
-import type { HodosService } from './service.js'
+import { learningTools, practiceTools } from './learn-tools.js'
+import type { ChatBinding, HodosService } from './service.js'
 
 declare module '@deepseek-ai/dsh-llm' {
   interface MessageSourceMap {
-    /** Learner activity in the Hodos workspace, reported to the tutor. */
+    /** A message from the Hodos panel: a graded answer, a practice submission, a request to start. */
     hodos: { kind: 'hodos' } & ContextFormed
   }
 }
 
-/** Longest notice text sent to the model. */
-const MAX_NOTICE_CHARS = 600
+/** Longest message text sent to the model. */
+const MAX_MESSAGE_CHARS = 12_000
 
 /** Hodos tools that start a subagent: not offered to a restricted tutor. */
 const DELEGATING_TOOLS: ReadonlySet<string> = new Set(['hodos_draft_course'])
 
-/** Binds sessions to Hodos and keeps tutor sessions consistent across restarts. */
+/** DSH tools a restricted tutor keeps: asking the learner an ungraded question. */
+const ALLOWED_HOST_TOOLS: readonly string[] = ['ask_user_question']
+
+/** The tools a binding needs. */
+function toolsFor(hodos: HodosService, binding: ChatBinding | null): ToolDefinition[] {
+  if (binding === null) return []
+  if (binding.kind === 'learn') return learningTools(hodos, binding.phase)
+  return binding.closed ? [] : practiceTools(hodos)
+}
+
+/** Text blocks of an assistant message (not reasoning, not tool calls). */
+function proseOf(event: SessionEvent): string {
+  if (event.type !== 'assistant/message') return ''
+  return event.data.message.content.map(block => (block.type === 'text' ? block.text : '')).filter(t => t.trim() !== '').join('\n\n')
+}
+
+/** Binds chats to Hodos and keeps tutor sessions consistent across phases and restarts. */
 export class TutorSessions {
-  private readonly active = new Map<string, () => void>()
+  private readonly active = new Map<string, { signature: string; dispose: () => void }>()
+  private readonly pending = new Map<string, Array<{ text: string; summary: string }>>()
 
   /**
    * @param ctx - plugin context with `agents`.
    * @param hodos - the Hodos service.
-   * @param sessionTools - the tools a bound session receives.
    */
-  constructor(
-    private readonly ctx: Context,
-    private readonly hodos: HodosService,
-    private readonly sessionTools: () => ToolDefinition[],
-  ) {}
+  constructor(private readonly ctx: Context, private readonly hodos: HodosService) {}
 
   private agent(sessionId: string): Agent | undefined {
-    return this.ctx.agents.list().find(a => a.id === sessionId)
+    return this.ctx.agents.list().find(a => String(a.id) === sessionId)
   }
 
   /**
-   * Turn a live session into a tutor session (idempotent).
+   * Give a live chat the tools its binding needs (idempotent; swaps tools when the phase changed).
    * @param sessionId - DSH session id.
    */
-  activate(sessionId: string): void {
-    if (this.active.has(sessionId)) return
+  sync(sessionId: string): void {
     const agent = this.agent(sessionId)
     if (agent === undefined) return
+    const binding = this.hodos.binding(sessionId)
+    const tools = toolsFor(this.hodos, binding)
+    const signature = `${binding?.kind ?? 'none'}:${binding?.kind === 'learn' ? binding.phase : String(binding?.closed ?? '')}:${tools.map(t => t.name).join(',')}`
+    const current = this.active.get(sessionId)
+    if (current?.signature === signature) return
+    current?.dispose()
+    this.active.delete(sessionId)
+    if (tools.length === 0) return
     const disposers: Array<() => void> = []
     try {
-      const sessionTools = this.sessionTools()
-      for (const tool of sessionTools) disposers.push(agent.ctx.tools.register(tool))
+      for (const tool of tools) disposers.push(agent.ctx.tools.register(tool))
       if (this.hodos.config.tutorTools === 'restricted') {
-        const globals = this.hodos.globalTools().filter(name => !DELEGATING_TOOLS.has(name))
+        const globals = [...this.hodos.globalTools().filter(name => !DELEGATING_TOOLS.has(name)), ...ALLOWED_HOST_TOOLS]
         disposers.push(agent.ctx.tools.restrict({ allow: globals }))
-        const allowed = new Set([...globals, ...sessionTools.map(tool => tool.name)])
-        disposers.push(agent.ctx.tools.guard(execution => (allowed.has(execution.name) ? undefined : `${execution.name} is not available in a learning session; use the Hodos tools.`)))
+        const allowed = new Set([...globals, ...tools.map(tool => tool.name)])
+        disposers.push(agent.ctx.tools.guard(execution => (allowed.has(execution.name) ? undefined : `${execution.name} is not available in a Hodos session; use the Hodos tools.`)))
       }
     } catch (error) {
       for (const dispose of disposers.toReversed()) dispose()
-      this.hodos.logger.error(`could not set up tutor session ${sessionId}: ${error instanceof Error ? error.message : String(error)}`)
+      this.hodos.logger.error(`could not set up Hodos session ${sessionId}: ${error instanceof Error ? error.message : String(error)}`)
       return
     }
-    this.active.set(sessionId, () => { for (const dispose of disposers.toReversed()) dispose() })
+    this.active.set(sessionId, { signature, dispose: () => { for (const dispose of disposers.toReversed()) dispose() } })
   }
 
-  /** Whether a session is an active tutor session in this process. */
+  /** Whether a chat currently has Hodos session tools in this process. */
   isActive(sessionId: string): boolean {
     return this.active.has(sessionId)
   }
 
   /**
-   * Listen for agents and session events. Call once from the plugin.
-   * @returns nothing; listeners are owned by the plugin context.
+   * Start a turn in a chat with a message from the Hodos panel; held until the chat's agent runs.
+   * @param sessionId - DSH session id.
+   * @param text - the message.
+   * @param summary - a one-line account for the transcript.
+   * @returns whether it was delivered now.
+   */
+  deliver(sessionId: string, text: string, summary: string): boolean {
+    const agent = this.agent(sessionId)
+    if (agent === undefined) {
+      this.pending.set(sessionId, [...(this.pending.get(sessionId) ?? []), { text, summary }].slice(-20))
+      return false
+    }
+    agent.followup(createUserMessage({
+      content: [{ type: 'text', text: text.slice(0, MAX_MESSAGE_CHARS) }],
+      source: { kind: 'hodos', form: 'notice', summary: summary.slice(0, 120) },
+    }))
+    return true
+  }
+
+  private flush(sessionId: string): void {
+    const queued = this.pending.get(sessionId)
+    if (queued === undefined) return
+    this.pending.delete(sessionId)
+    for (const m of queued) this.deliver(sessionId, m.text, m.summary)
+  }
+
+  /**
+   * Listen for agents, session events and registry changes. Call once from the plugin.
    */
   listen(): void {
-    // A bound session resumed after a restart becomes a tutor session again.
+    // A bound chat resumed after a restart becomes a tutor session again.
     this.ctx.on('agent/created', ({ agent }) => {
-      if (this.hodos.isTutorSession(String(agent.id))) this.activate(String(agent.id))
+      const id = String(agent.id)
+      if (this.hodos.isTutorSession(id)) this.sync(id)
+      this.flush(id)
       return undefined
     })
     // The agent's scope unwinds its registrations on disposal.
     this.ctx.on('agent/disposed', ({ agent }) => { this.active.delete(String(agent.id)) })
-    this.ctx.on('session/event', (session: Session, event: SessionEvent) => this.onSessionEvent(session, event))
-    this.hodos.engine.onEvent(event => this.onEngineEvent(event))
+    this.ctx.on('session/event', (session: Session, event: SessionEvent) => this.onSessionEvent(String(session.id), event))
+    this.ctx.effect(() => this.hodos.onChanged(id => this.sync(id)), 'hodos session changes')
+    // Installed interfaces change the exercise tools on offer.
+    this.ctx.effect(() => this.hodos.registry.onChange(() => {
+      const chats = [...this.active.keys()]
+      for (const id of chats) this.sync(id)
+    }), 'hodos registry changes')
   }
 
-  private onSessionEvent(session: Session, event: SessionEvent): void {
-    if (event.type !== 'user/message' || event.data.source.kind !== 'user') return
-    const binding = this.hodos.store.sessionBinding(String(session.id))
-    if (binding === undefined || binding.journeyId === null) return
-    // Checkpoint integrity: talking to the tutor during an attempt makes it assisted.
-    this.hodos.engine.recordTutorContact(binding.learnerId)
-  }
-
-  private onEngineEvent(event: EngineEvent): void {
-    const policy = this.hodos.config.notices
-    if (policy === 'off') return
-    const notice = noticeFor(event)
-    if (notice === null) return
-    const learnerId = notice.learnerId
-    const sessions = this.hodos.store.sessionsForJourney(notice.journeyId)
-    for (const sessionId of sessions) {
-      const agent = this.agent(sessionId)
-      if (agent === undefined) continue
-      // Bounded model usage: a token bucket per learner caps notices.
-      if (!this.hodos.engine.allowNotice(learnerId)) return
-      const message = createUserMessage({
-        content: [{ type: 'text', text: notice.text.slice(0, MAX_NOTICE_CHARS) }],
-        source: { kind: 'hodos', form: 'notice', summary: notice.summary.slice(0, 120) },
-      })
-      try {
-        if (policy === 'proactive' && notice.wake) agent.followup(message)
-        else agent.inject(message)
-      } catch (error) {
-        this.hodos.logger.warn(`notice to ${sessionId} failed: ${error instanceof Error ? error.message : String(error)}`)
-      }
+  private onSessionEvent(chatId: string, event: SessionEvent): void {
+    if (event.type !== 'assistant/message' && event.type !== 'turn/end') return
+    const binding = this.hodos.binding(chatId)
+    if (binding?.kind !== 'learn' || binding.phase === 'closed') return
+    if (event.type === 'assistant/message') {
+      const prose = proseOf(event)
+      if (prose !== '') this.hodos.learn.recordTranscript(binding.sessionId, 'teacher', prose)
+      return
     }
+    const session = this.hodos.learnRepo.session(binding.sessionId)
+    if (session === undefined || !this.hodos.hasModel()) return
+    void this.extract(session.learnerId, session.id)
   }
-}
 
-/** A notice derived from an engine event, or null when the tutor need not hear about it. */
-export function noticeFor(event: EngineEvent): { learnerId: LearnerId; journeyId: string; text: string; summary: string; wake: boolean } | null {
-  switch (event.type) {
-    case 'attempt': {
-      // The agent already knows about its own relayed attempts.
-      if (event.channel !== 'ui' || event.journeyId === null) return null
-      // Results of placement and checkpoint items stay withheld, in the summary too.
-      const assessment = event.mode === 'checkpoint' || event.mode === 'diagnostic'
-      const what = assessment ? 'answered an assessment item (result withheld until the end)' : `answered a ${event.mode} exercise: ${event.status}`
-      return {
-        learnerId: event.learnerId,
-        journeyId: event.journeyId,
-        text: `[Hodos] The learner ${what} on skill ${event.skillId} in the workspace${event.hintLevel > 0 ? ` after ${event.hintLevel} hint level(s)` : ''}.`,
-        summary: assessment ? `Learner answered an assessment item on ${event.skillId}` : `Learner ${event.status} on ${event.skillId}`,
-        wake: false,
-      }
+  /** Extract new teacher prose of a session into the knowledge graph; never throws. */
+  private async extract(learnerId: string, sessionId: string): Promise<void> {
+    try {
+      const result = await this.hodos.knowledge.extractSession(learnerId, sessionId)
+      if (result.status === 'done') this.hodos.logger.info(`knowledge graph: ${result.stats.propositions} new propositions, ${result.stats.chains} chains from ${sessionId}`)
+      else if (result.status === 'failed' || result.status === 'budget') this.hodos.logger.warn(`knowledge graph extraction for ${sessionId}: ${result.status}${result.message === undefined ? '' : ` (${result.message})`}`)
+    } catch (error) {
+      this.hodos.logger.warn(`knowledge graph extraction failed: ${error instanceof Error ? error.message : String(error)}`)
     }
-    case 'checkpoint':
-      return {
-        learnerId: event.learnerId,
-        journeyId: event.journeyId,
-        text: `[Hodos] The learner ${event.passed ? 'passed' : 'did not pass'} the checkpoint for ${event.skillId}. ${event.passed ? 'Congratulate them and introduce the next skill.' : 'Encourage them; Hodos adapted the path (see hodos_status).'}`,
-        summary: `Checkpoint ${event.passed ? 'passed' : 'not passed'}: ${event.skillId}`,
-        wake: true,
-      }
-    case 'journey':
-      return event.phase === 'complete'
-        ? { learnerId: event.learnerId, journeyId: event.journeyId, text: '[Hodos] The learner reached the journey goal.', summary: 'Learning goal reached', wake: true }
-        : null
-    case 'hint':
-    case 'security':
-      return null
-    default: return unreachable(event, 'engine event')
   }
 }

@@ -133,7 +133,7 @@ describe('knowledge extraction', () => {
       'graph.audit': ['{"links": [{"id": "p1", "linkTo": "n_1"}]}'],
     })
     const clock = manualClock(new Date('2026-10-28T10:00:00.000Z'))
-    const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model, logger: silent, clock, ids: sequentialIds(), budget: { minUncoveredChars: 10 } })
+    const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model: () => model, logger: silent, clock, ids: sequentialIds(), budget: { minUncoveredChars: 10 } })
 
     const first = await knowledge.extractSession(env.learner, 'lsn_1')
     expect(first).toEqual({ status: 'done', batches: 1, stats: { propositions: 3, linked: 0, chains: 1, droppedChains: 0 } })
@@ -173,7 +173,7 @@ describe('knowledge extraction', () => {
     const env = setup()
     session(env, 'lsn_1', 'Limits', ['Limits describe behaviour near a point, not at it.'])
     const model = fakeModel({ 'graph.extract': ['{}', '{}', '{}'] })
-    const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model, logger: silent, ids: sequentialIds(), budget: { callsPerDay: 1, minUncoveredChars: 10 } })
+    const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model: () => model, logger: silent, ids: sequentialIds(), budget: { callsPerDay: 1, minUncoveredChars: 10 } })
     const result = await knowledge.extractSession(env.learner, 'lsn_1')
     expect(result.status).toBe('budget')
     expect(model.requests).toHaveLength(1)
@@ -186,19 +186,19 @@ describe('knowledge extraction', () => {
     const opened: Array<() => void> = []
     const gate = new Promise<void>(resolve => { opened.push(resolve) })
     const model: ModelPort = { complete: async () => { await gate; return { text: '{"propositions": [], "chains": []}' } } }
-    const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model, logger: silent, ids: sequentialIds() })
+    const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model: () => model, logger: silent, ids: sequentialIds() })
     await expect(knowledge.extractSession(env.other, 'lsn_1', { force: true })).rejects.toThrow(/no such learning session/)
     const running = knowledge.extractSession(env.learner, 'lsn_1', { force: true })
     expect((await knowledge.extractSession(env.learner, 'lsn_1', { force: true })).status).toBe('busy')
     for (const open of opened) open()
     expect((await running).status).toBe('done')
-    expect((await new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model: null, logger: silent }).extractSession(env.learner, 'lsn_1', { force: true })).status).toBe('unavailable')
+    expect((await new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model: () => null, logger: silent }).extractSession(env.learner, 'lsn_1', { force: true })).status).toBe('unavailable')
   })
 
   it('imports notes in chunks under one stable source', async () => {
     const env = setup()
     const model = fakeModel({ 'graph.extract': [notesReply(1), notesReply(2)], 'graph.audit': ['{"links": []}'] })
-    const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model, logger: silent, ids: sequentialIds(), budget: { batchChars: 60 } })
+    const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model: () => model, logger: silent, ids: sequentialIds(), budget: { batchChars: 60 } })
     const notes = `${'First paragraph about sets. '.repeat(2)}\n\n${'Second paragraph about maps. '.repeat(2)}`
     const imported = await knowledge.importNotes(env.learner, 'algebra.md', notes)
     expect(imported.result).toMatchObject({ status: 'done', batches: 2 })
@@ -213,7 +213,7 @@ async function practiceEnv() {
   const env = setup()
   session(env, 'lsn_1', 'Chain rule', ['A derivative is a limit.', 'Rates multiply under composition.'])
   const model = fakeModel({ 'graph.extract': [FIRST] })
-  const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model, logger: silent, ids: sequentialIds(), budget: { minUncoveredChars: 1 } })
+  const knowledge = new KnowledgeService({ graph: env.graph, learn: env.learnRepo, model: () => model, logger: silent, ids: sequentialIds(), budget: { minUncoveredChars: 1 } })
   await knowledge.extractSession(env.learner, 'lsn_1')
   const practice = new PracticeService({ store: env.store, graph: env.graph, ids: sequentialIds() })
   return { env, practice }
