@@ -177,7 +177,7 @@ function routes(deps: HttpDeps): Record<string, Route> {
         practiceSessions: hodos.practice.sessions(learner(actor)).map(s => ({ id: s.id, title: s.title, status: s.status, hostSessionId: s.hostSessionId, updatedAt: s.updatedAt })),
         reviews: hodos.learn.dueReviews(learner(actor)),
         model: hodos.hasModel(),
-        drafts: hodos.engine.drafts(),
+        drafts: hodos.courses.drafts(),
       }
     },
     'POST learn/start': (actor, body) => {
@@ -264,12 +264,12 @@ function routes(deps: HttpDeps): Record<string, Route> {
       if (host !== null) hodos.notifyChanged(host)
       return { ok: true }
     },
-    'GET catalog': () => hodos.engine.catalog(),
-    'GET drafts': () => hodos.engine.drafts(),
+    'GET catalog': () => hodos.courses.catalog(),
+    'GET drafts': () => hodos.courses.drafts(),
     'POST drafts/decide': async (actor, body) => {
       const approve = bool(body, 'approve')
       if (approve === undefined) throw new BadRequest('approve is required')
-      await hodos.engine.decideCourse(actor, { courseId: str(body, 'courseId', true), version: str(body, 'version', true), approve })
+      await hodos.courses.decideCourse(actor, { courseId: str(body, 'courseId', true), version: str(body, 'version', true), approve })
       return { ok: true }
     },
     'GET export': actor => ({

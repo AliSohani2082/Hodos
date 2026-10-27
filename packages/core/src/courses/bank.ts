@@ -3,10 +3,12 @@
  * tutor may ask instead of writing its own. The tutor sees each exercise's
  * learner-visible text and how it was verified, never its key; it asks one
  * by reference, and Hodos grades it like any interface question.
- * @module @hodos/dsh/bank
+ * @module @hodos/core/courses/bank
  */
 import { stripServerFields, type ExerciseItem } from '@hodos/plugin-sdk'
-import type { BankEntry, HodosStore, PluginRegistry, QuestionBank } from '@hodos/core'
+import type { BankEntry, QuestionBank } from '../learn/service.js'
+import type { PluginRegistry } from '../registry/registry.js'
+import type { HodosStore } from '../store/store.js'
 
 function words(text: string): string[] {
   return text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(w => w.length > 1)

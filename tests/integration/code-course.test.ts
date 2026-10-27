@@ -1,11 +1,13 @@
 /**
- * Integration: the Python tracing course on the Hodos engine — full-coverage
- * validation, a lesson with code snippets, misconception feedback through
- * the leak guard, and code-writing exercises appearing only with a runner.
+ * Integration: the Python tracing course with Hodos core — full-coverage
+ * validation, its exercises asked from the question bank with the course's
+ * explanation of a misreading released through the leak guard, and
+ * code-writing exercises appearing only with a runner.
  */
 import { afterAll, describe, expect, it } from 'vitest'
 import { createCodePlugin, KIND, SKILL, tracingCourse, type CodeRunner } from '@hodos/code'
-import { HodosEngine, HodosStore, PluginRegistry, SandboxRunner, validateCourse, type Actor } from '@hodos/core'
+import { PluginRegistry, SandboxRunner, validateCourse } from '@hodos/core'
+import { bankSession } from '../support/bank-session.js'
 
 const sandbox = new SandboxRunner()
 afterAll(() => sandbox.dispose())
@@ -17,37 +19,23 @@ async function registry(runner?: CodeRunner): Promise<PluginRegistry> {
   return r
 }
 
-describe('Python tracing course on the Hodos engine', () => {
+describe('Python tracing course as a question bank', () => {
   it('validates with full coverage, lessons included', async () => {
     expect((await validateCourse(tracingCourse(), await registry(), { requireCoverage: true })).filter(f => f.severity === 'error')).toEqual([])
   })
 
-  it('teaches with code snippets and explains a misreading in practice', async () => {
-    const engine = new HodosEngine({ store: new HodosStore(':memory:'), registry: await registry() })
-    expect(await engine.syncContentPacks()).toEqual([])
-    const learnerId = engine.learnerForPrincipal('owner')
-    const ui: Actor = { learnerId, channel: 'ui', sessionId: 's1' }
-    const started = engine.startJourney({ ...ui, channel: 'agent' }, { goal: 'I want to learn to read Python code', skipDiagnostic: true })
-    expect(started.course.id).toBe('python-tracing')
-    expect(started.path.map(s => s.id)).toEqual(Object.values(SKILL))
-    engine.approvePath(ui)
-    const lesson = engine.lesson(ui)
-    expect(Object.values(lesson.lessons[0]?.blocks ?? {})[0]).toMatchObject({ type: 'code-snippet', renderer: { pluginId: 'hodos-code', rendererId: 'code-view' } })
-    for (const l of lesson.lessons) for (const c of l.checks) engine.answerCheck(ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
-    engine.completeLesson(ui)
-    const exercise = engine.nextExercise(ui)
-    expect(exercise).toMatchObject({ kind: KIND.predict, responseKind: 'lines', renderer: { rendererId: 'code-view' } })
-    expect(exercise?.fallbackText).toContain('1 | print(')
-    // Every expressions item has an integer-division misreading; answer with it.
-    const item = tracingCourse().items.find(i => i.id === exercise?.itemId)
-    const key = item?.key
-    const listed = typeof key === 'object' && key !== null && !Array.isArray(key) && Array.isArray(key.misconceptions) ? key.misconceptions : []
-    const wrong = listed.flatMap(m => (typeof m === 'object' && m !== null && !Array.isArray(m) && typeof m.output === 'string' && typeof m.id === 'string' ? [{ output: m.output, id: m.id }] : []))[0]
-    expect(wrong).toBeDefined()
-    const attempt = await engine.submitAttempt(ui, { presentationId: exercise?.id ?? '', response: { text: wrong?.output ?? '' } })
-    expect(attempt.status).toBe('incorrect')
-    expect(attempt.misconceptionFeedback?.length).toBe(1)
-    expect(JSON.stringify(attempt)).not.toContain(item?.explanation ?? '<none>')
+  it('asks a program to trace and explains an integer-division misreading', async () => {
+    const s = await bankSession(await registry())
+    const item = tracingCourse().items.find(i => i.id === 'ex-1')
+    const q = await s.ask('python-tracing/ex-1')
+    expect(q.form).toMatchObject({ type: 'interface', kind: KIND.predict, responseKind: 'lines', environment: 'code.listing' })
+    expect(q.form.type === 'interface' ? q.form.text : '').toContain('1 | print(')
+    expect(JSON.stringify(q)).not.toContain(item?.explanation ?? '<none>')
+    const { question, report } = await s.answer(q.id, { text: '3\n3\n1' })
+    expect(question.answer?.verdict).toMatchObject({ outcome: 'incorrect', misconceptions: ['true-division'], countsAsEvidence: true })
+    expect(question.answer?.verdict.misconceptionFeedback).toHaveLength(1)
+    expect(report).toContain('Explanation shown to the learner:')
+    s.close()
   })
 
   it('offers code-writing exercises only when the host supplies a runner', async () => {

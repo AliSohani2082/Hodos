@@ -11,18 +11,6 @@ export type Branded<B extends string> = string & { readonly [brand]: B }
 
 /** Learner identity. Never accepted from model-supplied arguments. */
 export type LearnerId = Branded<'LearnerId'>
-/** One learning journey toward a goal. */
-export type JourneyId = Branded<'JourneyId'>
-/** One presentation of an exercise item. */
-export type PresentationId = Branded<'PresentationId'>
-/** One evidence record. */
-export type EvidenceId = Branded<'EvidenceId'>
-/** One checkpoint session. */
-export type CheckpointId = Branded<'CheckpointId'>
-/** One diagnostic session. */
-export type DiagnosticId = Branded<'DiagnosticId'>
-/** One adaptive-layer lesson overlay. */
-export type OverlayId = Branded<'OverlayId'>
 
 /**
  * Brand a string. Use only where the value's provenance is already trusted
@@ -39,7 +27,7 @@ export interface IdGenerator {
   next(prefix: string): string
 }
 
-/** Random UUID-based ids, e.g. `jrn_3f1c…`. */
+/** Random UUID-based ids, e.g. `lrn_3f1c…`. */
 export const randomIds: IdGenerator = {
   next: prefix => `${prefix}_${randomUUID().replaceAll('-', '')}`,
 }

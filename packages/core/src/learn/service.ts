@@ -19,7 +19,7 @@ import { systemClock, type Clock } from '../clock.js'
 import { HodosError } from '../errors.js'
 import { randomIds, type IdGenerator, type LearnerId } from '../ids.js'
 import { FsrsScheduler } from '../mastery/fsrs.js'
-import { scanForLeaks, secretFragments } from '../projection/student-view.js'
+import { releaseMisconceptionFeedback, scanForLeaks, secretFragments } from '../projection/student-view.js'
 import type { PluginRegistry, RegistryLogger } from '../registry/registry.js'
 import { movesMastery, nodeMasteryView, observeNode, type NodeMasteryView } from './mastery.js'
 import { parsePlan, planStatuses, planToMermaid, type PlanEdge, type PlanNode, type PlanNodeStatus } from './plan.js'
@@ -436,6 +436,7 @@ export class LearnService {
     return {
       type: 'interface', kind: item.kind, payload: item.payload, key: item.key,
       ...(item.explanation === undefined ? {} : { explanation: item.explanation }),
+      ...(item.misconceptionFeedback === undefined ? {} : { misconceptionFeedback: item.misconceptionFeedback }),
       bankItem: { courseId: found.courseId, itemId: item.id },
     }
   }
@@ -603,14 +604,22 @@ export class LearnService {
       grade = await this.registry.grade(input)
     }
     const method = this.registry.graderInfo(body.kind)?.method
+    // Grader feedback may not reveal more of the key than the verdict itself does (the explanation and a
+    // trusted kind's solution): a bank item can be asked again later, in this session or another.
+    const reveal = this.reveal(question)
+    const shown = [response, progress, reveal.explanation ?? null, reveal.solution ?? null]
+    const released = releaseMisconceptionFeedback(item, kind, { hintLevel: 0, answer: false }, shown, grade.misconceptions)
+    const feedback = grade.feedback !== undefined && scanForLeaks(grade.feedback, released.secrets).length > 0 ? undefined : grade.feedback
+    if (feedback === undefined && grade.feedback !== undefined) this.logger.warn(`withheld grader feedback of ${body.kind} that quoted the key`)
     return {
       status: 'graded',
       progress,
       verdict: {
         outcome: grade.correct ? 'correct' : grade.score > 0 ? 'partial' : 'incorrect',
         score: grade.score,
-        ...(grade.feedback === undefined ? {} : { feedback: grade.feedback }),
+        ...(feedback === undefined ? {} : { feedback }),
         ...(grade.misconceptions.length === 0 ? {} : { misconceptions: grade.misconceptions }),
+        ...(released.feedback.length === 0 ? {} : { misconceptionFeedback: released.feedback }),
         countsAsEvidence: method !== undefined && EVIDENCE_METHODS.has(method),
       },
     }

@@ -1,15 +1,17 @@
 /**
  * The `hodos` Cordis service: owns the Hodos database, the plugin registry,
  * the sandbox worker, the learning, knowledge-graph and practice services,
- * and the course store used for question banks, for one DSH process.
+ * and the course library whose approved courses are question banks, for one
+ * DSH process.
  * Environment bundles inject it and call {@link HodosService.registerEnvironment}.
  * @module @hodos/dsh/service
  */
 import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import {
+  courseBank,
+  CourseLibrary,
   GraphRepository,
-  HodosEngine,
   HodosStore,
   KnowledgeService,
   LearnRepository,
@@ -19,7 +21,6 @@ import {
   PracticeService,
   SandboxRunner,
   THETA_BY_STRICTNESS,
-  DEFAULT_MASTERY_CONFIG,
   type Actor,
   type LearnerId,
   type LearnPhase,
@@ -27,7 +28,6 @@ import {
 } from '@hodos/core'
 import type { HodosEnvironmentHost, HodosEnvironmentPlugin } from '@hodos/plugin-sdk'
 import { OWNER_PRINCIPAL, type HodosConfig } from './config.js'
-import { courseBank } from './bank.js'
 import { CourseInbox, INBOX_DIR } from './inbox.js'
 
 /** How often the course inbox is checked for new files. */
@@ -39,7 +39,7 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
-/** Logger shape shared by the registry and engine. */
+/** Logger shape shared by the registry and the services. */
 export interface HodosLogger {
   info(message: string): void
   warn(message: string): void
@@ -55,8 +55,8 @@ export type ChatBinding =
 export class HodosService extends Service implements HodosEnvironmentHost {
   readonly store: HodosStore
   readonly registry: PluginRegistry
-  /** Course storage, validation and the inbox: installed courses serve as question banks. */
-  readonly engine: HodosEngine
+  /** Courses, drafts and learner identity: approved courses serve as question banks. */
+  readonly courses: CourseLibrary
   readonly learnRepo: LearnRepository
   readonly graph: GraphRepository
   readonly learn: LearnService
@@ -80,12 +80,7 @@ export class HodosService extends Service implements HodosEnvironmentHost {
     this.sandbox = new SandboxRunner()
     this.registry = new PluginRegistry({ sandbox: this.sandbox, logger: this.logger })
     this.store = new HodosStore(join(config.dataDir, 'hodos.db'))
-    this.engine = new HodosEngine({
-      store: this.store,
-      registry: this.registry,
-      logger: this.logger,
-      config: { mastery: { ...DEFAULT_MASTERY_CONFIG, theta: THETA_BY_STRICTNESS[config.strictness] } },
-    })
+    this.courses = new CourseLibrary({ store: this.store, registry: this.registry, logger: this.logger })
     this.learnRepo = new LearnRepository(this.store)
     this.graph = new GraphRepository(this.store)
     this.learn = new LearnService({ repository: this.learnRepo, registry: this.registry, logger: this.logger, theta: THETA_BY_STRICTNESS[config.strictness], bank: courseBank(this.store, this.registry) })
@@ -117,7 +112,7 @@ export class HodosService extends Service implements HodosEnvironmentHost {
   private async startInbox(): Promise<void> {
     const inbox = new CourseInbox({
       dir: join(this.config.dataDir, INBOX_DIR),
-      propose: (proposal, source) => this.engine.proposeCourse(this.uiActor(undefined), proposal, { origin: 'import', source }),
+      propose: (proposal, source) => this.courses.proposeCourse(this.uiActor(undefined), proposal, { origin: 'import', source }),
       logger: this.logger,
     })
     try {
@@ -136,7 +131,7 @@ export class HodosService extends Service implements HodosEnvironmentHost {
   }
 
   private async syncContent(): Promise<void> {
-    for (const rejected of await this.engine.syncContentPacks()) {
+    for (const rejected of await this.courses.syncContentPacks()) {
       this.logger.error(`course ${rejected.courseId} was rejected: ${rejected.errors.join('; ')}`)
     }
   }
@@ -156,7 +151,7 @@ export class HodosService extends Service implements HodosEnvironmentHost {
 
   /** The learner of the DSH owner principal. */
   ownerLearner(): LearnerId {
-    return this.engine.learnerForPrincipal(OWNER_PRINCIPAL)
+    return this.courses.learnerForPrincipal(OWNER_PRINCIPAL)
   }
 
   /**
@@ -165,7 +160,7 @@ export class HodosService extends Service implements HodosEnvironmentHost {
    * @returns the actor.
    */
   agentActor(sessionId: string): Actor {
-    return { learnerId: this.engine.learnerForSession(sessionId, OWNER_PRINCIPAL), channel: 'agent', sessionId }
+    return { learnerId: this.courses.learnerForSession(sessionId, OWNER_PRINCIPAL), channel: 'agent', sessionId }
   }
 
   /**

@@ -256,7 +256,7 @@ describe('Hodos DSH plugin', () => {
     const result = await call(h, 'hodos_draft_course', { topic: 'arithmetic for beginners' })
     expect(result.text).toContain('Draft quiz-drafted@0.1.0 is ready for the learner to review')
     expect(requests.map(r => r.provider)).toEqual(['claude-code'])
-    expect(h.hodos.engine.drafts()).toEqual([expect.objectContaining({ id: 'quiz-drafted', origin: 'agent' })])
+    expect(h.hodos.courses.drafts()).toEqual([expect.objectContaining({ id: 'quiz-drafted', origin: 'agent' })])
 
     const tutor = fakeAgent('sess-2')
     h.agents.push(tutor)
@@ -526,7 +526,7 @@ describe('Hodos workspace API', () => {
     const drafts = await api(h, 'GET', 'drafts')
     expect((dataOf(drafts) as Array<{ id: string }>).map(d => d.id)).toEqual(['quiz-proposed'])
     expect((await api(h, 'POST', 'drafts/decide', { courseId: 'quiz-proposed', version: '1.0.0', approve: true })).status).toBe(200)
-    expect(h.hodos.engine.catalog().map(c => c.id)).toContain('quiz-proposed')
+    expect(h.hodos.courses.catalog().map(c => c.id)).toContain('quiz-proposed')
   })
 
   it('reports errors with stable codes and no internals', async () => {

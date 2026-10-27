@@ -1,11 +1,12 @@
 /**
- * Integration: the algebra courses on the Hodos engine — full-coverage
- * validation, and a practice step with misconception feedback.
+ * Integration: the algebra courses with Hodos core — full-coverage
+ * validation, and an expression asked from the question bank with the
+ * course's explanation of a misconception.
  */
 import { afterAll, describe, expect, it } from 'vitest'
-import { createMathPlugin, expressionsCourse, linesCourse, SKILL } from '@hodos/math'
-import { HodosEngine, HodosStore, PluginRegistry, SandboxRunner, validateCourse, type Actor } from '@hodos/core'
-import { jsonObject, jsonString } from '../support/json.js'
+import { createMathPlugin, expressionsCourse, linesCourse } from '@hodos/math'
+import { PluginRegistry, SandboxRunner, validateCourse } from '@hodos/core'
+import { bankSession } from '../support/bank-session.js'
 
 const sandbox = new SandboxRunner()
 afterAll(() => sandbox.dispose())
@@ -17,7 +18,7 @@ async function registry(): Promise<PluginRegistry> {
   return r
 }
 
-describe('algebra courses on the Hodos engine', () => {
+describe('algebra courses as question banks', () => {
   it('validate with full coverage, lessons included', async () => {
     const r = await registry()
     for (const course of [expressionsCourse(), linesCourse()]) {
@@ -25,25 +26,15 @@ describe('algebra courses on the Hodos engine', () => {
     }
   })
 
-  it('finds the course for a goal and explains a misconception in practice', async () => {
-    const engine = new HodosEngine({ store: new HodosStore(':memory:'), registry: await registry() })
-    expect(await engine.syncContentPacks()).toEqual([])
-    const learnerId = engine.learnerForPrincipal('owner')
-    const ui: Actor = { learnerId, channel: 'ui', sessionId: 's1' }
-    const started = engine.startJourney({ ...ui, channel: 'agent' }, { goal: 'I want to practise expanding brackets and factoring', skipDiagnostic: true })
-    expect(started.course.id).toBe('algebra-expressions')
-    expect(started.path.map(s => s.id)).toEqual([SKILL.simplify, SKILL.expand, SKILL.factor])
-    engine.approvePath(ui)
-    const lesson = engine.lesson(ui)
-    expect(Object.values(lesson.lessons[0]?.blocks ?? {})[0]).toMatchObject({ type: 'math-formula', renderer: { pluginId: 'hodos-math', rendererId: 'math-view' } })
-    for (const l of lesson.lessons) for (const c of l.checks) engine.answerCheck(ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
-    engine.completeLesson(ui)
-    // A simplify item: answer it unsimplified first.
-    const exercise = engine.nextExercise(ui)
-    expect(exercise?.renderer).toMatchObject({ rendererId: 'math-view' })
-    const formula = jsonString(jsonObject(exercise?.payload, 'the exercise payload').formula, 'the formula')
-    const attempt = await engine.submitAttempt(ui, { presentationId: exercise?.id ?? '', response: { text: formula } })
-    expect(attempt.status).toBe('partial')
-    expect(attempt.misconceptionFeedback?.[0]).toContain('combine like terms')
+  it('asks an expression to simplify and explains multiplying the variables', async () => {
+    const s = await bankSession(await registry())
+    expect(s.entries('simplify').map(e => e.ref)).toContain('algebra-expressions/simp-1')
+    const q = await s.ask('algebra-expressions/simp-1')
+    expect(q.form).toMatchObject({ type: 'interface', kind: 'math.expression', answerField: { name: 'text', type: 'string' } })
+    expect(JSON.stringify(q)).not.toContain('5x')
+    const { question } = await s.answer(q.id, { text: '5x^2' })
+    expect(question.answer?.verdict).toMatchObject({ outcome: 'incorrect', misconceptions: ['multiplied-variables'], countsAsEvidence: true })
+    expect(question.answer?.verdict.misconceptionFeedback).toHaveLength(1)
+    s.close()
   })
 })

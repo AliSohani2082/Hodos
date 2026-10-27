@@ -1,6 +1,6 @@
 /**
- * Seeded pseudo-random numbers (mulberry32) for reproducible diagnostics and
- * item selection.
+ * Seeded pseudo-random numbers (mulberry32), for example for the
+ * reproducible order of a question's options.
  * @module @hodos/core/random
  */
 
@@ -25,17 +25,6 @@ export function seededRandom(seed: number): Random {
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296
     },
   }
-}
-
-/**
- * Standard normal sample (Box–Muller).
- * @param rng - uniform source.
- * @returns one N(0, 1) sample.
- */
-export function gaussian(rng: Random): number {
-  const u = Math.max(rng.next(), Number.EPSILON)
-  const v = rng.next()
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)
 }
 
 /**

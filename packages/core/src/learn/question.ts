@@ -61,6 +61,8 @@ export interface InterfaceBody {
   readonly explanation?: string
   /** Set when the item came from a plugin's question bank rather than the model. */
   readonly bankItem?: { readonly courseId: string; readonly itemId: string }
+  /** A bank item's explanation per misconception id, released when the grader detects it. */
+  readonly misconceptionFeedback?: Readonly<Record<string, string>>
 }
 
 /** The body of a question. */
@@ -101,6 +103,8 @@ export interface QuestionVerdict {
   /** Feedback safe to show the learner. */
   readonly feedback?: string
   readonly misconceptions?: readonly string[]
+  /** Explanations of the detected misconceptions, from a bank item's course. */
+  readonly misconceptionFeedback?: readonly string[]
   /** The grade can update mastery: deterministic, engine or oracle grading of an unassisted answer. */
   readonly countsAsEvidence: boolean
 }
@@ -315,6 +319,7 @@ export function interfaceItem(id: string, body: InterfaceBody, nodeId: string | 
     payload: body.payload,
     key: body.key,
     ...(body.explanation === undefined ? {} : { explanation: body.explanation }),
+    ...(body.misconceptionFeedback === undefined ? {} : { misconceptionFeedback: body.misconceptionFeedback }),
   }
 }
 
@@ -494,6 +499,7 @@ export function answerReport(answered: AnsweredQuestion): string {
     if (spec.body.type === 'choice' && verdict.outcome !== 'correct') lines.push(`The correct answer: ${labelsOf(spec.body, spec.body.correct)}.`)
     if (verdict.feedback !== undefined) lines.push(`Grader feedback shown to the learner: ${verdict.feedback}`)
     if (verdict.misconceptions !== undefined && verdict.misconceptions.length > 0) lines.push(`Misconceptions detected: ${verdict.misconceptions.join(', ')}.`)
+    for (const explanation of verdict.misconceptionFeedback ?? []) lines.push(`Explanation shown to the learner: ${explanation}`)
   }
   if (answered.thinking !== undefined && answered.thinking.trim() !== '') lines.push(`Their thinking out loud: «${answered.thinking.trim()}»`)
   return lines.join('\n')

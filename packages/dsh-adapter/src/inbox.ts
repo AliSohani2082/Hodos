@@ -1,7 +1,7 @@
 /**
  * The course inbox: course files placed in `<dataDir>/inbox` — normally by
  * `hodos course submit`, for example after writing a course with Claude
- * Code — are validated by the engine and stored as drafts that wait for the
+ * Code — are validated by the course library and stored as drafts that wait for the
  * learner's approval in the workspace. Nothing in a file is executed: it is
  * parsed as JSON and goes through the same validation as any proposal.
  * Processed files move to `imported/` or `rejected/`; a rejected file gets a
@@ -11,6 +11,7 @@
 import { constants } from 'node:fs'
 import { mkdir, open, readdir, rename, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import type { ProposalResult } from '@hodos/core'
 
 /** Inbox directory name inside the Hodos data directory. */
 export const INBOX_DIR = 'inbox'
@@ -38,8 +39,8 @@ export interface InboxOutcome {
 export interface InboxDeps {
   /** The inbox directory. */
   readonly dir: string
-  /** Validate and store a proposal as a draft (the engine's `proposeCourse` with origin `import`). */
-  propose(proposal: unknown, source: string): Promise<{ stored: boolean; courseId: string; version: string; errors: string[]; warnings: string[] }>
+  /** Validate and store a proposal as a draft (the course library's `proposeCourse` with origin `import`). */
+  propose(proposal: unknown, source: string): Promise<ProposalResult>
   readonly logger: { info(message: string): void; warn(message: string): void }
   readonly now?: () => Date
 }

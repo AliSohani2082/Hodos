@@ -12,7 +12,7 @@
  * @module @hodos/core/learn/mastery
  */
 import { bktUpdate, DEFAULT_BKT_PARAMS, type BktParams } from '../mastery/bkt.js'
-import { DEFAULT_MASTERY_CONFIG } from '../mastery/config.js'
+import { DEFAULT_THETA } from '../mastery/config.js'
 import { gradeRetrieval, type FsrsScheduler } from '../mastery/fsrs.js'
 import type { NodeStateRecord } from './repository.js'
 import type { QuestionRole, QuestionVerdict } from './question.js'
@@ -84,6 +84,6 @@ export interface NodeMasteryView {
  * @param theta - mastery threshold.
  * @returns the view.
  */
-export function nodeMasteryView(state: NodeStateRecord, theta: number = DEFAULT_MASTERY_CONFIG.theta): NodeMasteryView {
+export function nodeMasteryView(state: NodeStateRecord, theta: number = DEFAULT_THETA): NodeMasteryView {
   return { nodeId: state.nodeId, pMastered: state.pMastered, mastered: state.pMastered >= theta, observations: state.observations, dueAt: state.dueAt }
 }

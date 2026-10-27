@@ -1,8 +1,8 @@
 /**
  * Token-bucket limits per learner and bucket (PRD AI-5b, TM-012). Buckets
- * bound hint requests, agent notices (model usage), content generation, code
- * runs and subagent delegations, so neither a learner nor a broken plugin can
- * trigger unbounded work.
+ * bound model-written course proposals and subagent delegations, so neither
+ * a learner nor a broken plugin can trigger unbounded work. (The model calls
+ * of learning sessions have their own daily budget in the knowledge service.)
  * @module @hodos/core/limits
  */
 import type { Clock } from '../clock.js'
@@ -16,16 +16,12 @@ export interface BucketSpec {
 }
 
 /** Named buckets. */
-export type BucketName = 'hint' | 'notify' | 'generate' | 'run' | 'delegate' | 'attempt'
+export type BucketName = 'generate' | 'delegate'
 
 /** Default limits. Hosts override them through configuration. */
 export const DEFAULT_LIMITS: Readonly<Record<BucketName, BucketSpec>> = {
-  hint: { capacity: 12, refillPerSec: 1 / 30 },
-  notify: { capacity: 6, refillPerSec: 1 / 60 },
   generate: { capacity: 20, refillPerSec: 20 / 3600 },
-  run: { capacity: 30, refillPerSec: 1 / 10 },
   delegate: { capacity: 3, refillPerSec: 3 / 86_400 },
-  attempt: { capacity: 60, refillPerSec: 1 },
 }
 
 /** In-process token buckets. */

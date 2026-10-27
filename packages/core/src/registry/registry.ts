@@ -81,6 +81,13 @@ export interface RegisteredBlock {
   readonly validateAttributes: SchemaValidator
 }
 
+/** A renderer the workspace can load in a sandboxed iframe. */
+export interface RendererRef {
+  readonly pluginId: string
+  readonly rendererId: string
+  readonly entry: string
+}
+
 /** A registered renderer with the capabilities the host granted. */
 export interface RegisteredRenderer {
   readonly pluginId: string

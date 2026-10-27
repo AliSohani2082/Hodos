@@ -236,6 +236,7 @@ export function AnsweredQuestion(props: { readonly question: QuestionView }): Re
           <p><strong>You answered:</strong> <InlineMarkdown text={a.text} /></p>
           {a.thinking !== undefined && <p className="muted"><strong>Your thinking:</strong> {a.thinking}</p>}
           {a.verdict.feedback !== undefined && <p>{a.verdict.feedback}</p>}
+          {a.verdict.misconceptionFeedback?.map(text => <p key={text} className="misconception">{text}</p>)}
           {a.reveal.correct !== undefined && <p><strong>Correct:</strong> <InlineMarkdown text={a.reveal.correct.map(v => labels.get(v) ?? v).join(', ')} /></p>}
           {a.reveal.committedAnswer !== undefined && <div><strong>Your tutor's answer:</strong><Markdown text={a.reveal.committedAnswer} /></div>}
           {a.reveal.explanation !== undefined && <div className="explanation"><Markdown text={a.reveal.explanation} /></div>}

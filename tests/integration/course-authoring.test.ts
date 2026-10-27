@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { afterAll, describe, expect, it } from 'vitest'
 import { createChessPlugin, tacticsCourse } from '@hodos/chess'
-import { HodosEngine, HodosStore, PluginRegistry, SandboxRunner, type Actor } from '@hodos/core'
+import { CourseLibrary, HodosStore, PluginRegistry, SandboxRunner, type Actor } from '@hodos/core'
 import { main, resolveDataDir, type CliIo } from '../../packages/dsh-adapter/src/cli.js'
 import { CourseInbox, INBOX_DIR } from '../../packages/dsh-adapter/src/inbox.js'
 
@@ -103,17 +103,17 @@ describe('hodos course CLI', () => {
     // The host side: the running Hodos service scans the inbox.
     const registry = new PluginRegistry({ sandbox, logger: silent })
     await registry.register(createChessPlugin(), { trusted: true })
-    const engine = new HodosEngine({ store: new HodosStore(':memory:'), registry })
-    const actor: Actor = { learnerId: engine.learnerForPrincipal('owner'), channel: 'ui' }
-    const inbox = new CourseInbox({ dir: inboxDir, propose: (p, source) => engine.proposeCourse(actor, p, { origin: 'import', source }), logger: silent })
+    const courses = new CourseLibrary({ store: new HodosStore(':memory:'), registry })
+    const actor: Actor = { learnerId: courses.learnerForPrincipal('owner'), channel: 'ui' }
+    const inbox = new CourseInbox({ dir: inboxDir, propose: (p, source) => courses.proposeCourse(actor, p, { origin: 'import', source }), logger: silent })
     await inbox.prepare()
     expect((await inbox.scan()).map(o => o.status)).toEqual(['imported'])
-    const drafts = engine.drafts()
+    const drafts = courses.drafts()
     expect(drafts).toMatchObject([{ id: 'chess.authored', origin: 'import' }])
     expect(drafts[0]?.skills.map(s => s.id)).toEqual(tacticsCourse().skills.map(s => s.id))
     expect((await hodos(['course', 'status', '--data-dir', dataDir])).out).toContain('Imported as drafts')
-    await engine.decideCourse(actor, { courseId: 'chess.authored', version: '0.1.0', approve: true })
-    expect(engine.drafts()).toEqual([])
+    await courses.decideCourse(actor, { courseId: 'chess.authored', version: '0.1.0', approve: true })
+    expect(courses.drafts()).toEqual([])
   })
 
   it('refuses to submit a course with errors', async () => {

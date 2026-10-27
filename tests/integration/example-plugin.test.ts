@@ -1,17 +1,18 @@
 /**
  * Integration: the sample third-party plugin (examples/binary-numbers) as an
  * untrusted declarative plugin — loaded as data, its course validated with
- * item checks run in the QuickJS sandbox, its answers graded there, and a
- * journey through the engine with its lesson block and renderer.
+ * item checks run in the QuickJS sandbox, its answers graded there, and its
+ * course asked from as a question bank, with grader feedback that would give
+ * the key away withheld.
  */
-import { cpSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
-import { HodosEngine, HodosStore, loadDeclarativePlugin, PluginRegistry, SandboxRunner, validateCourse, type Actor } from '@hodos/core'
+import { loadDeclarativePlugin, PluginRegistry, SandboxRunner, validateCourse } from '@hodos/core'
 import type { ExerciseItem, GradeInput, JsonValue } from '@hodos/plugin-sdk'
-import { jsonObject, jsonString } from '../support/json.js'
+import { bankSession } from '../support/bank-session.js'
 
 const DIR = fileURLToPath(new URL('../../examples/binary-numbers', import.meta.url))
 
@@ -65,24 +66,37 @@ describe('example plugin: binary numbers (untrusted, declarative)', () => {
     expect((await r.grade(input(item('read-2'), 'twelve'))).feedback).toBe('Type a whole number, like 12.')
   })
 
-  it('runs a journey: lesson block through its renderer, practice with misconception feedback', async () => {
-    const engine = new HodosEngine({ store: new HodosStore(':memory:'), registry: await registry() })
-    expect(await engine.syncContentPacks()).toEqual([])
-    const learnerId = engine.learnerForPrincipal('owner')
-    const ui: Actor = { learnerId, channel: 'ui', sessionId: 's1' }
-    const started = engine.startJourney({ ...ui, channel: 'agent' }, { goal: 'I want to learn binary numbers', skipDiagnostic: true })
-    expect(started.course.id).toBe('binary-numbers')
-    engine.approvePath(ui)
-    const lesson = engine.lesson(ui)
-    expect(Object.values(lesson.lessons[0]?.blocks ?? {})[0]).toMatchObject({ type: 'binary-bits', renderer: { pluginId: 'example-binary', rendererId: 'binary-bits' } })
-    for (const l of lesson.lessons) for (const c of l.checks) engine.answerCheck(ui, { lessonId: l.id, checkId: c.id, optionId: 'a' })
-    engine.completeLesson(ui)
-    const exercise = engine.nextExercise(ui)
-    expect(exercise?.renderer).toMatchObject({ pluginId: 'example-binary', rendererId: 'binary-bits' })
-    const value = jsonString(jsonObject(exercise?.payload, 'the exercise payload').value, 'the value to convert')
-    const attempt = await engine.submitAttempt(ui, { presentationId: exercise?.id ?? '', response: { text: value } })
-    expect(attempt.status).toBe('incorrect')
-    expect(attempt.misconceptionFeedback).toEqual(['The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.'])
+  it('is a question bank: misconceptions explained, feedback that gives the key away withheld', async () => {
+    const s = await bankSession(await registry())
+    expect(s.entries('decimal').map(e => e.ref)).toContain('binary-numbers/read-2')
+    const q = await s.ask('binary-numbers/read-2')
+    expect(q.form).toMatchObject({ type: 'interface', kind: 'binary.convert', environment: 'binary.bits', answerField: { name: 'text', type: 'string' } })
+    const misread = await s.answer(q.id, { text: '1100' })
+    expect(misread.question.answer?.verdict).toMatchObject({
+      outcome: 'incorrect', countsAsEvidence: true, misconceptions: ['read-as-decimal'],
+      misconceptionFeedback: ['The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.'],
+    })
+    s.close()
+
+    // A grader whose feedback quotes the key, on items without an explanation: the verdict reveals
+    // nothing of the key, so it goes without the feedback (a bank item can be asked again).
+    const leaky = mkdtempSync(join(tmpdir(), 'hodos-example-'))
+    cpSync(DIR, leaky, { recursive: true })
+    const packFile = join(leaky, 'content/binary-basics.json')
+    const pack = JSON.parse(readFileSync(packFile, 'utf8')) as { courses: Array<{ items: Array<Record<string, unknown>> }> }
+    for (const c of pack.courses) for (const i of c.items) delete i.explanation
+    writeFileSync(packFile, JSON.stringify(pack))
+    writeFileSync(join(leaky, 'grader.js'), `function grade(input) {
+      return { score: 0, correct: false, skillEvidence: [], misconceptions: [], feedback: 'Not quite: it is ' + input.key.answer + '.' }
+    }
+    function validateItem(item) { return [] }`)
+    const t = await bankSession(await registry(leaky))
+    const write = await t.ask('binary-numbers/write-2')
+    const graded = await t.answer(write.id, { text: '1111' })
+    expect(graded.question.answer?.verdict).toMatchObject({ outcome: 'incorrect', score: 0 })
+    expect(graded.question.answer?.verdict.feedback).toBeUndefined()
+    expect(JSON.stringify(graded)).not.toContain('1001')
+    t.close()
   })
 
   it('security: its grader sees no host objects, and a hostile one fails closed', async () => {

@@ -74,7 +74,7 @@ export function draftCourseTool(hodos: HodosService, subagents: SubagentRuntime)
       if (agent === undefined) throw new Error('FORBIDDEN: Hodos tools can only be used from an agent session.')
       const actor = hodos.agentActor(String(agent.id))
       try {
-        hodos.engine.chargeDelegation(actor.learnerId)
+        hodos.courses.chargeDelegation(actor.learnerId)
       } catch (error) {
         throw new Error(`RATE_LIMITED: ${error instanceof Error ? error.message : 'delegation budget spent'}`, { cause: error })
       }
@@ -86,7 +86,7 @@ export function draftCourseTool(hodos: HodosService, subagents: SubagentRuntime)
         signal: exec.signal,
         delivery: 'caller',
         request: {
-          prompt: [{ type: 'text', text: draftingPrompt(args.topic, hodos.engine.authoringGuide(), args.notes ?? '') }],
+          prompt: [{ type: 'text', text: draftingPrompt(args.topic, hodos.courses.authoringGuide(), args.notes ?? '') }],
           parent: agent,
         },
       })
@@ -95,7 +95,7 @@ export function draftCourseTool(hodos: HodosService, subagents: SubagentRuntime)
         const text = result.output.map(block => (block.type === 'text' ? block.text : '')).join('\n')
         const course = result.structured ?? extractJson(text)
         if (course === undefined) return { text: `The subagent did not return a course (${result.stopReason}).` }
-        const stored = await hodos.engine.proposeCourse(actor, course)
+        const stored = await hodos.courses.proposeCourse(actor, course)
         if (!stored.stored) return { text: `The drafted course did not validate:\n${stored.errors.map(e => `- ${e}`).join('\n')}`, ref: stored.courseId }
         return { text: `Draft ${stored.courseId}@${stored.version} is ready for the learner to review and approve in the Hodos workspace. It was written by a model and is not independently verified.`, ref: stored.courseId }
       } finally {

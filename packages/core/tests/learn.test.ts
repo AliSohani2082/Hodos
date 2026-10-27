@@ -23,8 +23,9 @@ import {
   type LearnerId,
   type ManualClock,
   type PlanTree,
+  type QuestionBank,
 } from '../src/index.js'
-import { createQuizPlugin, type QuizOptions } from '@hodos/testing'
+import { createQuizPlugin, quizCourse, type QuizOptions } from '@hodos/testing'
 
 const sandbox = new SandboxRunner()
 afterAll(() => sandbox.dispose())
@@ -194,7 +195,7 @@ interface Env {
   readonly other: LearnerId
 }
 
-async function setup(quiz: QuizOptions = {}): Promise<Env> {
+async function setup(quiz: QuizOptions = {}, bank?: QuestionBank): Promise<Env> {
   const clock = manualClock(new Date('2026-10-28T09:00:00.000Z'))
   const store = new HodosStore(':memory:')
   const registry = new PluginRegistry({ sandbox, logger: silent })
@@ -202,7 +203,7 @@ async function setup(quiz: QuizOptions = {}): Promise<Env> {
   const learner = brandId<'LearnerId'>('lrn_me')
   const other = brandId<'LearnerId'>('lrn_other')
   for (const id of [learner, other]) store.insertLearner({ id, displayName: id, settings: {}, createdAt: clock.now().toISOString() })
-  const learn = new LearnService({ repository: new LearnRepository(store), registry, logger: silent, clock, ids: sequentialIds() })
+  const learn = new LearnService({ repository: new LearnRepository(store), registry, logger: silent, clock, ids: sequentialIds(), ...(bank === undefined ? {} : { bank }) })
   return { clock, learn, learner, other }
 }
 
@@ -389,5 +390,26 @@ describe('learning sessions', () => {
     expect(env.learn.concludeProbe(session.id, { strands: [{ strand: 'forks', assessment: 'unknown' }] }).strands).toHaveLength(1)
     const bad = await rejection(env.learn.ask(session.id, { form: 'choice', role: 'probe', prompt: 'p', input: { options: ['a', 'b'], correct: 'a' } }))
     expect(bad.code).toBe('INVALID_STATE')
+  })
+
+  it('asks a bank exercise by reference and releases its course\'s explanation of a detected misconception', async () => {
+    const item = quizCourse().items.find(i => JSON.stringify(i.key).includes('left-to-right'))
+    if (item === undefined) throw new Error('the quiz course has no item with a misconception')
+    const bank: QuestionBank = {
+      search: () => [{ ref: `quiz-arithmetic/${item.id}`, course: 'Quiz arithmetic', kind: item.kind, skill: 'mixed', text: 'a sum', verifiedBy: ['test'] }],
+      item: ref => (ref === `quiz-arithmetic/${item.id}` ? { item, courseId: 'quiz-arithmetic' } : undefined),
+    }
+    const env = await setup({}, bank)
+    const sessionId = await toTeaching(env)
+    expect((await rejection(env.learn.ask(sessionId, { form: 'interface', role: 'check', nodeId: 'limits', prompt: 'Try this one.', input: { bank: 'quiz-arithmetic/nope' } }))).message).toMatch(/no bank exercise is called "quiz-arithmetic\/nope"/)
+    const q = await env.learn.ask(sessionId, { form: 'interface', role: 'check', nodeId: 'limits', prompt: 'Try this one.', input: { bank: `quiz-arithmetic/${item.id}` } })
+    expect(q.origin).toBe('bank')
+    expect(JSON.stringify(env.learn.openQuestion(sessionId))).not.toMatch(/Multiplication comes before addition|internal-note|Worked explanation/)
+    const key = item.key as { misconceptions: Record<string, string> }
+    const wrong = Object.keys(key.misconceptions)[0] ?? ''
+    const result = await env.learn.answer(env.learner, q.id, { response: { choice: wrong } })
+    if (result.status !== 'answered') throw new Error('expected an answer')
+    expect(result.question.answer?.verdict).toMatchObject({ outcome: 'incorrect', misconceptions: ['left-to-right'], misconceptionFeedback: ['Multiplication comes before addition.'] })
+    expect(result.report).toContain('Explanation shown to the learner: Multiplication comes before addition.')
   })
 })

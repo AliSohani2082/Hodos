@@ -90,7 +90,7 @@ export function globalTools(hodos: HodosService): ToolDefinition[] {
       parameters: {},
       output: { schema: OUTPUT, render },
       execute: (_args, exec) => inChat(hodos, exec, () => {
-        const catalog = hodos.engine.catalog()
+        const catalog = hodos.courses.catalog()
         if (catalog.length === 0) return { text: 'No courses are installed.' }
         return { text: catalog.map(c => `- ${c.title} [${c.id}@${c.version}]${c.available ? '' : ' (environment not installed)'}: ${c.description}`).join('\n') }
       }),
@@ -101,7 +101,7 @@ export function globalTools(hodos: HodosService): ToolDefinition[] {
       parameters: { course: { type: 'json', required: true, description: 'The course JSON.' } },
       output: { schema: OUTPUT, render },
       execute: (args, exec) => inChat(hodos, exec, async chatId => {
-        const result = await hodos.engine.proposeCourse(hodos.agentActor(chatId), args.course)
+        const result = await hodos.courses.proposeCourse(hodos.agentActor(chatId), args.course)
         if (!result.stored) return { text: `The course was not stored. Fix these problems and propose it again:\n${result.errors.map(e => `- ${e}`).join('\n')}`, ref: result.courseId }
         return {
           text: [`Stored as a draft: ${result.courseId}@${result.version}. The learner reviews and approves it in the Hodos panel; it is not independently verified.`, ...result.warnings.map(w => `Warning: ${w}`)].join('\n'),

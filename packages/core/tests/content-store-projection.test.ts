@@ -4,7 +4,6 @@ import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { CourseSpec, LessonNode } from '@hodos/plugin-sdk'
 import {
-  assertNoLeak,
   blockLookup,
   brandId,
   HodosStore,
@@ -13,7 +12,7 @@ import {
   MIGRATIONS,
   parseLesson,
   PluginRegistry,
-  presentExercise,
+  projectPayload,
   projectLessonForStudent,
   SandboxRunner,
   scanForLeaks,
@@ -195,12 +194,14 @@ describe('store', () => {
     expect(() => new HodosStore(path)).toThrow(/newer than this Hodos/)
   })
 
-  it('never lets a self-report overwrite a diagnostic prior', () => {
+  it('binds host sessions to learners', () => {
     const store = new HodosStore(':memory:')
-    learner(store, 'lrn_p')
-    store.savePrior('lrn_p', { skillId: 's1', prior: 0.8, source: 'diagnostic', diagnosedKnown: true }, 't')
-    store.savePrior('lrn_p', { skillId: 's1', prior: 0.05, source: 'self-report', diagnosedKnown: false }, 't')
-    expect(store.priors('lrn_p').get('s1')).toMatchObject({ prior: 0.8, source: 'diagnostic', diagnosedKnown: true })
+    learner(store, 'lrn_s')
+    learner(store, 'lrn_t')
+    expect(store.sessionBinding('dsh-1')).toBeUndefined()
+    store.bindSession('dsh-1', brandId<'LearnerId'>('lrn_s'), 't1')
+    store.bindSession('dsh-1', brandId<'LearnerId'>('lrn_t'), 't2')
+    expect(store.sessionBinding('dsh-1')).toEqual({ learnerId: 'lrn_t' })
     store.close()
   })
 })
@@ -210,14 +211,11 @@ describe('student-view projection and leak guard', () => {
   const choice = course.items.find(i => i.id === 'add-p1')!
   const text = course.items.find(i => i.id === 'add-t1')!
 
-  it('removes server-only payload fields and the key', () => {
-    const kind = registry.kind(choice.kind)
-    const exercise = presentExercise({ presentationId: 'prs_1', item: choice, kind, mode: 'practice', attempt: 1, hintsAvailable: 5 })
-    const json = JSON.stringify(exercise)
-    expect(json).not.toContain('internal-note-add-p1')
-    expect(json).not.toContain('"key"')
-    expect(json).not.toContain('Hint one')
-    expect(exercise.payload).toMatchObject({ prompt: 'What is 2 + 2?' })
+  it('removes server-only payload fields', () => {
+    const payload = projectPayload(choice, registry.kind(choice.kind))
+    expect(JSON.stringify(payload)).not.toContain('internal-note-add-p1')
+    expect(payload).toMatchObject({ prompt: 'What is 2 + 2?' })
+    expect(projectPayload(choice, undefined)).toBeNull()
   })
 
   it('collects key, explanation, unreleased hints and server fields as secrets', () => {
@@ -271,15 +269,5 @@ describe('student-view projection and leak guard', () => {
     expect(scanForLeaks({ id: 'prs_ab1024cd', at: '2026-10-24T10:24:00Z' }, ['1024'])).toEqual([])
     expect(scanForLeaks({ feedback: 'The answer is 1024.' }, ['1024'])).toEqual(['1024'])
     expect(scanForLeaks('Nf3+ wins', ['Nf3+'])).toEqual(['Nf3+'])
-  })
-
-  it('blocks a leak without echoing the secret', () => {
-    let message = ''
-    try {
-      assertNoLeak({ text: 'the answer is Madrid' }, ['Madrid'], 'test path')
-    } catch (error) {
-      message = error instanceof Error ? error.message : ''
-    }
-    expect(message).toBe('blocked an answer-key leak on test path')
   })
 })
