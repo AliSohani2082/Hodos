@@ -228,8 +228,12 @@ export const expressionKind: ExerciseKindSpec = {
     if (formula !== '') {
       const shown = parse(formula, variables)
       if (!shown.ok) out.push(error('math/formula', `the formula does not parse: ${shown.error}`))
-      else if (form !== 'any' && equivalent(shown.expr, answer.expr, variables) === 'equivalent' && meetsForm(shown.expr, answer.expr, form)) {
-        out.push(error('math/formula-is-answer', 'the formula already is an accepted answer'))
+      else {
+        // The task rewrites the formula, so a key that is not equal to it marks right answers wrong.
+        const same = equivalent(shown.expr, answer.expr, variables)
+        if (same === 'different') out.push(error('math/answer-not-equivalent', 'the key is not equal to the formula it rewrites'))
+        else if (same === 'undetermined') out.push({ severity: 'warning', code: 'math/answer-unchecked', message: 'could not check that the key equals the formula: both are defined at too few points' })
+        else if (form !== 'any' && meetsForm(shown.expr, answer.expr, form)) out.push(error('math/formula-is-answer', 'the formula already is an accepted answer'))
       }
     }
     for (const m of Array.isArray(key.misconceptions) ? key.misconceptions : []) {

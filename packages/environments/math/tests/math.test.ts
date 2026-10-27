@@ -166,6 +166,8 @@ describe('items and validation', () => {
     expect(errors({ ...exp, key: { ...key, misconceptions: [{ expression: '1 + 2x + x^2', id: 'oops' }] } })).toContain('math/misconception')
     expect(errors({ ...exp, payload: { ...(exp.payload as JsonObject), formula: 'x^2 + 2x + 1' } })).toContain('math/formula-is-answer')
     expect(errors({ ...exp, key: { ...key, answer: 'x^2 +' } })).toContain('math/answer')
+    // A key that is not the formula rewritten, in the right form, would mark right answers wrong.
+    expect(errors({ ...exp, key: { ...key, answer: 'x^2 + x + 1' } })).toContain('math/answer-not-equivalent')
     const num = item('slo-1')
     expect(errors({ ...num, payload: { ...(num.payload as JsonObject), graph: { x: [5, -1], y: [0, 1] } } })).toContain('math/graph-range')
     expect(errors({ ...num, key: { value: 2, misconceptions: [{ value: 2, id: 'same' }] } })).toContain('math/misconception-value')
