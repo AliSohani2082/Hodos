@@ -32,7 +32,21 @@ dsh plugin --profile web add "$PWD/packages/environments/chess"
 dsh web
 ```
 
-Then state a goal in the chat and open the **Hodos learning** tab. The [install guide](docs/install.md) covers the other environments, tarball installs, configuration, your data and removal.
+Then state a goal in the chat and open the **Hodos learning** tab. The [install guide](docs/install.md) covers the other environments, tarball installs, configuration and your data.
+
+To turn chess off but keep it installed, put this row in the profile's patch list, `$DSH_HOME/profiles/web/cordis.patch.yml` (`$DSH_HOME` defaults to `~/.dsh`; the file starts as an empty list, `[]`, which the row replaces), and restart:
+
+```yaml
+- id: hodos-chess
+  disabled: true
+```
+
+To uninstall (your learning records in `$DSH_HOME/hodos` stay until you delete them):
+
+```sh
+dsh plugin --profile web remove @hodos/chess
+dsh plugin --profile web remove @hodos/dsh
+```
 
 ## Develop
 
@@ -71,6 +85,7 @@ The end-to-end tests use a scripted model and throwaway Harness homes. They need
 | [DSH compatibility report](docs/dsh-integration/compatibility.md) | Every DeepSeek Harness API Hodos uses, and how it was verified |
 | [ADRs](docs/adr/README.md) | Architecture decisions |
 | [PRD](docs/PRD.md), [threat model](docs/hodos-threat-model.md) | The original product requirements and the threat model of that design |
+| [MVP report](docs/reports/2026-10-27-mvp-report.md) | What was built, the decisions, the tests run with their results, defects found, gaps and the next step |
 
 ## Licensing
 

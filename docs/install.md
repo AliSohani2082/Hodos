@@ -59,7 +59,7 @@ The tutor starts a journey. Open the **Hodos learning** tab in the right sidebar
 
 ## Configure
 
-Hodos's settings live in the profile's patch file, `$DSH_HOME/profiles/web/cordis.patch.yml` (`$DSH_HOME` defaults to `~/.dsh`). A patch row replaces the row's whole `config`, so restate `dataDir`:
+Hodos's settings live in the profile's patch file, `$DSH_HOME/profiles/web/cordis.patch.yml` (`$DSH_HOME` defaults to `~/.dsh`). It is a YAML list that starts empty (`[]`); replace that with your rows. A patch row replaces the row's whole `config`, so restate `dataDir`:
 
 ```yaml
 - id: hodos
