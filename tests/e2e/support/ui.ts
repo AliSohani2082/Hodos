@@ -14,6 +14,7 @@ export function composer(page: Page): Locator {
 /**
  * Open DSH and get to a usable composer: dismiss the preview notice and, on
  * first use, pick the session workspace in DSH's in-browser directory picker.
+ * On a phone-sized screen the picker sits behind an "Add workspace" menu item.
  */
 export async function enterDsh(page: Page, url: string): Promise<void> {
   await page.goto(url)
@@ -22,11 +23,18 @@ export async function enterDsh(page: Page, url: string): Promise<void> {
     const notice = page.getByRole('button', { name: 'Continue' })
     if (await notice.count() > 0) await notice.click()
     if (await composer(page).getAttribute('contenteditable') === 'true') return true
-    const choose = page.getByRole('button', { name: 'Choose workspace' })
-    if (await choose.count() > 0) {
-      await choose.first().click()
-      await page.getByRole('button', { name: 'Open' }).click()
+    const open = page.getByRole('button', { name: 'Open', exact: true })
+    if (await open.count() > 0) {
+      await open.click()
+      return await composer(page).getAttribute('contenteditable') === 'true'
     }
+    const add = page.getByRole('menuitem', { name: /Add workspace/ })
+    if (await add.count() > 0) {
+      await add.first().click()
+      return false
+    }
+    const choose = page.getByRole('button', { name: 'Choose workspace' })
+    if (await choose.count() > 0) await choose.first().click()
     return await composer(page).getAttribute('contenteditable') === 'true'
   }, { timeout: 30_000, interval: 1_000 }).toBe(true)
 }

@@ -1,0 +1,30 @@
+# DeepSeek Harness with Hodos. From this folder:
+#
+#   cp .env.example .env     # then edit .env
+#   docker compose up -d --build
+#   docker compose logs hodos | grep "dsh web:"     # the address to open on the phone
+#
+# See docs/self-hosting.md before you publish the port on a network.
+services:
+  hodos:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: true
+    ports:
+      # Published on this machine only until you choose otherwise (HODOS_BIND in .env).
+      - "${HODOS_BIND:-127.0.0.1}:${HODOS_PORT:-8787}:${HODOS_PORT:-8787}"
+    volumes:
+      - hodos-data:/data
+      - hodos-workspace:/workspace
+      # For HODOS_TLS_CERT and HODOS_TLS_KEY, mount the certificate folder, for example:
+      # - ./certs:/certs:ro
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  hodos-data:
+  hodos-workspace:

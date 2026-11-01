@@ -1,0 +1,10 @@
+.git
+**/node_modules
+**/lib
+**/dist
+dist-packages
+coverage
+.e2e
+deploy/.env
+spikes
+*.log

@@ -9,6 +9,13 @@ What this release does not do, or has not been shown to do. The [security notes]
 - **One learner.** DSH has a single owner principal, so everyone who can use the Harness shares one Hodos learner.
 - **Not on npm.** Install from a checkout or from the tarballs `pnpm pack:dsh` builds ([install guide](install.md)).
 
+## Self-hosting
+
+- **The Docker image was not built.** The environment it was written in had no Docker daemon. Its steps were run outside a container ([self-hosting](self-hosting.md#in-a-container)).
+- **Not tested on a real phone, behind a real proxy or over a real VPN.** The end-to-end test uses an iPhone-sized touch browser and a made-up host name on one machine. A restart with signed-in phones, DSH's terminal tab, and the Knowledge graph tab, Python sandbox and practice sessions on a phone-sized screen were not checked.
+- **TLS is yours to manage.** DeepSeek Harness serves a certificate you give it and does not renew it.
+- **Reaching the Harness is reaching a shell.** DSH's chat has shell and file tools; the sign-in link and cookie are the only protection. See [security](security.md#remote-access).
+
 ## The tutor
 
 - **No real model in the tests.** Every end-to-end run drives DeepSeek Harness with a scripted model. How well a real DeepSeek model probes, plans and teaches, how often it writes a wrong question or a wrong key, and whether it follows the prompt rules, has not been measured. The guarantees that matter most do not depend on it: keys stay out of the browser, bank keys stay out of the model, and only Hodos's grading moves a mastery estimate.

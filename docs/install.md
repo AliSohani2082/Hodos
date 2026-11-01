@@ -57,6 +57,10 @@ Open the address it prints. In a new chat, say what you want to learn, for examp
 
 The chat becomes a learning session. Open the **Hodos learning** tab in the right sidebar: the tutor's questions appear there, first to probe what you already understand, then the plan map, then questions between teaching steps. The **Knowledge graph** tab (listed next to it) fills from what the tutor taught; pick propositions there and press **Practise selected** to practise them in a new chat. Sessions are saved in the Hodos database; when you come back to the chat, its tutor gets the session's tools and context again.
 
+## Open it from a phone or another computer
+
+`dsh web` listens on this machine only. To reach it from elsewhere, use `deploy/install.sh` and `deploy/serve.sh` or the Docker setup: [self-hosting](self-hosting.md) covers the choices (a VPN, TLS, a proxy), what to open on the phone, and the security caveats. In short, whoever signs in can run commands as the user that started the Harness.
+
 ## Configure
 
 Hodos's settings live in the profile's patch file, `$DSH_HOME/profiles/web/cordis.patch.yml` (`$DSH_HOME` defaults to `~/.dsh`). It is a YAML list that starts empty (`[]`); replace that with your rows. A patch row replaces the row's whole `config`, so restate `dataDir`:

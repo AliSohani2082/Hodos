@@ -22,6 +22,15 @@ Hodos protects three things:
 | Grader output → verdict and mastery | Grader results are validated (schema, size, only skills the item is tagged with). Only `check` and `review` answers graded by a `deterministic`, `engine` or `oracle` grader move a plan node's estimate; `self-report` and `ai-rubric` grades never do, and neither do the tutor's judgments of answers in the learner's own words or of practice problems. No plugin and no tool can set an estimate. A grader that throws, times out or returns something malformed fails closed. | `learn.test.ts`, `registry-sandbox.test.ts`; `dsh-learning.e2e.test.ts` (a sandbox answer is not evidence) |
 | Hodos → models and the network | Hodos makes no outbound requests of its own and sends no telemetry. Its only model calls are knowledge-graph extraction, through DSH's `ctx.llm` on the user's default model, with no tools, under a daily budget (below). It reads no credentials. | `knowledge.test.ts` (budget); `dsh-learning.e2e.test.ts` (the extraction request carries no tools) |
 
+## Remote access
+
+Opening DeepSeek Harness from another device ([self-hosting](self-hosting.md)) moves the whole boundary onto DSH's own sign-in. Hodos adds no sign-in of its own: its routes pass DSH's check like everything else.
+
+- **What protects it.** A random launch token, redeemed once for a signed cookie that is bound to the host name and port it was issued for (30 days by default). API and app requests are refused (403) unless their `Host` header is the listening address, a loopback name or a host named as trusted. Tested in `tests/e2e/selfhost.e2e.test.ts` on a network address and over TLS.
+- **What `serve.sh` enforces.** It never listens on all addresses (DSH refuses that as well), accepts no wildcard trusted host, and refuses plain HTTP on a network address unless TLS is configured, the public address is `https://`, or `HODOS_ALLOW_PLAIN_HTTP=1` says the network is private and encrypted. Tested in `tests/integration/serve-script.test.ts`.
+- **What it does not do.** Plain HTTP on a network sends the cookie unencrypted, which is why the opt-in exists. The token is in the printed line, so anyone who can read the log can sign in. DSH has no logout: revoking every browser means deleting the owner credential record and restarting. The Harness's shell tool runs as the user that started it; running it in the container or as a dedicated user limits what that reaches.
+- **Model key.** Passed in the environment, never stored by Hodos. DSH's shell tool scrubs it from the agent's environment (tested with an `env` command through the mock model).
+
 ## Plugin trust tiers
 
 | Tier | How a plugin gets it | What Hodos runs |

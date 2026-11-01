@@ -39,6 +39,8 @@ dsh web
 
 Then tell the agent what you want to learn and open the **Hodos learning** tab in the right sidebar; the **Knowledge graph** tab is listed next to it. The chess plugin is only an example: install the plugins whose interfaces you want, or none. The [install guide](docs/install.md) covers the other plugins, tarball installs, configuration and your data.
 
+To open it from your phone, see [self-hosting](docs/self-hosting.md): a script and a Docker setup serve DeepSeek Harness on a network address, with TLS or over a VPN, and the Hodos panel works on a phone-sized touch screen.
+
 To turn chess off but keep it installed, put this row in the profile's patch list, `$DSH_HOME/profiles/web/cordis.patch.yml` (`$DSH_HOME` defaults to `~/.dsh`; the file starts as an empty list, `[]`, which the row replaces), and restart:
 
 ```yaml
@@ -61,7 +63,7 @@ dsh plugin --profile web remove @hodos/dsh
 | `pnpm build` | Compile the packages, the workspace app, the DSH browser half and the renderers |
 | `pnpm typecheck` | Type-check Node, browser and test code |
 | `pnpm lint` | [oxlint](https://oxc.rs) with type-aware rules; the policy is in [`.oxlintrc.json`](.oxlintrc.json) |
-| `pnpm test` | Unit and integration tests, offline and without keys |
+| `pnpm test` | Unit and integration tests, offline and without keys (including the self-hosting launcher's rules) |
 | `pnpm test:security` | Only the tests named "security" |
 | `pnpm test:e2e` | Builds, then runs the browser tests and the DeepSeek Harness tests; set `HODOS_DSH_BIN` to the `dsh` launcher, or the Harness tests are skipped |
 | `pnpm verify:puzzles` | Check the chess puzzles with a UCI engine (`--engine <path>` or `HODOS_STOCKFISH`); `--write` records the result |
@@ -83,6 +85,7 @@ The end-to-end tests use a scripted model and throwaway Harness homes. They need
 |---|---|
 | [Architecture](docs/architecture.md) | Packages, the runtime picture, a learning session step by step, the knowledge graph, practice, mastery, storage |
 | [Install guide](docs/install.md) | Installing into DeepSeek Harness, configuration, data, removal |
+| [Self-hosting](docs/self-hosting.md) | Serving DeepSeek Harness with Hodos on a network address, opening it from a phone, the Docker setup, and what was tested |
 | [Security notes](docs/security.md) | Trust boundaries, plugin tiers, the sandbox, answer keys, and what is not covered |
 | [Known limitations](docs/limitations.md) | What this release does not do or has not been shown to do |
 | [Plugin guide](docs/plugin-guide.md) | Writing an environment plugin |
