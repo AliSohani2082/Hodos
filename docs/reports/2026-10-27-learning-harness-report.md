@@ -6,7 +6,7 @@
 | Branch | `claude/relaxed-ptolemy-s0ydt3` |
 | Commits | `6e6097a` (ADR-0007) to `d0b0e58`, plus this report |
 | Verified at | commit `d0b0e58` (checks below) |
-| Tested with | Linux x64, Node.js 24.22.1, pnpm 11.28.5, DeepSeek Harness `@deepseek-ai/dsh@0.2.1-rc.3`, Chromium through Playwright 1.63.0, CPython 3.13.17. No Stockfish in this environment |
+| Tested with | Linux x64, Node.js 24.22.1, pnpm 11.28.5, DeepSeek Harness `@deepseek-ai/dsh@0.2.1-rc.3`, Chromium through Playwright 1.63.0, CPython 3.13.17, Stockfish 17.1 |
 
 ## Summary
 
@@ -54,12 +54,12 @@ On the source of commit `d0b0e58`, after `pnpm clean` and a fresh build. The end
 |---|---|---|
 | Type check | `pnpm typecheck` | passed |
 | Lint | `pnpm lint` | 0 findings in 165 files |
-| Unit and integration | `pnpm test` | 242 passed, 2 skipped (the live Stockfish and CPython checks) |
+| Unit and integration | `pnpm test` | 242 passed, 2 skipped (the live Stockfish and CPython checks, which the next two rows ran) |
 | The live CPython check | `HODOS_PYTHON=/usr/bin/python3 vitest run … -t CPython` | passed |
-| The live Stockfish check | — | not run: no Stockfish in this environment |
+| The live Stockfish check | `HODOS_STOCKFISH=… vitest run … -t "engine protocol"` | passed (Stockfish 17.1) |
 | Security subset | `pnpm test:security` | 29 passed |
 | Python content | `pnpm verify:snippets` (CPython 3.13.17) | 52 of 52 programs print exactly their expected output |
-| Chess content | `pnpm verify:puzzles` | not re-run (no Stockfish; the puzzle set is unchanged since the MVP report, where 27 were verified) |
+| Chess content | `pnpm verify:puzzles` (Stockfish 17.1) | 27 verified, 0 failed |
 | End to end | `HODOS_DSH_BIN=… HODOS_E2E_CLAUDE_CODE=1 pnpm test:e2e` | 8 files, 31 tests passed |
 
 The end-to-end files, all against real DeepSeek Harness 0.2.1-rc.3 with a scripted model unless noted:
