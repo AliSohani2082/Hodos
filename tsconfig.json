@@ -1,0 +1,29 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/plugin-sdk"
+    },
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/testing"
+    },
+    {
+      "path": "packages/dsh-adapter"
+    },
+    {
+      "path": "packages/environments/chess"
+    },
+    {
+      "path": "packages/environments/language"
+    },
+    {
+      "path": "packages/environments/math"
+    },
+    {
+      "path": "packages/environments/code"
+    }
+  ]
+}

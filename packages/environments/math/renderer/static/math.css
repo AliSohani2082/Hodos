@@ -1,0 +1,27 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --grid: #e3e6ea;
+  --axis: #59636e;
+  --curve: #0b5cd5;
+  --point: #cf222e;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0d1117; --fg: #e6edf3; --grid: #262c36; --axis: #9198a1; --curve: #4493f8; --point: #f85149; color-scheme: dark; }
+}
+
+:root[data-theme="dark"] { --bg: #0d1117; --fg: #e6edf3; --grid: #262c36; --axis: #9198a1; --curve: #4493f8; --point: #f85149; color-scheme: dark; }
+
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.math { padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.prompt { margin: 0; align-self: stretch; font-weight: 600; }
+.formula { font-size: 1.35rem; }
+.formula-text { font-family: ui-monospace, monospace; }
+math { font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", "DejaVu Serif", serif; }
+.graph { max-width: 100%; height: auto; background: var(--bg); border: 1px solid var(--grid); border-radius: 4px; }
+.graph .grid { stroke: var(--grid); stroke-width: 1; }
+.graph .axis { stroke: var(--axis); stroke-width: 1.5; }
+.graph .curve { stroke: var(--curve); stroke-width: 2.5; fill: none; }
+.graph .point { fill: var(--point); }

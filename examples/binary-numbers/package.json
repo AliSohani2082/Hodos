@@ -1,0 +1,16 @@
+{
+  "name": "hodos-example-binary-numbers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sample third-party Hodos plugin: declarative data, a QuickJS-sandboxed grader and a sandboxed iframe renderer. No code runs in the host.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "hodos-plugin.json",
+    "grader.js",
+    "content",
+    "renderer",
+    "LICENSE",
+    "README.md"
+  ]
+}

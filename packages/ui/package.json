@@ -1,0 +1,24 @@
+{
+  "name": "@hodos/ui",
+  "version": "0.1.0",
+  "description": "Hodos learning workspace: tutor pane, environment pane and path footer, served by the Hodos host adapter",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {},
+  "devDependencies": {
+    "@hodos/core": "workspace:*",
+    "@hodos/plugin-sdk": "workspace:*",
+    "katex": "0.16.47",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

@@ -1,0 +1,68 @@
+# DeepSeek Harness compatibility report
+
+This report maps every Hodos capability to the DeepSeek Harness (DSH) API it uses, or to the Hodos adapter that fills a gap. It is the source of truth for what the DSH adapter (`@hodos/dsh`) may depend on. The decision behind it is [ADR-0006](../adr/0006-hodos-as-dsh-plugin-ecosystem.md).
+
+## Versions inspected and verified
+
+| Item | Value |
+|---|---|
+| Source inspected | `deepseek-ai/deepseek-harness` `master` at `22ddee3792402c3e70ec5f86a63c3e3e895a2f60` (2026-10-23), `git describe`: `dsh-v0.2.1-rc.3-1533-g22ddee3792` |
+| Runtime verified | `@deepseek-ai/dsh@0.2.1-rc.3` from npm (the release nearest the inspected commit), installed into an isolated prefix |
+| Supported range declared | `engines.dsh: ">=0.2.1-rc.3 <0.3.0"` |
+| Toolchain | Node 24.22.1 (DSH requires `>=24.9`), pnpm 11.28.5 (DSH's pinned package manager) |
+| Cordis | `@deepseek-ai/cordis` 4.0.5 (vendored and rescoped by DSH) |
+
+Every API below was checked twice: in the source at the inspected commit, and in the published `lib/types/*.d.ts` of the 0.2.1-rc.3 packages. Where the two differ, the published rc.3 surface wins and the difference is noted.
+
+The status column says what verified each row. "e2e" names a test in `tests/e2e/` that ran against `@deepseek-ai/dsh@0.2.1-rc.3`; the statuses were last re-checked on 2026-10-27 against the end-to-end suite of that day. "Spike" is the throwaway integration spike of [ADR-0006](../adr/0006-hodos-as-dsh-plugin-ecosystem.md). "Unit" means a test with fake DSH services only.
+
+## Extension-point inventory
+
+| Need | DSH API (owner package) | How Hodos uses it | Status |
+|---|---|---|---|
+| Plugin format | Cordis function/object/`Service` plugins with `name`, `inject`, `Config`, `apply(ctx, config)` (`@deepseek-ai/cordis`) | Every Hodos host module is a Cordis plugin; sub-plugins are mounted with `ctx.plugin()` | Verified (spike + e2e) |
+| Service registration and injection | `class X extends Service { constructor(ctx) { super(ctx, 'hodos') } }`; `inject: ['hodos']` waits for the service | `ctx.hodos` is the Hodos service; environment bundles inject it | Verified (e2e) |
+| Lifecycle and disposal | `ctx.effect(() => disposer)`, `ctx.on()`; registries return disposers; dependants unload when an injected service disappears | Plugin registration, routes, tools and timers are effects; unloading a plugin removes its kinds, graders and renderers, and the exercise tools of open sessions are re-synced | Verified (e2e: every DSH test loads the bundles; unit: registry disposal and the re-sync of session tools). A restart with a bundle disabled was verified by the journey suite this release replaced; live unloading without a restart is not tested |
+| Configuration | Exported `Config` Schemastery schema (`@deepseek-ai/schemastery`); `!!js` expressions in `cordis.yml` `config` | `dataDir: !!js dshHomePath('hodos')`, mastery threshold, the background-call budget, trusted plugin list, plugin directories | Verified (spike + e2e: `example-plugin`, `dsh-claude-drafting` patch the Hodos row) |
+| Tool registration | `ctx.tools.register(defineTool({ name, description, parameters, output: { schema, render }, execute(args, exec) }))` (`@deepseek-ai/dsh-tools`) | `hodos_*` tools. Object outputs use per-property `required: true` and mandatory `additionalProperties` | Verified (spike + e2e) |
+| Tool restriction and guards | `agent.ctx.tools.restrict({ allow })` filters the tools a scope inherits, never the ones its own layer registers; `agent.ctx.tools.guard(fn)` refuses a call by returning a reason, and no later guard can allow it | A chat that is a Hodos session keeps Hodos's global tools and DSH's `ask_user_question`; its phase tools are registered in the agent's own scope and swapped at each phase; a guard refuses everything else, including DSH's `subagent`, which DSH registers in each agent's own scope | Verified (e2e: `dsh-security`, the tools offered before and after the session starts, a refused `subagent` call, a failed hidden `bash` call; `dsh-learning`, the probe, teach and practice tool sets) |
+| Caller identity in tools | `exec.agent` (the calling `Agent`); `Agent.id: SessionId` | Learner binding is looked up by session id; tools take no learner id argument | Verified. The source also has `CreateAgentOptions.sessionId`; the live handle field is `id` |
+| System prompt extensions | `ctx.systemPrompt.section({ name, order, text })`; `ctx.systemPrompt.context({ name, order, text })` (`@deepseek-ai/dsh-system-prompt`) | A short static section on when to start a session; one context provider whose text is empty unless the calling agent's chat is a Hodos session, and otherwise holds the phase's instructions and the session's state. DSH sends context texts as a "Current runtime context" user message, not in `system` | Verified (e2e: `dsh-learning`, the prober's, teacher's and practice instructions reach the model after each swap) |
+| Agent and session events | `agent/created` (serial), `agent/disposed`, `session/event` (durable `SessionEvent`s: `assistant/message`, `turn/end`) | A Hodos session's tools and held answers are restored when its agent is created; the teacher's `assistant/message` text is recorded for the knowledge graph, and `turn/end` triggers extraction once enough is new | Verified (e2e: `dsh-learning`, the teacher's prose reaches the extraction request). Restoring on `agent/created` and the automatic trigger are unit-tested with DSH's event shapes |
+| Ending a turn, and the answer as the next turn | `exec.concludeTurn()` in a tool's `execute` (`@deepseek-ai/dsh-tools`); `agent.followup(createUserMessage({ content, source: { kind, form: 'notice', summary } }))` and `MessageSourceMap` declaration merging (`@deepseek-ai/dsh-llm`) | A question tool ends the tutor's turn; the graded answer, a practice submission or a session started from the panel reaches the agent as its next user message. DSH merges the concluded tool's result with that message | Verified (e2e: `dsh-learning`, every answer reaches the model as the next message) |
+| Tool-free model calls | `ctx.llm.prepareCall({ provider, model, maxTokens }, signal)` then `call.stream({ ...call.config, system, messages, signal })`, assembled with `BlockAssembler` (`@deepseek-ai/dsh-llm`); `ctx.agentDefaultModel.currentSelection()` (`@deepseek-ai/dsh-agent-default-model`) | Knowledge-graph extraction and identity calls on the user's default model, with no tools, under Hodos's daily budget | Verified (e2e: `dsh-learning`, the extraction request reaches the scripted model with no tools offered) |
+| Persistent storage | `ctx.storage` / `ctx.storageDomain` (KV units, single-call atomicity, `version-mismatch` without migration) | **Not used** for learning data; see the storage adapter row | Inspected |
+| Storage adapter (gap) | `node:sqlite` `DatabaseSync` (same engine as `@deepseek-ai/dsh-storage-sqlite`) | Hodos SQLite file under `dshHomePath('hodos')`, WAL, versioned migrations, `BEGIN IMMEDIATE` transactions | Verified (restart test) |
+| HTTP routes | `ctx.webServer.register({ kind: 'prefix', path, handler })` (`@deepseek-ai/dsh-host-webserver`); rc.3 accepts handler routes only | `/hodos/api/*`, `/hodos/app/*`, `/hodos/env/*` | Verified (spike + e2e) |
+| Route authentication | `ctx.connection.requestRejection({ headers })` → `401 \| 403 \| undefined` (`@deepseek-ai/dsh-client-connection`): Host/Origin checks plus the browser session cookie | Every `/hodos/api/*` and `/hodos/app/*` request; the DSH owner principal maps to the local learner. Renderer files under `/hodos/env/*` are public plugin assets | Verified (e2e: `dsh-security`, 401 without the sign-in, 200 with it) |
+| Web application extension | `dsh.client: { platform: 'web' }` in `package.json` + `exports["./client"]`; the bundle is a CommonJS factory passed to `window.__ModuleLoader__.load({ id, factory })`; platform modules (`react`, `react-dom`, `@deepseek-ai/cordis`, …) come from the injected `require` (`@deepseek-ai/dsh-client-modules`) | `@hodos/dsh/client` is built with esbuild into that format | Verified (spike + e2e) |
+| Custom frontend rendering | `ctx.sidebarRightTabs.register({ id, kind, title, guide })`, called once per tab type, and `ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name, key, inject }, Component))` (`@deepseek-ai/dsh-client-ui-sidebar-right`, `ui-slots`); slot `inject(sessionId)` gives the session | Two right-sidebar tab types: "Hodos learning" (an iframe of `/hodos/app/?session=<id>`) and "Knowledge graph" (`?view=graph`) | Verified (spike + e2e: `dsh-learning` opens both) |
+| Opening the tab from code | `ctx.sidebarRight.openTab(kind)` | Not used. The tutor's tool results tell the learner to open the "Hodos learning" tab, which the tab type's guide entry lists in the sidebar | Not used |
+| Plugin installation | `dsh plugin --profile <p> add <path\|tarball\|spec>`; `remove`; `package.json` `dsh.bundle.patch`; `engines.dsh` checked on install and boot (`@deepseek-ai/dsh-plugin-manager`) | Each Hodos package is a bundle; environments install separately. A path installs as `link:`; a tarball through `pnpm add` | Verified (e2e: every DSH test installs with `add <path>`; `dsh-tarball-install` installs the `pnpm pack:dsh` tarballs). `remove` checked by hand |
+| Enable/disable | Profile `cordis.patch.yml` row overrides `- id: hodos-chess\n  disabled: true`; Plugins page toggles | Documented per plugin | `disabled: true` through a `--patch` overlay was verified by the journey suite this release replaced; the current suite patches configuration only. The Plugins page toggle is not tested |
+| Subagent delegation | `ctx.subagents.startActivation({ provider, label, request: { prompt, parent, outputSchema? }, signal, delivery: 'caller' })`; providers registered by `dsh-subagent-claude-code`, `-codex`, `-acp`, in-process spawn (`@deepseek-ai/dsh-subagent`) | `hodos_draft_course` drafts a course through the configured provider; mounted only when `subagents` exists; not offered to Hodos sessions | Verified with the `claude-code` provider (e2e, opt-in: `dsh-claude-drafting`, against a local stand-in for Anthropic's API with a dummy key); other providers untested |
+| Human approval | `tools/pre-execute` waterfall may return an `ask` decision answered through `ctx.approval` | Not used: course approval is a learner action in the Hodos workspace, never a model call | Inspected |
+| Model provider | Anthropic-Messages-compatible SSE at `$DEEPSEEK_BASE_URL/v1/messages` (`@deepseek-ai/dsh-llm-deepseek`) | Not used by Hodos directly. Keyless tests point DSH at `@hodos/testing`'s scripted mock | Verified (spike + e2e) |
+
+## Packaging rules that DSH imposes
+
+- A bundle is an npm package with `dsh.bundle.patch` pointing at a YAML patch list; the patch inserts rows by `id`. Rows in a bundle patch name packages resolvable from that bundle.
+- DSH packages shared with the host (`@deepseek-ai/cordis`, `@deepseek-ai/dsh-tools`, `@deepseek-ai/dsh-llm`, `@deepseek-ai/schemastery`) are `peerDependencies` so the running installation's copy is used.
+- A browser half must not runtime-import another DSH client plugin; it may import only the platform modules. Hodos's browser half imports `react` only and talks to DSH through injected services.
+- Packages installed from git need a `prepare` build and an explicit build allowance; Hodos ships prebuilt tarballs instead.
+
+## Gaps and adapters
+
+| Gap | Adapter | Remaining limitation |
+|---|---|---|
+| No migratable, transactional storage seam | Hodos SQLite store with its own migrations | Not visible in DSH's storage tooling; backed up by copying the `hodos` directory under `$DSH_HOME` |
+| One DSH principal | Owner → `learner:local`; learner-scoped tables | Multi-learner support needs DSH principals first |
+| No plugin-worker isolation in DSH | QuickJS-wasm in a killable child process (ADR-0002 mechanism) for untrusted graders/validators | No OS confinement layer; trusted built-ins run in-process |
+| `ui-sidebar-browser` refuses the DSH origin | Hodos registers its own tab type | — |
+| A tool restriction cannot hide tools registered in the agent's own scope (DSH's `subagent`) | An agent-scoped tool guard refuses them in Hodos sessions | The model still sees `subagent` and may try it; the call is refused |
+| A tool that waits for the learner holds the turn open, and a restart loses the call | Question tools end the turn; answers arrive as follow-ups, held in the database while the chat's agent is not running ([ADR-0008](../adr/0008-learning-session-mechanics.md)) | The learner can still type in the chat while a question is open |
+| No secure code runner in this environment | `@hodos/code` runs Python in the learner's browser (Pyodide in the sandboxed renderer), self-reported; it also ships a non-executing kind and a tested runner adapter contract | Server-graded code exercises are disabled unless a runner is configured; browser runs never count as mastery evidence |
+
+## Safe-to-consume services
+
+Hodos consumes only documented Service Definitions: `tools`, `systemPrompt`, `agents`, `webServer`, `connection`, `llm` and `agentDefaultModel` (for extraction), `subagents` (optional), and on the browser `slots` and `sidebarRightTabs`. It never imports a concrete provider (`dsh-agent-loop`, `dsh-bash-local`, …), never writes DSH's own storage units, and never reads DSH credentials.

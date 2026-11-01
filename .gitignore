@@ -1,0 +1,11 @@
+node_modules/
+/packages/**/lib/
+/packages/**/dist/
+/examples/**/lib/
+/examples/**/dist/
+/dist-packages/
+*.tsbuildinfo
+/coverage/
+/.e2e/
+*.log
+.DS_Store

@@ -1,0 +1,641 @@
+{
+  "id": "binary-basics",
+  "version": "1.0.0",
+  "title": "Binary basics",
+  "courses": [
+    {
+      "id": "binary-numbers",
+      "version": "1.0.0",
+      "title": "Binary numbers",
+      "description": "Read and write whole numbers from 0 to 255 in binary.",
+      "keywords": [
+        "binary",
+        "bits",
+        "base 2",
+        "numbers",
+        "number systems",
+        "computing"
+      ],
+      "language": "en",
+      "goal": "binary.write",
+      "environments": [
+        "binary.bits"
+      ],
+      "skills": [
+        {
+          "id": "binary.read",
+          "title": "Reading binary numbers",
+          "kind": "procedure",
+          "environment": "binary.bits",
+          "description": "Turn a binary number into decimal by adding place values."
+        },
+        {
+          "id": "binary.write",
+          "title": "Writing numbers in binary",
+          "kind": "procedure",
+          "environment": "binary.bits",
+          "requires": [
+            "binary.read"
+          ],
+          "description": "Turn a decimal number into binary."
+        }
+      ],
+      "lessons": [
+        {
+          "id": "binary-read",
+          "skillId": "binary.read",
+          "title": "Reading binary numbers",
+          "source": "# Reading binary numbers\n\nBinary numbers use only the digits 0 and 1. Each place is worth twice the place to its right: 1, 2, 4, 8, 16, 32, 64 and 128.\n\n{% binary-bits value=14 bits=4 caption=\"1110 is 8 + 4 + 2 = 14\" /%}\n\nTo read a binary number, add up the place values that hold a 1. The rightmost place is the 1s place.\n\n{% check question=\"What is the binary number 100 in decimal?\" options=[{id: \"a\", text: \"4\"}, {id: \"b\", text: \"100\"}, {id: \"c\", text: \"1\"}] answer=\"a\" explain=\"The only 1 is in the 4s place.\" /%}\n"
+        },
+        {
+          "id": "binary-write",
+          "skillId": "binary.write",
+          "title": "Writing numbers in binary",
+          "source": "# Writing numbers in binary\n\nStart at the largest place value that fits into the number, write 1 there and subtract it. Then go right one place at a time: write 1 when the place value fits into what is left, and 0 when it does not.\n\n{% binary-bits value=22 bits=8 caption=\"22 = 16 + 4 + 2, so 22 is 10110 in binary\" /%}\n\n{% check question=\"Which binary number is 8?\" options=[{id: \"a\", text: \"1000\"}, {id: \"b\", text: \"0001\"}, {id: \"c\", text: \"111\"}] answer=\"a\" explain=\"8 is a single 1 in the 8s place: 1000.\" /%}\n"
+        }
+      ],
+      "items": [
+        {
+          "id": "read-1",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.read",
+              "weight": 1
+            }
+          ],
+          "difficulty": -1,
+          "modes": [
+            "practice",
+            "review"
+          ],
+          "payload": {
+            "prompt": "What is the binary number 101 in decimal?",
+            "direction": "to-decimal",
+            "value": "101"
+          },
+          "key": {
+            "answer": "5"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Each place is worth twice the place to its right: 1, 2, 4, 8, 16 and so on. Add the places that hold a 1."
+            },
+            {
+              "level": 5,
+              "text": "101 is 4 + 1 = 5."
+            }
+          ],
+          "explanation": "The 1s of 101 are worth 4 + 1, which makes 5.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "read-2",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.read",
+              "weight": 1
+            }
+          ],
+          "difficulty": -0.5,
+          "modes": [
+            "practice",
+            "review"
+          ],
+          "payload": {
+            "prompt": "What is the binary number 1100 in decimal?",
+            "direction": "to-decimal",
+            "value": "1100"
+          },
+          "key": {
+            "answer": "12"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Each place is worth twice the place to its right: 1, 2, 4, 8, 16 and so on. Add the places that hold a 1."
+            },
+            {
+              "level": 5,
+              "text": "1100 is 8 + 4 = 12."
+            }
+          ],
+          "explanation": "The 1s of 1100 are worth 8 + 4, which makes 12.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "read-3",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.read",
+              "weight": 1
+            }
+          ],
+          "difficulty": 0,
+          "modes": [
+            "practice",
+            "review"
+          ],
+          "payload": {
+            "prompt": "What is the binary number 10011 in decimal?",
+            "direction": "to-decimal",
+            "value": "10011"
+          },
+          "key": {
+            "answer": "19"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Each place is worth twice the place to its right: 1, 2, 4, 8, 16 and so on. Add the places that hold a 1."
+            },
+            {
+              "level": 5,
+              "text": "10011 is 16 + 2 + 1 = 19."
+            }
+          ],
+          "explanation": "The 1s of 10011 are worth 16 + 2 + 1, which makes 19.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "read-c1",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.read",
+              "weight": 1
+            }
+          ],
+          "difficulty": -0.5,
+          "modes": [
+            "checkpoint"
+          ],
+          "payload": {
+            "prompt": "What is the binary number 110 in decimal?",
+            "direction": "to-decimal",
+            "value": "110"
+          },
+          "key": {
+            "answer": "6"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Each place is worth twice the place to its right: 1, 2, 4, 8, 16 and so on. Add the places that hold a 1."
+            },
+            {
+              "level": 5,
+              "text": "110 is 4 + 2 = 6."
+            }
+          ],
+          "explanation": "The 1s of 110 are worth 4 + 2, which makes 6.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "read-c2",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.read",
+              "weight": 1
+            }
+          ],
+          "difficulty": 0,
+          "modes": [
+            "checkpoint"
+          ],
+          "payload": {
+            "prompt": "What is the binary number 1011 in decimal?",
+            "direction": "to-decimal",
+            "value": "1011"
+          },
+          "key": {
+            "answer": "11"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Each place is worth twice the place to its right: 1, 2, 4, 8, 16 and so on. Add the places that hold a 1."
+            },
+            {
+              "level": 5,
+              "text": "1011 is 8 + 2 + 1 = 11."
+            }
+          ],
+          "explanation": "The 1s of 1011 are worth 8 + 2 + 1, which makes 11.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "read-c3",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.read",
+              "weight": 1
+            }
+          ],
+          "difficulty": 0.5,
+          "modes": [
+            "checkpoint"
+          ],
+          "payload": {
+            "prompt": "What is the binary number 11001 in decimal?",
+            "direction": "to-decimal",
+            "value": "11001"
+          },
+          "key": {
+            "answer": "25"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Each place is worth twice the place to its right: 1, 2, 4, 8, 16 and so on. Add the places that hold a 1."
+            },
+            {
+              "level": 5,
+              "text": "11001 is 16 + 8 + 1 = 25."
+            }
+          ],
+          "explanation": "The 1s of 11001 are worth 16 + 8 + 1, which makes 25.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "read-d1",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.read",
+              "weight": 1
+            }
+          ],
+          "difficulty": -1,
+          "modes": [
+            "diagnostic"
+          ],
+          "payload": {
+            "prompt": "What is the binary number 111 in decimal?",
+            "direction": "to-decimal",
+            "value": "111"
+          },
+          "key": {
+            "answer": "7"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Each place is worth twice the place to its right: 1, 2, 4, 8, 16 and so on. Add the places that hold a 1."
+            },
+            {
+              "level": 5,
+              "text": "111 is 4 + 2 + 1 = 7."
+            }
+          ],
+          "explanation": "The 1s of 111 are worth 4 + 2 + 1, which makes 7.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "write-1",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.write",
+              "weight": 1
+            }
+          ],
+          "difficulty": -1,
+          "modes": [
+            "practice",
+            "review"
+          ],
+          "payload": {
+            "prompt": "Write 6 in binary.",
+            "direction": "to-binary",
+            "value": "6"
+          },
+          "key": {
+            "answer": "110"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Start at the largest place value that fits (1, 2, 4, 8, 16, …), write 1 there and subtract it; then go right, writing 1 where the place value fits into what is left and 0 where it does not."
+            },
+            {
+              "level": 5,
+              "text": "6 = 4 + 2, which is 110 in binary."
+            }
+          ],
+          "explanation": "6 = 4 + 2, so the places worth 4, 2 hold a 1: 110.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "write-2",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.write",
+              "weight": 1
+            }
+          ],
+          "difficulty": -0.5,
+          "modes": [
+            "practice",
+            "review"
+          ],
+          "payload": {
+            "prompt": "Write 9 in binary.",
+            "direction": "to-binary",
+            "value": "9"
+          },
+          "key": {
+            "answer": "1001"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Start at the largest place value that fits (1, 2, 4, 8, 16, …), write 1 there and subtract it; then go right, writing 1 where the place value fits into what is left and 0 where it does not."
+            },
+            {
+              "level": 5,
+              "text": "9 = 8 + 1, which is 1001 in binary."
+            }
+          ],
+          "explanation": "9 = 8 + 1, so the places worth 8, 1 hold a 1: 1001.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "write-3",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.write",
+              "weight": 1
+            }
+          ],
+          "difficulty": 0.3,
+          "modes": [
+            "practice",
+            "review"
+          ],
+          "payload": {
+            "prompt": "Write 20 in binary.",
+            "direction": "to-binary",
+            "value": "20"
+          },
+          "key": {
+            "answer": "10100"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Start at the largest place value that fits (1, 2, 4, 8, 16, …), write 1 there and subtract it; then go right, writing 1 where the place value fits into what is left and 0 where it does not."
+            },
+            {
+              "level": 5,
+              "text": "20 = 16 + 4, which is 10100 in binary."
+            }
+          ],
+          "explanation": "20 = 16 + 4, so the places worth 16, 4 hold a 1: 10100.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "write-c1",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.write",
+              "weight": 1
+            }
+          ],
+          "difficulty": -0.5,
+          "modes": [
+            "checkpoint"
+          ],
+          "payload": {
+            "prompt": "Write 10 in binary.",
+            "direction": "to-binary",
+            "value": "10"
+          },
+          "key": {
+            "answer": "1010"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Start at the largest place value that fits (1, 2, 4, 8, 16, …), write 1 there and subtract it; then go right, writing 1 where the place value fits into what is left and 0 where it does not."
+            },
+            {
+              "level": 5,
+              "text": "10 = 8 + 2, which is 1010 in binary."
+            }
+          ],
+          "explanation": "10 = 8 + 2, so the places worth 8, 2 hold a 1: 1010.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "write-c2",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.write",
+              "weight": 1
+            }
+          ],
+          "difficulty": 0,
+          "modes": [
+            "checkpoint"
+          ],
+          "payload": {
+            "prompt": "Write 13 in binary.",
+            "direction": "to-binary",
+            "value": "13"
+          },
+          "key": {
+            "answer": "1101"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Start at the largest place value that fits (1, 2, 4, 8, 16, …), write 1 there and subtract it; then go right, writing 1 where the place value fits into what is left and 0 where it does not."
+            },
+            {
+              "level": 5,
+              "text": "13 = 8 + 4 + 1, which is 1101 in binary."
+            }
+          ],
+          "explanation": "13 = 8 + 4 + 1, so the places worth 8, 4, 1 hold a 1: 1101.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "write-c3",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.write",
+              "weight": 1
+            }
+          ],
+          "difficulty": 0.5,
+          "modes": [
+            "checkpoint"
+          ],
+          "payload": {
+            "prompt": "Write 24 in binary.",
+            "direction": "to-binary",
+            "value": "24"
+          },
+          "key": {
+            "answer": "11000"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Start at the largest place value that fits (1, 2, 4, 8, 16, …), write 1 there and subtract it; then go right, writing 1 where the place value fits into what is left and 0 where it does not."
+            },
+            {
+              "level": 5,
+              "text": "24 = 16 + 8, which is 11000 in binary."
+            }
+          ],
+          "explanation": "24 = 16 + 8, so the places worth 16, 8 hold a 1: 11000.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        },
+        {
+          "id": "write-d1",
+          "kind": "binary.convert",
+          "skills": [
+            {
+              "skillId": "binary.write",
+              "weight": 1
+            }
+          ],
+          "difficulty": -1,
+          "modes": [
+            "diagnostic"
+          ],
+          "payload": {
+            "prompt": "Write 3 in binary.",
+            "direction": "to-binary",
+            "value": "3"
+          },
+          "key": {
+            "answer": "11"
+          },
+          "hints": [
+            {
+              "level": 1,
+              "text": "Start at the largest place value that fits (1, 2, 4, 8, 16, …), write 1 there and subtract it; then go right, writing 1 where the place value fits into what is left and 0 where it does not."
+            },
+            {
+              "level": 5,
+              "text": "3 = 2 + 1, which is 11 in binary."
+            }
+          ],
+          "explanation": "3 = 2 + 1, so the places worth 2, 1 hold a 1: 11.",
+          "misconceptionFeedback": {
+            "reversed-bits": "Binary is written like decimal: the place worth the most is on the left, and the 1s place is on the right.",
+            "read-as-decimal": "The 1s and 0s are bits, not a decimal number: add up the place values that hold a 1.",
+            "counted-ones": "Each 1 is worth its place value (1, 2, 4, 8, …), not just 1."
+          },
+          "provenance": {
+            "source": "authored"
+          }
+        }
+      ]
+    }
+  ]
+}

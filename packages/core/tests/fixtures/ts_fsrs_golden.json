@@ -1,0 +1,11 @@
+{
+  "source": "ts-fsrs@5.4.2; fsrs({enable_fuzz:false}); next_state(memoryState, elapsed, grade); next_interval(stability, 0)",
+  "sequence": [
+    {"elapsed": 0, "grade": 3, "stability": 2.3065, "difficulty": 2.11810397, "interval": 2},
+    {"elapsed": 2, "grade": 3, "stability": 10.96433194, "difficulty": 2.11121424, "interval": 11},
+    {"elapsed": 5, "grade": 1, "stability": 1.42875311, "difficulty": 7.39223814, "interval": 1},
+    {"elapsed": 3, "grade": 3, "stability": 5.6713621, "difficulty": 7.38007427, "interval": 6},
+    {"elapsed": 12, "grade": 4, "stability": 30.93779998, "difficulty": 6.48984555, "interval": 31},
+    {"elapsed": 50, "grade": 3, "stability": 89.5903893, "difficulty": 6.47858407, "interval": 90}
+  ]
+}

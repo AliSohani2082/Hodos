@@ -1,0 +1,98 @@
+{
+  "manifest": {
+    "id": "example-binary",
+    "version": "1.0.0",
+    "displayName": "Binary numbers (example plugin)",
+    "description": "Read and write whole numbers in binary. A sample third-party plugin: data, a sandboxed grader and a sandboxed renderer.",
+    "requiresCore": "^0.1.0",
+    "sdkVersion": "0.1.0",
+    "license": "MIT",
+    "capabilities": {
+      "environments": ["binary.bits"],
+      "exerciseKinds": ["binary.convert"],
+      "graders": ["binary.grader"],
+      "lessonBlocks": ["binary-bits"],
+      "renderers": ["binary-bits"],
+      "contentPacks": ["binary-basics"]
+    },
+    "rendererPermissions": ["resize"]
+  },
+  "exerciseKinds": [
+    {
+      "id": "binary.convert",
+      "title": "Binary conversion",
+      "environment": "binary.bits",
+      "responseKind": "text",
+      "interaction": "single",
+      "grader": "binary.grader",
+      "format": { "guessable": false },
+      "payloadSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["prompt", "direction", "value"],
+        "properties": {
+          "prompt": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "direction": { "enum": ["to-decimal", "to-binary"] },
+          "value": { "type": "string", "pattern": "^[0-9]{1,8}$" }
+        }
+      },
+      "keySchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["answer"],
+        "properties": { "answer": { "type": "string", "pattern": "^[0-9]{1,8}$" } }
+      },
+      "responseSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text"],
+        "properties": { "text": { "type": "string", "maxLength": 40 } }
+      },
+      "fallbackTemplate": "{{prompt}}",
+      "guidance": {
+        "when": "Convert a whole number between binary and decimal (0 to 255).",
+        "rules": [
+          "direction to-decimal: value is the binary number and key.answer its decimal value.",
+          "direction to-binary: value is the decimal number and key.answer its binary form without leading zeros.",
+          "The prompt states the number but never the answer."
+        ],
+        "example": {
+          "payload": { "prompt": "What is the binary number 1100 in decimal?", "direction": "to-decimal", "value": "1100" },
+          "key": { "answer": "12" }
+        }
+      }
+    }
+  ],
+  "graders": [
+    { "id": "binary.grader", "kinds": ["binary.convert"], "method": "deterministic", "sandbox": "grader.js" }
+  ],
+  "lessonBlocks": [
+    {
+      "name": "binary-bits",
+      "version": 1,
+      "kind": "leaf",
+      "attributes": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "value"],
+        "properties": {
+          "id": { "type": "string" },
+          "value": { "type": "integer", "minimum": 0, "maximum": 255 },
+          "bits": { "enum": [4, 8] },
+          "caption": { "type": "string", "maxLength": 200 }
+        }
+      },
+      "guidance": {
+        "when": "Show a number in place-value boxes (128 … 1) with its bits.",
+        "syntax": "{% binary-bits value=13 bits=4 /%}",
+        "rules": ["value is a whole number from 0 to 255; bits is 4 or 8 and must be enough for the value."]
+      },
+      "fallbackTemplate": "[Place-value boxes showing {{value}} in binary] {{caption}}",
+      "renderer": "binary-bits"
+    }
+  ],
+  "renderers": [
+    { "id": "binary-bits", "environments": ["binary.bits"], "root": "renderer", "entry": "index.html", "capabilities": ["resize"] }
+  ],
+  "contentPacks": ["content/binary-basics.json"]
+}

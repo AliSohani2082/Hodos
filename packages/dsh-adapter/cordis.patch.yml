@@ -1,0 +1,8 @@
+# Hodos for DeepSeek Harness. `dsh plugin add` applies this patch to the
+# profile: it inserts the Hodos plugin row with its data directory under
+# $DSH_HOME. Override any config key from the profile's own patch by id.
+- insert:
+    - id: hodos
+      name: '@hodos/dsh'
+      config:
+        dataDir: !!js dshHomePath('hodos')

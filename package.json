@@ -1,0 +1,43 @@
+{
+  "name": "hodos-monorepo",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@11.28.5",
+  "engines": {
+    "node": ">=24.9.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:types": "tsc -b tsconfig.json",
+    "typecheck": "tsc -b tsconfig.json && tsc -p tsconfig.browser.json --noEmit && tsc -p tsconfig.tests.json",
+    "lint": "oxlint",
+    "test": "node scripts/build.mjs renderers && vitest run --project unit",
+    "test:security": "vitest run --project unit -t security",
+    "verify:puzzles": "node packages/environments/chess/scripts/verify-puzzles.mjs",
+    "verify:snippets": "node packages/environments/code/scripts/verify-snippets.mjs",
+    "pack:dsh": "node scripts/pack-bundles.mjs",
+    "clean": "node scripts/clean.mjs",
+    "test:e2e": "node scripts/build.mjs && vitest run --project e2e"
+  },
+  "devDependencies": {
+    "@hodos/chess": "workspace:*",
+    "@hodos/code": "workspace:*",
+    "@hodos/core": "workspace:*",
+    "@hodos/dsh": "workspace:*",
+    "@hodos/language": "workspace:*",
+    "@hodos/math": "workspace:*",
+    "@hodos/plugin-sdk": "workspace:*",
+    "@hodos/testing": "workspace:*",
+    "@types/node": "^24.10.0",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "chess.js": "1.4.0",
+    "esbuild": "^0.25.10",
+    "oxlint": "1.87.0",
+    "oxlint-tsgolint": "7.0.2004",
+    "playwright": "1.63.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,55 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --muted: #59636e;
+  --panel: #f6f8fa;
+  --border: #d1d9e0;
+  --hl: #fff8c5;
+  --keyword: #cf222e;
+  --builtin: #8250df;
+  --string: #0a3069;
+  --number: #0550ae;
+  --comment: #59636e;
+  --operator: #1f2328;
+  --error: #82071e;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --panel: #151b23; --border: #3d444d; --hl: #3a3218;
+    --keyword: #ff7b72; --builtin: #d2a8ff; --string: #a5d6ff; --number: #79c0ff; --comment: #9198a1; --operator: #e6edf3; --error: #ffa198;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --panel: #151b23; --border: #3d444d; --hl: #3a3218;
+  --keyword: #ff7b72; --builtin: #d2a8ff; --string: #a5d6ff; --number: #79c0ff; --comment: #9198a1; --operator: #e6edf3; --error: #ffa198;
+  color-scheme: dark;
+}
+
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.code-view { padding: 8px; display: flex; flex-direction: column; gap: 10px; }
+.prompt { margin: 0; font-weight: 600; }
+.note { margin: 0; color: var(--muted); }
+h3 { margin: 0 0 4px; font-size: 0.95rem; }
+
+pre { margin: 0; font: 14px/1.5 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; tab-size: 4; }
+.code { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 8px 0; overflow-x: auto; }
+.code:focus-visible { outline: 2px solid var(--number); outline-offset: 2px; }
+.code .line { display: block; padding: 0 12px 0 0; white-space: pre; }
+.code .line.hl { background: var(--hl); }
+.code .ln { display: inline-block; padding: 0 12px; color: var(--muted); text-align: right; user-select: none; }
+.tok-keyword { color: var(--keyword); font-weight: 600; }
+.tok-builtin { color: var(--builtin); }
+.tok-string { color: var(--string); }
+.tok-number { color: var(--number); }
+.tok-comment { color: var(--comment); font-style: italic; }
+.tok-operator { color: var(--operator); }
+.tok-error { color: var(--error); text-decoration: underline wavy; }
+
+.output { border-left: 3px solid var(--border); padding: 2px 0 2px 10px; }
+.output-label { font-size: 0.85rem; color: var(--muted); }
+.output-text { white-space: pre-wrap; }
+.example { display: flex; flex-direction: column; gap: 4px; }

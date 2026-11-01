@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib",
+    "tsBuildInfoFile": "lib/.tsbuildinfo"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/client/**/*"],
+  "references": [{ "path": "../plugin-sdk" }, { "path": "../core" }]
+}

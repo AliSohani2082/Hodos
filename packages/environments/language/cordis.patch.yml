@@ -1,0 +1,4 @@
+# Hodos Language for DeepSeek Harness. Requires the @hodos/dsh bundle.
+- insert:
+    - id: hodos-language
+      name: '@hodos/language'

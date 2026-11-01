@@ -1,0 +1,8 @@
+# Hodos Chess for DeepSeek Harness. Requires the @hodos/dsh bundle.
+# Set stockfishPath to an absolute path of a UCI engine binary to let the
+# grader accept alternative moves that are as strong as the solution.
+- insert:
+    - id: hodos-chess
+      name: '@hodos/chess'
+      config:
+        stockfishPath: ''

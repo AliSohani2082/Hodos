@@ -1,0 +1,281 @@
+{
+ "multi": [
+  {
+   "expected": [
+    {
+     "a": 0.9327272727272726,
+     "b": 0.06480000000000002
+    },
+    {
+     "a": 0.9899036918138041,
+     "b": 0.3996072507552871
+    }
+   ],
+   "name": "two_skill_failure_blames_weak",
+   "p0": {
+    "a": 0.95,
+    "b": 0.3
+   },
+   "skills": [
+    [
+     "a",
+     1.0
+    ],
+    [
+     "b",
+     1.0
+    ]
+   ],
+   "steps": [
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "checkpoint",
+     "x": 0
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 1
+    }
+   ]
+  },
+  {
+   "expected": [
+    {
+     "a": 0.74767411563781,
+     "b": 0.6588657358235924,
+     "c": 0.7
+    }
+   ],
+   "name": "weighted_success",
+   "p0": {
+    "a": 0.4,
+    "b": 0.5,
+    "c": 0.7
+   },
+   "skills": [
+    [
+     "a",
+     1.0
+    ],
+    [
+     "b",
+     0.5
+    ]
+   ],
+   "steps": [
+    {
+     "b": 0.3,
+     "hint_level": 1,
+     "mode": "practice",
+     "x": 1
+    }
+   ]
+  }
+ ],
+ "params": {
+  "T": 0.15,
+  "g0": 0.15,
+  "lambda": {
+   "checkpoint": 0.0,
+   "practice": 1.0,
+   "review": 0.5
+  },
+  "max_hint_level": 5,
+  "p0": 0.1,
+  "p_eps": 0.0001,
+  "s0": 0.1
+ },
+ "single": [
+  {
+   "expected": [
+    0.49,
+    0.8743478260869566,
+    0.980117361392149,
+    0.9971358369312122
+   ],
+   "name": "clean_run_from_p0_0.1",
+   "p0": 0.1,
+   "steps": [
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 1
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 1
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 1
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 1
+    }
+   ]
+  },
+  {
+   "expected": [
+    0.7620000000000001,
+    0.957941787941788
+   ],
+   "name": "two_correct_from_p0_0.3",
+   "p0": 0.3,
+   "steps": [
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 1
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 1
+    }
+   ]
+  },
+  {
+   "expected": [
+    0.23947368421052634,
+    0.1803631010794897,
+    0.17144993701149583,
+    0.17020098583217608,
+    0.1700278239133244
+   ],
+   "name": "wrong_answers_settle",
+   "p0": 0.5,
+   "steps": [
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 0
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 0
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 0
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 0
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 0
+    }
+   ]
+  },
+  {
+   "expected": [
+    0.23947368421052634,
+    0.1803631010794897,
+    0.17144993701149583
+   ],
+   "name": "bottom_out_is_failure",
+   "p0": 0.5,
+   "steps": [
+    {
+     "b": 0.0,
+     "hint_level": 5,
+     "mode": "practice",
+     "x": 1
+    },
+    {
+     "b": 0.0,
+     "hint_level": 5,
+     "mode": "practice",
+     "x": 1
+    },
+    {
+     "b": 0.0,
+     "hint_level": 5,
+     "mode": "practice",
+     "x": 1
+    }
+   ]
+  },
+  {
+   "expected": [
+    0.513862445007592,
+    0.5924187336000738,
+    0.31938045615554483,
+    0.8553204150389545
+   ],
+   "name": "partial_hint_and_soft_score",
+   "p0": 0.2,
+   "steps": [
+    {
+     "b": 0.5,
+     "hint_level": 2,
+     "mode": "practice",
+     "x": 1.0
+    },
+    {
+     "b": -0.5,
+     "hint_level": 0,
+     "mode": "practice",
+     "x": 0.6
+    },
+    {
+     "b": 1.0,
+     "hint_level": 0,
+     "mode": "review",
+     "x": 0.0
+    },
+    {
+     "b": 1.0,
+     "hint_level": 0,
+     "mode": "checkpoint",
+     "x": 1.0
+    }
+   ]
+  },
+  {
+   "expected": [
+    0.8074489795918366,
+    0.9646414463688847
+   ],
+   "name": "review_after_lapse",
+   "p0": 0.97,
+   "steps": [
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "review",
+     "x": 0
+    },
+    {
+     "b": 0.0,
+     "hint_level": 0,
+     "mode": "review",
+     "x": 1
+    }
+   ]
+  }
+ ]
+}
