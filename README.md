@@ -90,6 +90,7 @@ The end-to-end tests use a scripted model and throwaway Harness homes. They need
 | [DSH compatibility report](docs/dsh-integration/compatibility.md) | Every DeepSeek Harness API Hodos uses, and how it was verified |
 | [ADRs](docs/adr/README.md) | Architecture decisions; [ADR-0007](docs/adr/0007-learning-harness-on-dsh.md) is the move to LearnHarness's process |
 | [PRD](docs/PRD.md), [threat model](docs/hodos-threat-model.md) | The original product requirements and the threat model of that design |
+| [Security and product review](docs/reports/2026-11-02-security-and-product-review.md) | A whole-codebase security review (method, candidate findings and their scores, the fixes made, what was checked and found sound) and a review of the product against the PRD and ADR-0007 |
 | [Learning-harness report](docs/reports/2026-10-27-learning-harness-report.md) | The redesign around LearnHarness's process: what changed, the tests run with their results, defects found, gaps and the next step |
 | [MVP report](docs/reports/2026-10-27-mvp-report.md) | The first release, built around prepared courses (superseded by the redesign) |
 
