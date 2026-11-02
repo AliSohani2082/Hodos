@@ -9,8 +9,9 @@
  * - `/hodos/app/*`: the workspace single-page app (first-party, same origin).
  * - `/hodos/env/<plugin>/<renderer>/*`: environment renderer files. They are
  *   served with `Content-Security-Policy: sandbox allow-scripts`, so a renderer
- *   document always runs in an opaque origin with no network access, even if
- *   opened directly.
+ *   document always runs in an opaque origin that may not fetch or load
+ *   anything from elsewhere, even if opened directly. (CSP does not cover
+ *   WebRTC; see docs/limitations.md.)
  * @module @hodos/dsh/http
  */
 import { createReadStream, existsSync, realpathSync, statSync } from 'node:fs'
@@ -31,7 +32,12 @@ export const MAX_BODY_BYTES = 64 * 1024
 /** Content-Security-Policy of the workspace app. */
 export const APP_CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
 
-/** Content-Security-Policy of renderer files: always sandboxed, no network. */
+/**
+ * Content-Security-Policy of renderer files: always sandboxed, no requests to
+ * other origins. CSP has no effect on WebRTC peer connections, and Chromium
+ * reports the `webrtc` directive as unrecognized (an error in the console),
+ * so it is not listed here.
+ */
 export const RENDERER_CSP = "sandbox allow-scripts; default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; connect-src 'none'; frame-ancestors 'self'; base-uri 'none'; form-action 'none'"
 
 /**

@@ -84,25 +84,50 @@ export class TutorSessions {
     this.active.delete(sessionId)
     if (tools.length === 0) return
     const disposers: Array<() => void> = []
+    const undo = (): void => { for (const dispose of disposers.splice(0).toReversed()) dispose() }
+    let guard: (() => void) | undefined
     try {
-      for (const tool of tools) disposers.push(agent.ctx.tools.register(tool))
       if (this.hodos.config.tutorTools === 'restricted') {
-        const globals = [...this.hodos.globalTools().filter(name => !DELEGATING_TOOLS.has(name)), ...ALLOWED_HOST_TOOLS]
-        disposers.push(agent.ctx.tools.restrict({ allow: globals }))
-        const allowed = new Set([...globals, ...tools.map(tool => tool.name)])
-        disposers.push(agent.ctx.tools.guard(execution => (allowed.has(execution.name) ? undefined : `${execution.name} is not available in a Hodos session; use the Hodos tools.`)))
+        const globals = this.hodos.globalTools().filter(name => !DELEGATING_TOOLS.has(name))
+        const allowed = new Set([...globals, ...ALLOWED_HOST_TOOLS, ...tools.map(tool => tool.name)])
+        // The guard comes first and outlives a failure of the steps below, so a session that could not be
+        // set up completely still runs no other tool (fail closed).
+        guard = agent.ctx.tools.guard(execution => (allowed.has(execution.name) ? undefined : `${execution.name} is not available in a Hodos session; use the Hodos tools.`))
+        disposers.push(this.restrict(agent, globals))
       }
+      for (const tool of tools) disposers.push(agent.ctx.tools.register(tool))
     } catch (error) {
-      for (const dispose of disposers.toReversed()) dispose()
-      this.hodos.logger.error(`could not set up Hodos session ${sessionId}: ${error instanceof Error ? error.message : String(error)}`)
+      undo()
+      this.hodos.logger.error(`could not set up Hodos session ${sessionId}${guard === undefined ? '' : '; every other tool stays refused'}: ${error instanceof Error ? error.message : String(error)}`)
+      // Keep the guard; the next change of the session retries the setup (the signature differs).
+      if (guard !== undefined) this.active.set(sessionId, { signature: `failed:${signature}`, dispose: guard })
       return
     }
-    this.active.set(sessionId, { signature, dispose: () => { for (const dispose of disposers.toReversed()) dispose() } })
+    this.active.set(sessionId, { signature, dispose: () => { undo(); guard?.() } })
+  }
+
+  /**
+   * Hide every global tool from a tutor's view except Hodos's own and the host tools it may keep.
+   * DSH refuses a restriction that names a tool it does not know, and the host tools come from
+   * other plugins that a composition may leave out, so a missing one is dropped rather than
+   * failing the restriction.
+   * @param agent - the tutor's agent.
+   * @param globals - Hodos's global tools to keep.
+   * @returns the restriction's disposer.
+   */
+  private restrict(agent: Agent, globals: readonly string[]): () => void {
+    try {
+      return agent.ctx.tools.restrict({ allow: [...globals, ...ALLOWED_HOST_TOOLS] })
+    } catch (error) {
+      this.hodos.logger.warn(`restricting a Hodos session without ${ALLOWED_HOST_TOOLS.join(', ')}: ${error instanceof Error ? error.message : String(error)}`)
+      return agent.ctx.tools.restrict({ allow: [...globals] })
+    }
   }
 
   /** Whether a chat currently has Hodos session tools in this process. */
   isActive(sessionId: string): boolean {
-    return this.active.has(sessionId)
+    const entry = this.active.get(sessionId)
+    return entry !== undefined && !entry.signature.startsWith('failed:')
   }
 
   /**

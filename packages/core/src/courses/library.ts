@@ -21,6 +21,13 @@ import { DEFAULT_LIMITS, RateLimiter, type BucketName, type BucketSpec } from '.
 import type { PluginRegistry } from '../registry/registry.js'
 import type { CourseRecord, HodosStore } from '../store/store.js'
 
+/** An item without its `verifiedBy` claims (where it came from and its author are kept). */
+function withoutVerificationClaims<T extends { readonly provenance?: ItemProvenance }>(item: T): T {
+  if (item.provenance?.verifiedBy === undefined) return item
+  const { verifiedBy: _claims, ...rest } = item.provenance
+  return { ...item, provenance: rest }
+}
+
 /** Course library dependencies. */
 export interface CourseLibraryDeps {
   readonly store: HodosStore
@@ -132,8 +139,11 @@ export class CourseLibrary {
    */
   async syncContentPacks(): Promise<Array<{ courseId: string; errors: string[] }>> {
     const rejected: Array<{ courseId: string; errors: string[] }> = []
+    const trusted = new Set(this.registry.plugins().filter(p => p.trusted).map(p => p.manifest.id))
     for (const { pluginId, pack } of this.registry.contentPacks()) {
-      for (const course of pack.courses) {
+      for (const shipped of pack.courses) {
+        // How a sandboxed plugin says its items were checked is its own claim: the tutor is not told it.
+        const course = trusted.has(pluginId) ? shipped : { ...shipped, items: shipped.items.map(withoutVerificationClaims) }
         if (this.store.course(course.id, course.version) !== undefined) continue
         const findings = await validateCourse(course, this.registry, { requireCoverage: false })
         const errors = findings.filter(f => f.severity === 'error')
@@ -219,8 +229,14 @@ export class CourseLibrary {
     const errors = findings.filter(f => f.severity === 'error').map(f => `${f.code}: ${f.message}`)
     const warnings = findings.filter(f => f.severity === 'warning').map(f => `${f.code}: ${f.message}`)
     if (errors.length > 0) return { stored: false, courseId: course.id, version: course.version, errors, warnings }
-    if (this.store.course(course.id, course.version)?.status === 'approved') {
+    const existing = this.store.course(course.id, course.version)
+    if (existing?.status === 'approved') {
       return { stored: false, courseId: course.id, version: course.version, errors: ['course/version-exists: this course version is already approved; bump the version'], warnings }
+    }
+    // Replacing a waiting draft from another source would change what the learner approves while the
+    // workspace still shows it as coming from that source (an imported course swapped for a model-written one).
+    if (existing !== undefined && existing.origin !== origin) {
+      return { stored: false, courseId: course.id, version: course.version, errors: ['course/version-exists: a draft of this course version from another source is waiting for review; bump the version'], warnings }
     }
     const provenance: ItemProvenance = { source: origin === 'import' ? 'imported' : 'generated' }
     this.store.upsertCourse({

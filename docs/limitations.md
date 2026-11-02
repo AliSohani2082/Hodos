@@ -33,6 +33,8 @@ Hodos follows LearnHarness 0.3.8's process ([ADR-0007](adr/0007-learning-harness
 - **Third-party DSH bundles run in the Harness process.** Hodos cannot sandbox them; untrusted plugins should use the declarative format.
 - **The leak guard misses short and rephrased answers:** fragments under 4 characters, and answers written another way.
 - **DSH's `subagent` tool stays visible** to the model in a Hodos session. DSH registers it where restrictions do not reach; Hodos refuses to run it, but the model may still try.
+- **Renderers can reach the network through WebRTC.** The renderer CSP refuses `fetch`, XHR, WebSocket and remote images, but CSP's `connect-src` does not cover WebRTC, and Chromium 153 does not support the CSP `webrtc` directive (it reports it as unrecognized). A sandboxed iframe cannot be stopped from opening a peer connection, so a malicious renderer of a declarative plugin could send what it is shown (the learner-visible exercise, the learner's response in it, the reveal after grading) to its author's server. No cookies, keys or Hodos data beyond that reach it.
+- **Plugin ids are first come, first served.** Declarative plugins register before the built-in bundles. One that takes a built-in's exercise kind or grader id keeps it, and the built-in is then refused as a duplicate; a course in its pack with a built-in course's id and version is imported instead of the built-in's. Install only declarative plugins whose ids do not clash with the built-ins'.
 - **The learner database is not encrypted.**
 
 ## Plugins and content

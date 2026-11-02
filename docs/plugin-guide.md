@@ -63,7 +63,7 @@ An exercise item has an envelope the platform owns (id, skills and weights, diff
 - `key`: the answer, validated against `keySchema`, **server-only**: it is never sent to a browser, a renderer or the model;
 - the learner's response, validated against `responseSchema` before any grader sees it.
 
-Mark payload fields that must stay on the server with `"x-visibility": "server"` in the schema; they are removed from the student view.
+Mark payload fields that must stay on the server with `"x-visibility": "server"` in the schema; they are removed from the student view and from the exercise's plain-text view. The marker counts wherever it applies to a value: in `properties`, `patternProperties`, `items`, combinators (`allOf`, `anyOf`, `oneOf`), conditionals, `dependentSchemas` and local `$ref`s. A `$ref` that is not a JSON pointer into the same schema (`#/$defs/…`), or a schema with nested `$id`s, cannot be followed, so the value it describes is withheld. Properties the schema does not declare are dropped unless `additionalProperties` allows them. Schemas must validate synchronously: `$async` is refused.
 
 Other fields of `ExerciseKindSpec`:
 
@@ -105,7 +105,7 @@ img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; connect-src
 frame-ancestors 'self'; base-uri 'none'; form-action 'none'
 ```
 
-and loads it in an `<iframe sandbox="allow-scripts">`: an opaque origin with no access to the workspace, its cookies or its API, and no network. Bundle everything into the directory; nothing outside `root` is served.
+and loads it in an `<iframe sandbox="allow-scripts">`: an opaque origin with no access to the workspace, its cookies or its API, and no `fetch`, XHR, WebSocket or remote images. (CSP does not cover WebRTC, so this is not a complete network barrier; see [limitations](limitations.md#security).) Bundle everything into the directory; nothing outside `root` is served, and for a declarative plugin the folder must not contain `hodos-plugin.json`, graders or content packs.
 
 A renderer granted `run-code` (a trusted plugin that lists it in `rendererPermissions`) is served with `script-src 'self' 'wasm-unsafe-eval'`, `worker-src blob:` and `connect-src 'self'` instead, so it can run WebAssembly in a worker started from a `blob:` URL and fetch its own files from the server. It is still sandboxed in an opaque origin; the Hodos API refuses its requests. `@hodos/code`'s sandbox is the example: its build vendors Pyodide into the renderer directory (`hodos.renderer.vendor` in its `package.json`).
 

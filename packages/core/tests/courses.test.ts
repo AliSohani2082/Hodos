@@ -8,6 +8,7 @@ import {
   sequentialIds,
   type Actor,
 } from '../src/index.js'
+import { CORE_PLUGIN_API_VERSION, SDK_VERSION } from '@hodos/plugin-sdk'
 import { createQuizPlugin, quizCourse } from '@hodos/testing'
 
 const sandbox = new SandboxRunner()
@@ -49,6 +50,37 @@ describe('course library', () => {
     expect(env.courses.catalog()).toEqual([expect.objectContaining({ id: 'quiz-arithmetic', version: '1.0.0', available: true })])
     expect(await env.courses.syncContentPacks()).toEqual([])
     expect(env.store.courses('approved')).toHaveLength(1)
+    env.store.close()
+  })
+
+  it('security: does not let a proposal from another source replace a waiting draft', async () => {
+    const env = await setup()
+    const imported = { ...quizCourse(), id: 'quiz-inbox', title: 'Inbox quiz' }
+    expect(await env.courses.proposeCourse(env.ui, imported, { origin: 'import', source: 'inbox:quiz-inbox.json' })).toMatchObject({ stored: true })
+    // The tutor proposes other content under the same id and version while the learner is reviewing the import.
+    const swapped = await env.courses.proposeCourse(env.agent, { ...imported, title: 'Swapped quiz' })
+    expect(swapped).toMatchObject({ stored: false })
+    expect(swapped.errors.join(' ')).toMatch(/another source/)
+    expect(env.courses.drafts()).toEqual([expect.objectContaining({ id: 'quiz-inbox', title: 'Inbox quiz', origin: 'import' })])
+    // The same source may still revise its own draft.
+    expect(await env.courses.proposeCourse(env.ui, { ...imported, title: 'Inbox quiz, revised' }, { origin: 'import', source: 'inbox:quiz-inbox-2.json' })).toMatchObject({ stored: true })
+    expect(env.courses.drafts()).toEqual([expect.objectContaining({ id: 'quiz-inbox', title: 'Inbox quiz, revised', origin: 'import' })])
+    env.store.close()
+  })
+
+  it('security: keeps the verification claims of trusted plugins\' packs only', async () => {
+    const env = await setup()
+    expect(env.store.course('quiz-arithmetic', '1.0.0')?.spec.items.some(i => (i.provenance?.verifiedBy ?? []).length > 0)).toBe(true)
+    // A sandboxed plugin that ships a course claiming checks it cannot prove.
+    const claimed = { ...quizCourse(), id: 'quiz-claimed', title: 'Claimed quiz', items: quizCourse().items.map(i => ({ ...i, provenance: { source: 'authored' as const, verifiedBy: ['stockfish'], author: 'someone' } })) }
+    await env.registry.register({
+      manifest: { id: 'third-party-pack', version: '1.0.0', displayName: 'Third-party pack', requiresCore: `^${CORE_PLUGIN_API_VERSION}`, sdkVersion: SDK_VERSION, capabilities: { contentPacks: ['claimed-pack'] } },
+      register(ctx) { ctx.registerContentPack({ id: 'claimed-pack', version: '1.0.0', title: 'Claimed pack', courses: [claimed] }) },
+    }, { trusted: false })
+    expect(await env.courses.syncContentPacks()).toEqual([])
+    const items = env.store.course('quiz-claimed', '1.0.0')?.spec.items ?? []
+    expect(items.length).toBeGreaterThan(0)
+    expect(items.every(i => i.provenance?.verifiedBy === undefined && i.provenance?.source === 'authored' && i.provenance.author === 'someone')).toBe(true)
     env.store.close()
   })
 

@@ -38,7 +38,7 @@ function sandboxedPlugin(source: string, spy?: () => void): HodosEnvironmentPlug
       ctx.registerExerciseKind({
         id: 'tp.text', title: 'TP text', environment: 'tp.env', responseKind: 'text', interaction: 'single', grader: 'tp.grader',
         format: { guessable: false },
-        payloadSchema: { type: 'object' }, keySchema: { type: 'object' }, responseSchema: { type: 'object' },
+        payloadSchema: { type: 'object', properties: { prompt: { type: 'string' } } }, keySchema: { type: 'object' }, responseSchema: { type: 'object' },
         fallbackText: () => 'IN-PROCESS FALLBACK MUST NOT RUN',
       })
     },
@@ -68,6 +68,25 @@ describe('plugin registry', () => {
     const trusted = registry().registry
     await trusted.register(rendererPlugin(source), { trusted: true })
     expect(trusted.renderer('tp-view')?.granted).toEqual(['respond', 'resize', 'speech-synthesis', 'run-code'])
+  })
+
+  it('security: draws an environment with a trusted plugin\'s renderer, even when a sandboxed one registered first', async () => {
+    const source = 'function grade(input) { return { score: 1, correct: true, skillEvidence: [], misconceptions: [] } }'
+    const { registry: r } = registry()
+    await r.register(rendererPlugin(source), { trusted: false })
+    expect(r.rendererFor('tp.env')?.pluginId).toBe('third-party')
+    const root = mkdtempSync(join(tmpdir(), 'hodos-renderer-'))
+    writeFileSync(join(root, 'index.html'), '<!doctype html>')
+    await r.register({
+      manifest: {
+        id: 'built-in', version: '1.0.0', displayName: 'Built in', requiresCore: `^${CORE_PLUGIN_API_VERSION}`, sdkVersion: SDK_VERSION,
+        capabilities: { environments: ['tp.env'], renderers: ['built-in-view'] },
+      },
+      register(ctx) {
+        ctx.registerRenderer({ id: 'built-in-view', environments: ['tp.env'], root, entry: 'index.html', capabilities: ['respond', 'resize'] })
+      },
+    }, { trusted: true })
+    expect(r.rendererFor('tp.env')?.pluginId).toBe('built-in')
   })
 
   it('registers a trusted plugin with all contributions', async () => {
@@ -306,6 +325,33 @@ describe('declarative plugins', () => {
     const grade = await r.grade({ kind: 'decl.text', payload: {}, key: { answer: 'Madrid' }, response: { text: ' madrid ' }, mode: 'practice', skills: [{ skillId: 'geo.capitals', weight: 1 }], attempt: 1 })
     expect(grade.correct).toBe(true)
     expect(grade.skillEvidence).toEqual([{ skillId: 'geo.capitals', score: 1 }])
+  })
+
+  it('security: builds text views from what the learner may see, never from server-only payload fields', async () => {
+    const withSecret = JSON.parse(description('grader.js')) as { exerciseKinds: Array<{ payloadSchema: unknown; fallbackTemplate: string }> }
+    const kind = withSecret.exerciseKinds[0]
+    if (kind === undefined) throw new Error('fixture kind missing')
+    kind.payloadSchema = { type: 'object', properties: { prompt: { type: 'string' }, note: { type: 'string', 'x-visibility': 'server' } } }
+    kind.fallbackTemplate = 'Q: {{prompt}} {{note}}'
+    const plugin = await loadDeclarativePlugin(writePlugin({ 'hodos-plugin.json': JSON.stringify(withSecret), 'grader.js': graderSource }))
+    const { registry: r } = registry()
+    await r.register(plugin, { trusted: false, declarative: true })
+    expect(r.fallbackText('decl.text', { prompt: 'Capital of Spain?', note: 'answer: Madrid' })).toBe('Q: Capital of Spain? ')
+  })
+
+  /** The description with a renderer whose folder is `root`. */
+  const withRenderer = (root: string): string => {
+    const d = JSON.parse(description('grader.js')) as Record<string, unknown> & { manifest: { capabilities: Record<string, unknown> } }
+    d.manifest.capabilities.renderers = ['decl-view']
+    d.renderers = [{ id: 'decl-view', environments: ['decl.env'], root, entry: 'index.html' }]
+    return JSON.stringify(d)
+  }
+
+  it('security: refuses a renderer folder that would serve the description, graders or content packs', async () => {
+    const exposed = writePlugin({ 'hodos-plugin.json': withRenderer('.'), 'grader.js': graderSource, 'index.html': '<!doctype html>' })
+    await expect(loadDeclarativePlugin(exposed)).rejects.toThrow(/keep the plugin description, graders and content packs outside renderer folders/)
+    const separate = writePlugin({ 'hodos-plugin.json': withRenderer('view'), 'grader.js': graderSource, 'view/index.html': '<!doctype html>' })
+    await expect(loadDeclarativePlugin(separate)).resolves.toBeDefined()
   })
 
   it('refuses paths that escape the plugin directory, including through symlinks', async () => {
