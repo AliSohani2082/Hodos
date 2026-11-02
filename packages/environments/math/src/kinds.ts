@@ -6,7 +6,7 @@
  * @module @hodos/math/kinds
  */
 import { unreachable, type Diagnostic, type ExerciseItem, type ExerciseKindSpec, type JsonObject, type JsonSchema, type JsonValue, type LessonBlockSpec, type LessonNode } from '@hodos/plugin-sdk'
-import { equivalent, hasUnexpandedProduct, isProduct, parse, type Expr } from './expr.js'
+import { equivalent, hasUnexpandedProduct, isExpanded, isFactored, isProduct, parse, toPolynomial, type Expr } from './expr.js'
 import { toText } from './present.js'
 
 export const ENVIRONMENT = 'math.expression'
@@ -80,12 +80,17 @@ function graphProblems(graph: JsonValue | undefined): Diagnostic[] {
   return out
 }
 
-/** Whether an answer meets a required form. */
+/**
+ * Whether an answer meets a required form. When the key is a polynomial, the
+ * answer must be one too and its form is checked on its polynomial structure,
+ * so a wrapper such as `1(…)`, `(…)^1` or `a/(1/b)` does not pass for factored
+ * or expanded; other keys keep the syntactic check.
+ */
 export function meetsForm(answer: Expr, key: Expr, form: Form): boolean {
   switch (form) {
     case 'any': return true
-    case 'expanded': return !hasUnexpandedProduct(answer)
-    case 'factored': return isProduct(answer)
+    case 'expanded': return toPolynomial(key) === null ? !hasUnexpandedProduct(answer) : isExpanded(answer) && toPolynomial(answer) !== null
+    case 'factored': return toPolynomial(key) === null ? isProduct(answer) : isFactored(answer)
     case 'simplified': return size(answer) <= size(key)
     default: return unreachable(form, 'form')
   }
