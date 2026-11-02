@@ -406,26 +406,31 @@ export function degree(polynomial: Polynomial): number {
 
 const nearInteger = (value: number): boolean => Math.abs(value - Math.round(value)) < 1e-9
 
-/** The factors of a product: `−a` adds a factor −1, and `a^n` with a whole n from 1 to 12 adds `a` n times. */
-function collectFactors(expr: Expr, out: Expr[]): void {
+/**
+ * The factors of a product: `−a` adds a factor −1, and `a^n` with a whole n from 1 to 12 adds `a` n times.
+ * @returns false when there would be more factors than a polynomial may have terms.
+ */
+function collectFactors(expr: Expr, out: Expr[]): boolean {
+  // Nested powers multiply out quickly ((((x+1)^12)^12)^12 …): stop at the term bound instead.
+  if (out.length >= POLYNOMIAL_LIMITS.maxTerms) return false
   if (expr.type === 'neg') {
     out.push({ type: 'num', value: -1 })
-    collectFactors(expr.arg, out)
-    return
+    return collectFactors(expr.arg, out)
   }
   if (expr.type === 'bin' && expr.op === '*') {
-    collectFactors(expr.left, out)
-    collectFactors(expr.right, out)
-    return
+    return collectFactors(expr.left, out) && collectFactors(expr.right, out)
   }
   if (expr.type === 'bin' && expr.op === '^' && isConstant(expr.right)) {
     const n = evaluate(expr.right, {})
     if (Number.isInteger(n) && n >= 1 && n <= POLYNOMIAL_LIMITS.maxPower) {
-      for (let i = 0; i < n; i += 1) collectFactors(expr.left, out)
-      return
+      for (let i = 0; i < n; i += 1) {
+        if (!collectFactors(expr.left, out)) return false
+      }
+      return true
     }
   }
   out.push(expr)
+  return true
 }
 
 /**
@@ -441,7 +446,7 @@ function collectFactors(expr: Expr, out: Expr[]): void {
  */
 export function isFactored(expr: Expr): boolean {
   const factors: Expr[] = []
-  collectFactors(expr, factors)
+  if (!collectFactors(expr, factors)) return false
   let constant = 1
   const terms: Polynomial[] = []
   for (const factor of factors) {

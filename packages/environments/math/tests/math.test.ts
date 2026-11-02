@@ -105,6 +105,11 @@ describe('equivalence and form', () => {
     for (const answer of ['(x + 1)/(1/(x + 2))', '(x + 1)(x + 2)', '-(-x - 1)(x + 2)', '(x^2 + 3x + 2)^1', '(2x^2 + 6x + 4)/2', 'abs(x + 1)^2 + x + 1', 'exp(ln(x^2 + 3x + 2))']) {
       expect(meetsForm(ok(answer), expandedKey, 'expanded'), answer).toBe(false)
     }
+    // Nested powers would multiply out to millions of factors: the check stops at its bound.
+    const nested = `${'('.repeat(8)}x + 1${')^12'.repeat(8)}`
+    const started = Date.now()
+    expect(meetsForm(ok(nested), factoredKey, 'factored')).toBe(false)
+    expect(Date.now() - started).toBeLessThan(1000)
     // A key that is not a polynomial keeps the syntactic check.
     expect(meetsForm(ok('(e^x - 1)(e^x + 1)'), ok('(e^x - 1)(e^x + 1)'), 'factored')).toBe(true)
   })

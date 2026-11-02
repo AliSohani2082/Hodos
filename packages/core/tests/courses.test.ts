@@ -64,7 +64,7 @@ describe('course library', () => {
     expect(env.courses.drafts()).toEqual([expect.objectContaining({ id: 'quiz-inbox', title: 'Inbox quiz', origin: 'import' })])
     // The same source may still revise its own draft.
     expect(await env.courses.proposeCourse(env.ui, { ...imported, title: 'Inbox quiz, revised' }, { origin: 'import', source: 'inbox:quiz-inbox-2.json' })).toMatchObject({ stored: true })
-    expect(env.courses.drafts()).toEqual([expect.objectContaining({ id: 'quiz-inbox', title: 'Inbox quiz, revised', origin: 'import' })])
+    expect(env.courses.drafts()).toEqual([expect.objectContaining({ id: 'quiz-inbox', title: 'Inbox quiz, revised', origin: 'import', proposedBy: 'inbox:quiz-inbox-2.json' })])
     env.store.close()
   })
 

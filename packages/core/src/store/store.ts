@@ -178,11 +178,14 @@ export class HodosStore {
 
   // ---- courses ----
 
-  /** @param course - course version to insert or replace (same id and version). */
+  /**
+   * @param course - course version to insert or replace (same id and version); a replacement keeps
+   *   the first origin and creation time and takes the new content and proposer.
+   */
   upsertCourse(course: CourseRecord): void {
     this.run(`INSERT INTO courses (id, version, status, origin, plugin_id, title, spec_json, proposed_by, created_at, approved_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id, version) DO UPDATE SET status = excluded.status, title = excluded.title, spec_json = excluded.spec_json, approved_at = excluded.approved_at`,
+      ON CONFLICT(id, version) DO UPDATE SET status = excluded.status, title = excluded.title, spec_json = excluded.spec_json, proposed_by = excluded.proposed_by, approved_at = excluded.approved_at`,
     course.id, course.version, course.status, course.origin, course.pluginId, course.title, JSON.stringify(course.spec), course.proposedBy, course.createdAt, course.approvedAt)
   }
 
