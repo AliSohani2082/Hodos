@@ -1,4 +1,32 @@
-# Hodos
+<div align="center">
+
+<img src="assets/logo.svg" alt="Hodos" width="220">
+
+<p><strong>ὁδός — "the path."</strong><br>
+Learning plugins for DeepSeek Harness: tell the agent what you want to learn, and the chat becomes a tutored session.</p>
+
+<p>
+  <a href="docs/install.md"><b>Install</b></a> ·
+  <a href="docs/architecture.md"><b>Architecture</b></a> ·
+  <a href="docs/security.md"><b>Security</b></a> ·
+  <a href="docs/plugin-guide.md"><b>Plugins</b></a> ·
+  <a href="https://github.com/AliSohani2082/Hodos/issues"><b>Issues</b></a>
+</p>
+
+<p>
+  <a href="LICENSING.md"><img alt="License: AGPL-3.0 core, MIT plugins" src="https://img.shields.io/badge/license-AGPL--3.0%20%2B%20MIT-blue?style=flat-square"></a>
+  <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-orange?style=flat-square">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white">
+  <img alt="pnpm" src="https://img.shields.io/badge/pnpm-workspace-F69220?style=flat-square&logo=pnpm&logoColor=white">
+  <img alt="DeepSeek Harness 0.2" src="https://img.shields.io/badge/DeepSeek%20Harness-0.2-4D6BFE?style=flat-square">
+  <img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square">
+</p>
+
+</div>
+
+---
+
+## What is Hodos?
 
 Learning plugins for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), following the process of [LearnHarness](https://github.com/amosblomqvist/learnharness). Tell the agent what you want to learn, on any topic ("I want to learn how knight forks win material"), and the chat becomes a learning session:
 
