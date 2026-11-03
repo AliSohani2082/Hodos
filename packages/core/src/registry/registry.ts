@@ -19,6 +19,7 @@ import {
   formatDiagnostics,
   HodosPluginError,
   isJsonValue,
+  stripServerFields,
   validateContentPackShape,
   validateManifest,
   type ContentGeneratorSpec,
@@ -476,12 +477,15 @@ export class PluginRegistry {
   }
 
   /**
-   * The renderer for an environment.
+   * The renderer for an environment. A trusted plugin's renderer comes first,
+   * so a sandboxed plugin that lists a built-in environment cannot take over
+   * how that environment's exercises are drawn.
    * @param environment - environment id.
-   * @returns the first renderer presenting it, or undefined.
+   * @returns the first trusted renderer presenting it, else the first one, or undefined.
    */
   rendererFor(environment: string): RegisteredRenderer | undefined {
-    return [...this.rendererMap.values()].find(r => r.spec.environments.includes(environment))
+    const candidates = [...this.rendererMap.values()].filter(r => r.spec.environments.includes(environment))
+    return candidates.find(r => this.records.get(r.pluginId)?.trusted === true) ?? candidates[0]
   }
 
   /** Environments provided by active plugins. */
@@ -617,12 +621,20 @@ export class PluginRegistry {
   fallbackText(kindId: string, payload: JsonValue): string {
     const kind = this.kinds.get(kindId)
     if (kind === undefined) return genericFallbackText(kindId, payload)
-    if (!kind.trusted && !kind.declarative) return genericFallbackText(kind.spec.title, payload)
+    // The text reaches the learner and the tutor, so it is built from what the learner may see:
+    // server-only payload fields are removed before any text view reads the payload.
+    let visible: JsonValue
     try {
-      return kind.spec.fallbackText(payload)
+      visible = stripServerFields(kind.spec.payloadSchema, payload) ?? null
+    } catch {
+      return genericFallbackText(kind.spec.title, null)
+    }
+    if (!kind.trusted && !kind.declarative) return genericFallbackText(kind.spec.title, visible)
+    try {
+      return kind.spec.fallbackText(visible)
     } catch {
       // A throwing projection must not break the learner's view; use the generic one.
-      return genericFallbackText(kind.spec.title, payload)
+      return genericFallbackText(kind.spec.title, visible)
     }
   }
 }

@@ -10,7 +10,7 @@
  * @module @hodos/core/registry/declarative
  */
 import { readFile, realpath, stat } from 'node:fs/promises'
-import { isAbsolute, join, relative, resolve } from 'node:path'
+import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import {
   compileSchema,
   formatDiagnostics,
@@ -190,15 +190,27 @@ export async function loadDeclarativePlugin(dir: string): Promise<HodosEnvironme
     contentPacks?: string[]
   }
 
-  const graders = await Promise.all((d.graders ?? []).map(async g => ({
+  const graderFiles = await Promise.all((d.graders ?? []).map(g => inside(root, g.sandbox)))
+  const packFiles = await Promise.all((d.contentPacks ?? []).map(file => inside(root, file)))
+  const graders = await Promise.all((d.graders ?? []).map(async (g, i) => ({
     id: g.id, kinds: g.kinds, method: g.method,
-    sandbox: { source: await readCapped(await inside(root, g.sandbox), MAX_GRADER_BYTES) },
+    sandbox: { source: await readCapped(graderFiles[i] ?? '', MAX_GRADER_BYTES) },
   })))
   const renderers = await Promise.all((d.renderers ?? []).map(async r => ({
     id: r.id, environments: r.environments, root: await inside(root, r.root), entry: r.entry, capabilities: r.capabilities ?? ['respond', 'resize'],
   })))
-  const packs = await Promise.all((d.contentPacks ?? []).map(async file => {
-    const text = await readCapped(await inside(root, file), MAX_CONTENT_BYTES)
+  // Renderer folders are served to the browser without sign-in. The description, the graders and the
+  // content packs (which hold answer keys) must stay out of them.
+  for (const r of renderers) {
+    for (const file of [join(root, DECLARATIVE_PLUGIN_FILE), ...graderFiles, ...packFiles]) {
+      const rel = relative(r.root, file)
+      if (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel)) {
+        throw new HodosPluginError('INVALID_CONTENT', `renderer ${r.id} would serve ${relative(root, file)}: keep the plugin description, graders and content packs outside renderer folders`)
+      }
+    }
+  }
+  const packs = await Promise.all((d.contentPacks ?? []).map(async (file, i) => {
+    const text = await readCapped(packFiles[i] ?? '', MAX_CONTENT_BYTES)
     try {
       return JSON.parse(text) as ContentPack // validated by the course validator before use
     } catch (error) {

@@ -126,6 +126,44 @@ describe('schema projection', () => {
     expect(validate({ question: Number.POSITIVE_INFINITY }).length).toBeGreaterThan(0)
     expect(() => compileSchema({ type: 'strng' }, 'bad')).toThrowError(/invalid JSON Schema/)
   })
+
+  it('security: refuses asynchronous schemas, whose validators would accept anything', () => {
+    // An `$async` validator returns a promise, which reads as "valid" (and rejects unhandled).
+    const asynchronous: JsonSchema = { $async: true, type: 'object', properties: { text: { type: 'string' } }, required: ['text'], additionalProperties: false }
+    expect(() => compileSchema(asynchronous, 'test/async')).toThrowError(/asynchronous schemas/)
+  })
+
+  it('security: honours server-only markers behind references, combinators and conditionals', () => {
+    const secret = { type: 'string', 'x-visibility': 'server' }
+    const value = { question: 'Q?', answer: 'THE-KEY' }
+    const strip = (s: JsonSchema): unknown => stripServerFields(s, value)
+    // A local reference to a server-only definition, and a visible one.
+    expect(strip({ type: 'object', properties: { question: { $ref: '#/$defs/text' }, answer: { $ref: '#/$defs/secret' } }, $defs: { text: { type: 'string' }, secret } })).toEqual({ question: 'Q?' })
+    // A marker in any branch of a combinator wins.
+    expect(strip({ type: 'object', properties: { question: { type: 'string' }, answer: { anyOf: [secret, { type: 'number' }] } } })).toEqual({ question: 'Q?' })
+    expect(strip({ type: 'object', properties: { question: { type: 'string' } }, allOf: [{ properties: { answer: secret } }], additionalProperties: true })).toEqual({ question: 'Q?' })
+    // Conditionals, dependent schemas and pattern properties, even when the object is open.
+    // Parsed from JSON text: an object literal with a `then` key reads as a thenable to the linter.
+    const conditional = JSON.parse('{"type":"object","properties":{"question":{"type":"string"}},"additionalProperties":true,"if":{"required":["question"]},"then":{"properties":{"answer":{"type":"string","x-visibility":"server"}}}}') as JsonSchema
+    expect(strip(conditional)).toEqual({ question: 'Q?' })
+    expect(strip({ type: 'object', properties: { question: { type: 'string' } }, additionalProperties: true, dependentSchemas: { question: { properties: { answer: secret } } } })).toEqual({ question: 'Q?' })
+    expect(strip({ type: 'object', properties: { question: { type: 'string' } }, additionalProperties: true, patternProperties: { '^ans': secret } })).toEqual({ question: 'Q?' })
+    // A reference that cannot be followed withholds the value it describes.
+    expect(strip({ type: 'object', properties: { question: { type: 'string' }, answer: { $ref: 'https://example.com/schema.json' } } })).toEqual({ question: 'Q?' })
+    expect(strip({ type: 'object', properties: { question: { type: 'string' }, answer: { $ref: '#/$defs/missing' } } })).toEqual({ question: 'Q?' })
+    expect(strip({ type: 'object', properties: { question: { type: 'string' }, answer: { $ref: '#/$defs/text' } }, $defs: { text: { $id: 'https://example.com/text', type: 'string' } } })).toEqual({ question: 'Q?' })
+    // Recursive references are followed at every depth.
+    const tree: JsonSchema = { type: 'object', properties: { label: { type: 'string' }, note: secret, children: { type: 'array', items: { $ref: '#' } } } }
+    expect(stripServerFields(tree, { label: 'a', note: 'n1', children: [{ label: 'b', note: 'n2', children: [] }] })).toEqual({ label: 'a', children: [{ label: 'b', children: [] }] })
+    expect(serverOnlyPaths(tree)).toEqual(['/note'])
+    expect(serverOnlyPaths({ type: 'object', properties: { answer: { $ref: '#/$defs/secret' } }, $defs: { secret } })).toEqual(['/answer'])
+  })
+
+  it('looks up declared properties without the prototype chain', () => {
+    const value = JSON.parse('{"question":"Q?","constructor":"c","toString":"t","__proto__":{"polluted":true}}') as Record<string, unknown>
+    expect(stripServerFields({ type: 'object', properties: { question: { type: 'string' } } }, value as never)).toEqual({ question: 'Q?' })
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+  })
 })
 
 describe('helpers', () => {

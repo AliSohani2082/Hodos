@@ -174,6 +174,13 @@ describe('engine protocol', () => {
     expect(scoreCp({ mate: 3 })).toBeGreaterThan(scoreCp({ cp: 2000 }))
   })
 
+  it('security: refuses a FEN with a line break, which would start another engine command', async () => {
+    // Rejected before any engine process starts, so no engine binary is needed here.
+    const engine = new UciEngine('/nonexistent/stockfish')
+    await expect(engine.analyse('8/8/8/8/8/8/8/K6k w - - 0 1\nsetoption name Debug Log File value /tmp/hodos-engine.log')).rejects.toThrow(/line break/)
+    engine.dispose()
+  })
+
   it.skipIf(STOCKFISH === '' || !existsSync(STOCKFISH))('finds the knight fork with Stockfish and accepts equally strong alternatives', async () => {
     const engine = new UciEngine(STOCKFISH)
     try {

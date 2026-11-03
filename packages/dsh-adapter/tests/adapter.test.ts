@@ -40,7 +40,11 @@ interface FakeAgent {
   followup(message: unknown): void
 }
 
-function fakeAgent(id: string): FakeAgent {
+/**
+ * A fake DSH agent. With `known`, its `restrict` behaves like DSH's: a restriction naming a tool
+ * the agent does not inherit is refused with an error.
+ */
+function fakeAgent(id: string, options: { known?: () => Iterable<string> } = {}): FakeAgent {
   const scoped = new Map<string, ToolDefinition>()
   const restrictions: Array<{ allow?: readonly string[] }> = []
   const guards: FakeGuard[] = []
@@ -51,7 +55,15 @@ function fakeAgent(id: string): FakeAgent {
     ctx: {
       tools: {
         register(def) { scoped.set(def.name, def); return () => { scoped.delete(def.name) } },
-        restrict(filter) { restrictions.push(filter); return () => { restrictions.splice(restrictions.indexOf(filter), 1) } },
+        restrict(filter) {
+          if (options.known !== undefined) {
+            const known = new Set(options.known())
+            const unknown = (filter.allow ?? []).filter(name => !known.has(name))
+            if (unknown.length > 0) throw new Error(`tools.restrict() names unknown global tools ${unknown.join(', ')}`)
+          }
+          restrictions.push(filter)
+          return () => { restrictions.splice(restrictions.indexOf(filter), 1) }
+        },
         guard(guard) { guards.push(guard); return () => { guards.splice(guards.indexOf(guard), 1) } },
       },
     },
@@ -146,6 +158,11 @@ async function call(h: Harness, name: string, args: Record<string, unknown>, ses
 function contextText(h: Harness, sessionId: string): string {
   const context = h.contexts[0]
   return typeof context?.text === 'function' ? context.text({ agent: { id: sessionId } }) : ''
+}
+
+/** The reason a fake agent's guards give for refusing a tool, or undefined when they allow it. */
+function refusedBy(agent: FakeAgent, name: string): string | undefined {
+  return agent.guards.map(guard => guard({ name })).find(reason => reason !== undefined)
 }
 
 /** Text of the follow-up messages an agent received. */
@@ -296,6 +313,33 @@ describe('Hodos DSH plugin', () => {
     const planned = await call(h, 'hodos_plan', { mermaid: 'graph TD\n  power[Power rule] --> chain[Chain rule]' })
     expect(planned.text).toContain('Plan version 1 saved')
     await expect(call(h, 'hodos_plan', { mermaid: 'a --> b\nb --> a' })).rejects.toThrow(/INVALID_INPUT: the plan was not saved: the plan has a cycle/)
+  })
+
+  it('security: keeps a Hodos session closed to other tools when DSH refuses the restriction (fail closed)', async () => {
+    const h = await harness()
+
+    // A composition without DSH's ask_user_question: DSH refuses a restriction that names it.
+    const partial = fakeAgent('sess-1', { known: () => [...h.globals.keys(), 'bash', 'web_fetch'] })
+    h.agents.push(partial)
+    await call(h, 'hodos_start_learning', { goal: 'Understand the chain rule' }, 'sess-1')
+    expect(partial.restrictions).toEqual([{ allow: expect.arrayContaining([...GLOBAL_TOOL_NAMES]) as unknown as string[] }])
+    expect(partial.restrictions[0]?.allow).not.toContain('ask_user_question')
+    expect([...partial.scoped.keys()].toSorted()).toEqual(PROBE_TOOLS)
+    for (const name of ['bash', 'web_fetch', 'subagent']) expect(refusedBy(partial, name), name).toContain('not available in a Hodos session')
+
+    // DSH refuses every restriction: the session gets no Hodos tools, and the guard still refuses everything else.
+    const broken = fakeAgent('sess-2', { known: () => [] })
+    h.agents.push(broken)
+    await call(h, 'hodos_start_learning', { goal: 'Understand the chain rule' }, 'sess-2')
+    expect(broken.restrictions).toEqual([])
+    expect(broken.scoped.size).toBe(0)
+    expect(broken.guards).toHaveLength(1)
+    for (const name of ['bash', 'web_fetch', 'subagent', 'hodos_draft_course']) expect(refusedBy(broken, name), name).toContain('not available in a Hodos session')
+
+    // Closing the session lifts the guard, as for a session that was set up completely.
+    const sessionId = h.hodos.learn.sessionForHost('sess-2')?.id ?? ''
+    dataOf(await api(h, 'POST', 'learn/close', { sessionId }, { session: 'sess-2' }))
+    expect(broken.guards).toEqual([])
   })
 
   it('teaches without any environment plugin, and offers exercise tools once one is installed', async () => {

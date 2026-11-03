@@ -455,6 +455,14 @@ export class LearnService {
   private async checkInterface(id: string, body: InterfaceBody, nodeId: string | undefined, visibleText: readonly string[]): Promise<string[]> {
     const item = interfaceItem(id, body, nodeId)
     const problems = diagnosticProblems(await this.registry.validateItem(item))
+    if (body.bankItem !== undefined) {
+      // The tutor never sees a bank item's key, so its text cannot give the key away; scanning it against
+      // the key, or passing on the plugin's findings (which may quote the key), would tell the tutor
+      // whether a guess matches. A bank item that no longer validates gets a fixed message instead.
+      if (problems.length === 0) return []
+      this.logger.warn(`bank exercise ${body.bankItem.courseId}/${body.bankItem.itemId} no longer validates: ${problems.join('; ')}`)
+      return ['this bank exercise no longer passes its environment\'s checks; ask another one']
+    }
     if (problems.length > 0) return problems
     // What the payload shows is the plugin's projection (server-only fields removed); the key itself
     // never leaves the server. The question text is the tutor's own and may name a theme as a hint

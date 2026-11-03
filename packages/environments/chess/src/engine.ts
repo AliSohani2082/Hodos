@@ -173,9 +173,11 @@ export class UciEngine {
    * @param fen - position.
    * @param options - depth or move time, number of lines, deadline.
    * @returns the best move and variations (scores from the side to move's view).
-   * @throws Error when the engine fails or misses the deadline.
+   * @throws Error when the engine fails or misses the deadline, or the FEN has a line break.
    */
   analyse(fen: string, options: AnalyseOptions = {}): Promise<EngineAnalysis> {
+    // The FEN goes into the engine's command stream: a line break would start another UCI command.
+    if (/[\r\n]/u.test(fen)) return Promise.reject(new Error('a FEN cannot contain a line break'))
     return this.exclusive(options.timeoutMs ?? 10_000, async () => {
       const lines = new Map<number, EngineLine>()
       const collect = (line: string): void => {

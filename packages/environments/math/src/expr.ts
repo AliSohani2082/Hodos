@@ -296,3 +296,188 @@ export function isProduct(expr: Expr): boolean {
   if (expr.type === 'neg') return isProduct(expr.arg)
   return expr.type === 'bin' && (expr.op === '*' || expr.op === '^')
 }
+
+/** Whether an expression contains no variable (a number, pi, e, or a function of those). */
+export function isConstant(expr: Expr): boolean {
+  switch (expr.type) {
+    case 'var': return false
+    case 'bin': return isConstant(expr.left) && isConstant(expr.right)
+    case 'neg':
+    case 'call': return isConstant(expr.arg)
+    default: return true
+  }
+}
+
+/**
+ * A polynomial in normal form: each monomial (variables with exponents, such
+ * as `x^2*y^1`, or `''` for the constant term) mapped to its coefficient.
+ */
+export type Polynomial = ReadonlyMap<string, number>
+
+/** Bounds on normalizing a polynomial, so that `(x + y + z)^12` cannot blow up. */
+const POLYNOMIAL_LIMITS = { maxTerms: 256, maxPower: 12 } as const
+
+function monomial(key: string): Map<string, number> {
+  const powers = new Map<string, number>()
+  if (key === '') return powers
+  for (const part of key.split('*')) {
+    const [name = '', exponent = '0'] = part.split('^')
+    powers.set(name, (powers.get(name) ?? 0) + Number(exponent))
+  }
+  return powers
+}
+
+function monomialKey(powers: ReadonlyMap<string, number>): string {
+  return [...powers].filter(([, n]) => n > 0).toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([name, n]) => `${name}^${n}`).join('*')
+}
+
+function constantPolynomial(value: number): Map<string, number> | null {
+  if (!Number.isFinite(value)) return null
+  return new Map(value === 0 ? [] : [['', value]])
+}
+
+function accumulate(out: Map<string, number>, key: string, value: number): void {
+  const next = (out.get(key) ?? 0) + value
+  if (Math.abs(next) < 1e-12) out.delete(key)
+  else out.set(key, next)
+}
+
+function addPolynomials(a: Polynomial, b: Polynomial, sign: 1 | -1): Map<string, number> | null {
+  const out = new Map(a)
+  for (const [key, c] of b) accumulate(out, key, sign * c)
+  return out.size > POLYNOMIAL_LIMITS.maxTerms ? null : out
+}
+
+function multiplyPolynomials(a: Polynomial, b: Polynomial): Map<string, number> | null {
+  const out = new Map<string, number>()
+  for (const [ka, ca] of a) {
+    for (const [kb, cb] of b) {
+      const powers = monomial(ka)
+      for (const [name, n] of monomial(kb)) powers.set(name, (powers.get(name) ?? 0) + n)
+      accumulate(out, monomialKey(powers), ca * cb)
+      if (out.size > POLYNOMIAL_LIMITS.maxTerms) return null
+    }
+  }
+  return out
+}
+
+/**
+ * The normal form of an expression that is a polynomial in its variables:
+ * sums, differences and products of numbers and variables, whole-number
+ * exponents from 0 to 12, and division by non-zero constants only.
+ * @param expr - the expression.
+ * @returns the polynomial, or null when the expression is not one (a variable
+ *   under a function or in a denominator, or a variable exponent) or is too large.
+ */
+export function toPolynomial(expr: Expr): Polynomial | null {
+  if (isConstant(expr)) return constantPolynomial(evaluate(expr, {}))
+  switch (expr.type) {
+    case 'var': return new Map([[`${expr.name}^1`, 1]])
+    case 'neg': {
+      const arg = toPolynomial(expr.arg)
+      return arg === null ? null : new Map([...arg].map(([key, c]) => [key, -c]))
+    }
+    case 'bin': {
+      const left = toPolynomial(expr.left)
+      if (left === null) return null
+      if (expr.op === '/' || expr.op === '^') {
+        if (!isConstant(expr.right)) return null
+        const n = evaluate(expr.right, {})
+        if (expr.op === '/') return Number.isFinite(n) && n !== 0 ? new Map([...left].map(([key, c]) => [key, c / n])) : null
+        if (!Number.isInteger(n) || n < 0 || n > POLYNOMIAL_LIMITS.maxPower) return null
+        let out: Polynomial | null = constantPolynomial(1)
+        for (let i = 0; i < n && out !== null; i += 1) out = multiplyPolynomials(out, left)
+        return out
+      }
+      const right = toPolynomial(expr.right)
+      if (right === null) return null
+      return expr.op === '*' ? multiplyPolynomials(left, right) : addPolynomials(left, right, expr.op === '+' ? 1 : -1)
+    }
+    default: return null
+  }
+}
+
+/** Total degree of a polynomial; 0 for a constant (including zero). */
+export function degree(polynomial: Polynomial): number {
+  let out = 0
+  for (const key of polynomial.keys()) out = Math.max(out, [...monomial(key).values()].reduce((sum, n) => sum + n, 0))
+  return out
+}
+
+const nearInteger = (value: number): boolean => Math.abs(value - Math.round(value)) < 1e-9
+
+/**
+ * The factors of a product: `−a` adds a factor −1, and `a^n` with a whole n from 1 to 12 adds `a` n times.
+ * @returns false when there would be more factors than a polynomial may have terms.
+ */
+function collectFactors(expr: Expr, out: Expr[]): boolean {
+  // Nested powers multiply out quickly ((((x+1)^12)^12)^12 …): stop at the term bound instead.
+  if (out.length >= POLYNOMIAL_LIMITS.maxTerms) return false
+  if (expr.type === 'neg') {
+    out.push({ type: 'num', value: -1 })
+    return collectFactors(expr.arg, out)
+  }
+  if (expr.type === 'bin' && expr.op === '*') {
+    return collectFactors(expr.left, out) && collectFactors(expr.right, out)
+  }
+  if (expr.type === 'bin' && expr.op === '^' && isConstant(expr.right)) {
+    const n = evaluate(expr.right, {})
+    if (Number.isInteger(n) && n >= 1 && n <= POLYNOMIAL_LIMITS.maxPower) {
+      for (let i = 0; i < n; i += 1) {
+        if (!collectFactors(expr.left, out)) return false
+      }
+      return true
+    }
+  }
+  out.push(expr)
+  return true
+}
+
+/**
+ * Whether an expression is factored: a product of at least two polynomial
+ * factors of degree one or more, as in `(x + 2)(x + 3)` or `(x + 1)^2`, or a
+ * whole number other than 0 and ±1 taken out of one polynomial factor with
+ * whole-number coefficients, as in `2(x + 3)`. Factors that are constant as
+ * polynomials (`1`, `x − x + 1`) do not count, and every factor must be a
+ * polynomial, so `1(x^2 + 5x + 6)`, `(x^2 + 5x + 6)^1` and
+ * `sqrt(x^2 + 5x + 6)^2` are not factored.
+ * @param expr - the expression.
+ * @returns whether it is in factored form.
+ */
+export function isFactored(expr: Expr): boolean {
+  const factors: Expr[] = []
+  if (!collectFactors(expr, factors)) return false
+  let constant = 1
+  const terms: Polynomial[] = []
+  for (const factor of factors) {
+    const polynomial = toPolynomial(factor)
+    if (polynomial === null) return false
+    if (degree(polynomial) === 0) constant *= polynomial.get('') ?? 0
+    else terms.push(polynomial)
+  }
+  if (terms.length >= 2) return true
+  const [only] = terms
+  return terms.length === 1 && only !== undefined && nearInteger(constant) && Math.abs(constant) >= 2 && [...only.values()].every(nearInteger)
+}
+
+/**
+ * Whether an expression is expanded: no sum or difference (negated or not)
+ * inside a product, under a power, or divided by something, as in `x^2 + 3x + 2`
+ * and not `(x + 1)(x + 2)` or `(x + 1)/(1/(x + 2))`.
+ * @param expr - the expression.
+ * @returns whether it is in expanded form.
+ */
+export function isExpanded(expr: Expr): boolean {
+  const isSum = (e: Expr): boolean => (e.type === 'neg' ? isSum(e.arg) : e.type === 'bin' && (e.op === '+' || e.op === '-'))
+  switch (expr.type) {
+    case 'bin':
+      if (expr.op === '*' && (isSum(expr.left) || isSum(expr.right))) return false
+      if ((expr.op === '/' || expr.op === '^') && isSum(expr.left)) return false
+      return isExpanded(expr.left) && isExpanded(expr.right)
+    case 'neg':
+    case 'call':
+      return isExpanded(expr.arg)
+    default:
+      return true
+  }
+}

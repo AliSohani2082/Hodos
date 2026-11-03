@@ -90,6 +90,29 @@ describe('equivalence and form', () => {
     expect(meetsForm(ok('3x + 2x'), ok('5x'), 'simplified')).toBe(false)
     expect(meetsForm(ok('x5'), ok('5x'), 'simplified')).toBe(true)
   })
+
+  it('does not take a wrapped copy of the formula as factored or expanded', () => {
+    const factoredKey = ok('(x + 2)(x + 3)')
+    for (const answer of ['(x + 2)(x + 3)', '(x+3)(x+2)', '-(-x - 2)(x + 3)', '(2x + 4)(0.5x + 1.5)']) expect(meetsForm(ok(answer), factoredKey, 'factored'), answer).toBe(true)
+    expect(meetsForm(ok('(x + 1)^2'), ok('(x + 1)^2'), 'factored')).toBe(true)
+    expect(meetsForm(ok('x(x + 4)'), ok('x(x + 4)'), 'factored')).toBe(true)
+    expect(meetsForm(ok('-2(x + 3)'), ok('-2(x + 3)'), 'factored')).toBe(true)
+    for (const answer of ['1(x^2 + 5x + 6)', '(x^2 + 5x + 6)^1', '1*(x^2 + 5x + 6)*1', '(x^2 + 5x + 6)(x - x + 1)', '-(-(x^2 + 5x + 6))', '2((x^2 + 5x + 6)/2)', '2(0.5x^2 + 2.5x + 3)', 'sqrt(x^2 + 5x + 6)^2', '(x^2 + 5x + 6)/(x/x)']) {
+      expect(meetsForm(ok(answer), factoredKey, 'factored'), answer).toBe(false)
+    }
+    const expandedKey = ok('x^2 + 3x + 2')
+    for (const answer of ['x^2 + 3x + 2', 'x*x + 3x + 2', '2 + 3x + x^2', 'x^2/1 + 3x + 2']) expect(meetsForm(ok(answer), expandedKey, 'expanded'), answer).toBe(true)
+    for (const answer of ['(x + 1)/(1/(x + 2))', '(x + 1)(x + 2)', '-(-x - 1)(x + 2)', '(x^2 + 3x + 2)^1', '(2x^2 + 6x + 4)/2', 'abs(x + 1)^2 + x + 1', 'exp(ln(x^2 + 3x + 2))']) {
+      expect(meetsForm(ok(answer), expandedKey, 'expanded'), answer).toBe(false)
+    }
+    // Nested powers would multiply out to millions of factors: the check stops at its bound.
+    const nested = `${'('.repeat(8)}x + 1${')^12'.repeat(8)}`
+    const started = Date.now()
+    expect(meetsForm(ok(nested), factoredKey, 'factored')).toBe(false)
+    expect(Date.now() - started).toBeLessThan(1000)
+    // A key that is not a polynomial keeps the syntactic check.
+    expect(meetsForm(ok('(e^x - 1)(e^x + 1)'), ok('(e^x - 1)(e^x + 1)'), 'factored')).toBe(true)
+  })
 })
 
 describe('presenting', () => {
@@ -131,6 +154,10 @@ describe('grading', () => {
     expect(gradeMath(input(item('exp-c2'), { text: 'x^2 + 1' })).misconceptions).toEqual(['freshmans-dream'])
     expect(gradeMath(input(item('fac-2'), { text: '(x+3)(x+2)' })).correct).toBe(true)
     expect(gradeMath(input(item('fac-2'), { text: 'x^2 + 5x + 6' })).misconceptions).toEqual(['not-factored'])
+    // Wrapping the formula is not factoring or expanding it (and earns no more than the equivalent-form credit).
+    for (const [id, text] of [['fac-2', '1(x^2 + 5x + 6)'], ['fac-c2', '(x^2 + 7x + 12)^1'], ['fac-c3', '1*(x^2 - 9)'], ['exp-3', '(x + 1)/(1/(x + 2))'], ['exp-c3', '(x - 3)/(1/(x + 3))']] as const) {
+      expect(gradeMath(input(item(id), { text })), `${id}: ${text}`).toMatchObject({ correct: false, score: FORM_CREDIT })
+    }
     expect(gradeMath(input(item('simp-1'), { text: '3x + 2x' })).misconceptions).toEqual(['not-simplified'])
     expect(gradeMath(input(item('simp-1'), { text: 'y' })).feedback).toContain('could not read')
   })

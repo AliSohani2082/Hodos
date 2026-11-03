@@ -412,4 +412,23 @@ describe('learning sessions', () => {
     expect(result.question.answer?.verdict).toMatchObject({ outcome: 'incorrect', misconceptions: ['left-to-right'], misconceptionFeedback: ['Multiplication comes before addition.'] })
     expect(result.report).toContain('Explanation shown to the learner: Multiplication comes before addition.')
   })
+
+  it('security: asks a bank exercise whatever the tutor\'s text guesses, so no refusal confirms a guess at its key', async () => {
+    const item = quizCourse().items.find(i => i.explanation !== undefined && i.explanation.length >= 8)
+    if (item === undefined) throw new Error('the quiz course has no item with an explanation')
+    const broken = { ...item, id: `${item.id}-broken`, payload: {} }
+    const bank: QuestionBank = {
+      search: () => [],
+      item: ref => (ref === `quiz-arithmetic/${item.id}` ? { item, courseId: 'quiz-arithmetic' } : ref === `quiz-arithmetic/${broken.id}` ? { item: broken, courseId: 'quiz-arithmetic' } : undefined),
+    }
+    const env = await setup({}, bank)
+    const sessionId = await toTeaching(env)
+    // The tutor never sees a bank key: text that happens to contain it (here, the item's withheld explanation) is not refused.
+    const q = await env.learn.ask(sessionId, { form: 'interface', role: 'check', nodeId: 'limits', prompt: 'Try this one.', details: `Hint: ${item.explanation ?? ''}`, input: { bank: `quiz-arithmetic/${item.id}` } })
+    expect(q.origin).toBe('bank')
+    // A bank item that no longer validates is refused with a fixed message, never the plugin's findings.
+    const refused = await rejection(env.learn.ask(sessionId, { form: 'interface', role: 'check', nodeId: 'limits', prompt: 'Try this one.', input: { bank: `quiz-arithmetic/${broken.id}` } }))
+    expect(refused.message).toMatch(/no longer passes its environment's checks/)
+    expect(refused.message).not.toMatch(/payload|required|must/)
+  })
 })
