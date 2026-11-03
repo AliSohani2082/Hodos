@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="assets/logo.svg" alt="Hodos" width="220">
+<img src="assets/logo.svg" alt="Hodos" width="200">
 
 <p><strong>ὁδός — "the path."</strong><br>
-Learning plugins for DeepSeek Harness: tell the agent what you want to learn, and the chat becomes a tutored session.</p>
+A learning harness for DeepSeek Harness: say what you want to learn, and the chat becomes a tutored session.</p>
 
 <p>
-  <a href="docs/install.md"><b>Install</b></a> ·
+  <a href="#install"><b>Install</b></a> ·
   <a href="docs/architecture.md"><b>Architecture</b></a> ·
   <a href="docs/security.md"><b>Security</b></a> ·
   <a href="docs/plugin-guide.md"><b>Plugins</b></a> ·
@@ -17,7 +17,9 @@ Learning plugins for DeepSeek Harness: tell the agent what you want to learn, an
   <a href="LICENSING.md"><img alt="License: AGPL-3.0 core, MIT plugins" src="https://img.shields.io/badge/license-AGPL--3.0%20%2B%20MIT-blue?style=flat-square"></a>
   <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-orange?style=flat-square">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white">
+  <img alt="Node.js 24+" src="https://img.shields.io/badge/node-%E2%89%A5%2024.9-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white">
   <img alt="pnpm" src="https://img.shields.io/badge/pnpm-workspace-F69220?style=flat-square&logo=pnpm&logoColor=white">
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-storage-003B57?style=flat-square&logo=sqlite&logoColor=white">
   <img alt="DeepSeek Harness 0.2" src="https://img.shields.io/badge/DeepSeek%20Harness-0.2-4D6BFE?style=flat-square">
   <img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square">
 </p>
@@ -25,6 +27,20 @@ Learning plugins for DeepSeek Harness: tell the agent what you want to learn, an
 </div>
 
 ---
+
+## Why Hodos?
+
+Most people learn by being told things; far fewer by being checked, step by step, on what they actually understand. Hodos aims to give anyone a patient tutor for any topic: it finds where your understanding ends, plans the shortest route from there to your goal, teaches one step at a time, and only counts something as learned when a check you cannot talk your way past says so.
+
+*Hodos* (ὁδός) is Greek for "way" or "path", and the root of "method" (*meta* + *hodos*, "the way after").
+
+Hodos is a **learning harness**. It follows the process of [LearnHarness](https://github.com/amosblomqvist/learnharness) by amosblomqvist (probe, plan, teach, practise) and runs it inside [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH), the agent harness you already chat with.
+
+### Why build it on DSH?
+
+Every subject needs a different place to learn. Chess is learned on a board, Python by running code, algebra by writing expressions, a language by answering in it, and none of these fits a plain text chat. A fixed app would have to pick a few subjects and a single way of learning them.
+
+DSH's plugin system removes that limit. Hodos supplies the learning process and the grading, and each **learning environment is a plugin** you choose: install the board for chess, the sandbox for code, or write your own for what you are studying ([plugin guide](docs/plugin-guide.md)). You also choose the model and the agent behind the tutor, so the setup adapts to your topic and to how you like to learn, not the other way round.
 
 ## What is Hodos?
 
@@ -53,21 +69,56 @@ The plugins are optional. Each adds ways of asking questions: `@hodos/chess` add
 | **Plugin SDK** | MIT-licensed contracts for writing your own interface, as a DeepSeek Harness bundle or as a declarative plugin that runs no code in the host ([plugin guide](docs/plugin-guide.md), [sample plugin](examples/binary-numbers)) |
 | **Question banks** | Courses shipped with the plugins, written with Claude Code and the `hodos course` command, or drafted by DeepSeek Harness through its Claude Code subagent. A course that did not ship with a plugin waits for your approval ([course authoring](docs/course-authoring.md)) |
 
-## Try it
+## Install
 
-You need Node.js 24.9 or later, pnpm, and DeepSeek Harness 0.2.1-rc.3 or a later 0.2 release with a model configured.
+You need a machine with Linux or macOS (other platforms are untested), `git`, and a model for the tutor configured in DeepSeek Harness (for DeepSeek, `DEEPSEEK_API_KEY`). Everything else is checked, and installed if missing, by the installer.
+
+### Option 1: install.sh (recommended)
+
+```sh
+git clone https://github.com/AliSohani2082/Hodos.git
+cd Hodos
+./install.sh
+```
+
+Or in one line: `curl -fsSL https://raw.githubusercontent.com/AliSohani2082/Hodos/main/install.sh | bash`. Read the script first if you prefer; it is short.
+
+The script:
+
+1. checks for **Node.js 24.9+** (offers to install it with nvm), **pnpm**, and **DeepSeek Harness** (`@deepseek-ai/dsh`), and installs what is missing;
+2. builds Hodos and installs the core plugin, `@hodos/dsh`, into the `web` profile;
+3. asks which **complementary plugins** you want: chess, code, math, language, and the Claude Code, Codex and ACP subagent providers.
+
+For no questions, run `./install.sh --yes` (core plugin and chess) or choose plugins yourself with `./install.sh --plugins chess,code,math`. `./install.sh --help` lists the other options.
+
+### Option 2: install manually
+
+You need Node.js 24.9 or later, pnpm, and DeepSeek Harness 0.2.1-rc.3 or a later 0.2 release.
 
 ```sh
 pnpm install
 pnpm build
 dsh plugin --profile web add "$PWD/packages/dsh-adapter"
-dsh plugin --profile web add "$PWD/packages/environments/chess"
+dsh plugin --profile web add "$PWD/packages/environments/chess"   # optional: any of chess, code, math, language
 dsh web
 ```
 
-Then tell the agent what you want to learn and open the **Hodos learning** tab in the right sidebar; the **Knowledge graph** tab is listed next to it. The chess plugin is only an example: install the plugins whose interfaces you want, or none. The [install guide](docs/install.md) covers the other plugins, tarball installs, configuration and your data.
+The [install guide](docs/install.md) covers the other plugins, tarball installs, configuration and your data.
 
-To turn chess off but keep it installed, put this row in the profile's patch list, `$DSH_HOME/profiles/web/cordis.patch.yml` (`$DSH_HOME` defaults to `~/.dsh`; the file starts as an empty list, `[]`, which the row replaces), and restart:
+### Self-host on your own server
+
+Hodos has no separate server: it is a set of DSH plugins, so hosting it means running `dsh web` on a machine you control (a VPS or a home server).
+
+1. Install on the server with either option above.
+2. Start `dsh web` (run `dsh web --help` for its address and port options), under a process manager such as systemd or `tmux` so it survives logouts.
+3. Put a reverse proxy with TLS **and authentication** in front of it. Do not expose it to the internet as it is: the tutor runs on your model key.
+4. Back up `$DSH_HOME/hodos` (default `~/.dsh/hodos`). It holds every learner's sessions, knowledge graph and mastery estimates in SQLite.
+
+### Use it
+
+Tell the agent what you want to learn and open the **Hodos learning** tab in the right sidebar; the **Knowledge graph** tab is listed next to it.
+
+To turn a plugin off but keep it installed, put a row like this in the profile's patch list, `$DSH_HOME/profiles/web/cordis.patch.yml` (`$DSH_HOME` defaults to `~/.dsh`; the file starts as an empty list, `[]`, which the row replaces), and restart:
 
 ```yaml
 - id: hodos-chess
@@ -80,6 +131,18 @@ To uninstall (your learning records in `$DSH_HOME/hodos` stay until you delete t
 dsh plugin --profile web remove @hodos/chess
 dsh plugin --profile web remove @hodos/dsh
 ```
+
+## Recommended plugins
+
+Hodos's own interfaces are in [What is included](#what-is-included). These DSH plugins work alongside it:
+
+| Plugin | What it does for Hodos |
+|---|---|
+| **Claude Code subagent** (`@deepseek-ai/dsh-subagent-claude-code`) | Connects your Claude Code sign-in to DSH, so `hodos_draft_course` can draft question banks through Claude. Tested end to end against a local stand-in for Anthropic's API; setup and the sign-in rules are in [course authoring](docs/course-authoring.md#drafting-in-deepseek-harness-with-claude). |
+| **Codex subagent** (`@deepseek-ai/dsh-subagent-codex`) | The same idea through Codex. Not yet tested with Hodos. |
+| **ACP subagent** (`@deepseek-ai/dsh-subagent-acp`) | Drives any agent that speaks the Agent Client Protocol (Gemini CLI, OpenCode and others) as a subagent. Not yet tested with Hodos. |
+
+Hodos never handles these tools' credentials: whatever they are signed in with stays inside them. `install.sh` offers all three.
 
 ## Develop
 
